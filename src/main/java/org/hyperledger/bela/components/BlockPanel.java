@@ -19,6 +19,7 @@ package org.hyperledger.bela.components;
 
 import java.time.Instant;
 
+import com.googlecode.lanterna.gui2.BorderLayout;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.GridLayout;
 import com.googlecode.lanterna.gui2.Label;
@@ -39,11 +40,11 @@ public class BlockPanel implements LanternaComponent<Panel> {
     Panel panel = new Panel();
     panel.setLayoutManager(new GridLayout(2));
 
-    panel.addComponent(new Label("block time:"));
-    panel.addComponent(new Label(Instant.ofEpochMilli(block.getTimestamp()).toString()));
-
     panel.addComponent(new Label("block number:"));
     panel.addComponent(new Label(String.valueOf(block.getNumber())));
+
+    panel.addComponent(new Label("block time:"));
+    panel.addComponent(new Label(Instant.ofEpochSecond(block.getTimestamp()).toString()));
 
     panel.addComponent(new Label("block hash:"));
     panel.addComponent(new TextBox(block.getHash()));
@@ -78,9 +79,9 @@ public class BlockPanel implements LanternaComponent<Panel> {
     panel.addComponent(new Label(block.getReceiptsRoot()));
 
     Panel outerPanel = new Panel();
-    outerPanel.setLayoutManager(new GridLayout(2));
-    outerPanel.addComponent(panel);
-    outerPanel.addComponent(new ScrollBar(Direction.VERTICAL));
+    outerPanel.setLayoutManager(new BorderLayout());
+    outerPanel.addComponent(panel, BorderLayout.Location.LEFT);
+    outerPanel.addComponent(new ScrollBar(Direction.VERTICAL), BorderLayout.Location.RIGHT);
 
     return outerPanel;
   }

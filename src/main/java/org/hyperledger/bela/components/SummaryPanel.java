@@ -2,13 +2,9 @@ package org.hyperledger.bela.components;
 
 import org.hyperledger.besu.ethereum.chain.ChainHead;
 
-import com.googlecode.lanterna.gui2.EmptySpace;
 import com.googlecode.lanterna.gui2.GridLayout;
 import com.googlecode.lanterna.gui2.Label;
-import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
 import com.googlecode.lanterna.gui2.Panel;
-import com.googlecode.lanterna.gui2.TextBox;
-import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 
 public class SummaryPanel implements LanternaComponent<Panel>{
   private final String worldStateRoot;

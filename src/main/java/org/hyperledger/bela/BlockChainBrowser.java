@@ -36,7 +36,6 @@ import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.bela.components.BlockPanel;
-import org.hyperledger.bela.components.BlockPanelComponent;
 import org.hyperledger.bela.components.LanternaComponent;
 import org.hyperledger.bela.components.MessagePanel;
 import org.hyperledger.bela.components.SummaryPanel;

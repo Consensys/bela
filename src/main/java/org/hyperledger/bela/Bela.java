@@ -29,11 +29,21 @@ import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksD
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.List;
 
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.SimpleTheme;
 import com.googlecode.lanterna.gui2.BasicWindow;
+import com.googlecode.lanterna.gui2.Border;
+import com.googlecode.lanterna.gui2.BorderLayout;
+import com.googlecode.lanterna.gui2.Direction;
+import com.googlecode.lanterna.gui2.EmptySpace;
+import com.googlecode.lanterna.gui2.GridLayout;
 import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
+import com.googlecode.lanterna.gui2.Panel;
+import com.googlecode.lanterna.gui2.ScrollBar;
+import com.googlecode.lanterna.gui2.Separator;
+import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
@@ -59,12 +69,20 @@ public class Bela {
       MultiWindowTextGUI gui = new MultiWindowTextGUI(screen);
       gui.setTheme(new SimpleTheme(TextColor.ANSI.WHITE, TextColor.ANSI.BLACK));
 
+
       // Create window to hold the panel
       BasicWindow window = new BasicWindow("Bela DB Browser");
+      window.setHints(List.of(Window.Hint.FULL_SCREEN));
 //      window.setComponent(searchPanel.createComponent());
       var summaryPanel = browser.showSummaryPanel();
-      window.setComponent(summaryPanel.createComponent());
+      var blockPanel = browser.headBlockPanel();
+      Panel panel = new Panel(new BorderLayout());
 
+      panel.addComponent(summaryPanel.createComponent(), BorderLayout.Location.TOP);
+      var blockPanelComponent = blockPanel.createComponent();
+      panel.addComponent(blockPanelComponent, BorderLayout.Location.BOTTOM);
+
+      window.setComponent(panel);
 //      Panel change
 //      searchPanel.onChange(
 //          blockNumber -> window.setComponent(browser.findBlockPanel(blockNumber).createComponent()));
@@ -73,6 +91,7 @@ public class Bela {
           browser.showFindBlockDialog(gui, blockNumber));
 
       gui.addWindowAndWait(window);
+
     }
   }
 

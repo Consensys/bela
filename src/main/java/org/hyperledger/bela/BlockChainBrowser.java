@@ -20,6 +20,7 @@ package org.hyperledger.bela;
 import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateKeyValueStorage;
 import org.hyperledger.besu.ethereum.chain.Blockchain;
 import org.hyperledger.besu.ethereum.chain.DefaultBlockchain;
+import org.hyperledger.besu.ethereum.core.Block;
 import org.hyperledger.besu.ethereum.mainnet.MainnetBlockHeaderFunctions;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
@@ -29,14 +30,17 @@ import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
 import java.util.Optional;
 
 import com.googlecode.lanterna.gui2.Component;
+import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 import org.apache.tuweni.bytes.Bytes;
+import org.hyperledger.bela.components.BlockPanel;
 import org.hyperledger.bela.components.BlockPanelComponent;
 import org.hyperledger.bela.components.LanternaComponent;
 import org.hyperledger.bela.components.MessagePanel;
 import org.hyperledger.bela.components.SummaryPanel;
+import org.hyperledger.bela.model.BlockResult;
 
 public class BlockChainBrowser {
 
@@ -68,10 +72,16 @@ public class BlockChainBrowser {
     return new BlockChainBrowser(blockchain/*, worldStateArchive*/, worldStateStorage);
   }
 
-  public LanternaComponent<? extends Component> findBlockPanel(final long blockNumber) {
-    return getBlockHeaderByNumber(blockNumber)
-        .<LanternaComponent<? extends Component>>map(BlockPanelComponent::new)
-        .orElseGet(() -> new MessagePanel("Not found block " + blockNumber));
+//  public LanternaComponent<? extends Component> findBlockPanel(final long blockNumber) {
+//    return getBlockByNumber(blockNumber)
+//        .<LanternaComponent<? extends Component>>map(BlockPanelComponent::new)
+//        .orElseGet(() -> new MessagePanel("Not found block " + blockNumber));
+//  }
+
+  public LanternaComponent<Panel> headBlockPanel() {
+    return getBlockByNumber(blockchain.getChainHeadBlockNumber())
+        .<LanternaComponent<Panel>>map(BlockPanel::new)
+        .orElseGet(() -> new MessagePanel("Chain head not found"));
   }
 
   public LanternaComponent<? extends Component> showSummaryPanel() {
@@ -83,13 +93,18 @@ public class BlockChainBrowser {
   public void showFindBlockDialog(final WindowBasedTextGUI parentWindow, final long blockNumber) {
     MessageDialog.showMessageDialog(parentWindow,
         "Search Result",
-        getBlockHeaderByNumber(blockNumber)
+        getBlockByNumber(blockNumber)
             .map(BlockUtils::prettyPrintBlockHeader)
             .orElse("Not found block " + blockNumber),
         MessageDialogButton.OK);
   }
-  private Optional<BlockUtils.BlockSearchResult> getBlockHeaderByNumber(final long blockNumber) {
+  private Optional<BlockResult> getBlockByNumber(final long blockNumber) {
     return blockchain.getBlockHeader(blockNumber)
-        .map(BlockUtils.BlockSearchResult::new);
+        .flatMap(header -> blockchain.getBlockBody(header.getHash())
+            .map(body -> new Block(header, body)))
+        .map(block -> new BlockResult(
+            block,
+            blockchain.getTotalDifficultyByHash(block.getHash()))
+        );
   }
 }

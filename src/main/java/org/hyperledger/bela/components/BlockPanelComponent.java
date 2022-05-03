@@ -20,12 +20,13 @@ package org.hyperledger.bela.components;
 import com.googlecode.lanterna.gui2.GridLayout;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
+import org.hyperledger.bela.model.BlockResult;
 import org.hyperledger.bela.BlockUtils;
 
 public class BlockPanelComponent implements LanternaComponent<Panel> {
-  private final BlockUtils.BlockSearchResult blockResult;
+  private final BlockResult blockResult;
 
-  public BlockPanelComponent(final BlockUtils.BlockSearchResult blockResult) {
+  public BlockPanelComponent(final BlockResult blockResult) {
 
     this.blockResult = blockResult;
   }

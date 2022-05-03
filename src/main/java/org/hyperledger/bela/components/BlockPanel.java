@@ -17,11 +17,71 @@
 
 package org.hyperledger.bela.components;
 
+import java.time.Instant;
+
+import com.googlecode.lanterna.gui2.Direction;
+import com.googlecode.lanterna.gui2.GridLayout;
+import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
+import com.googlecode.lanterna.gui2.ScrollBar;
+import com.googlecode.lanterna.gui2.TextBox;
+import org.hyperledger.bela.model.BlockResult;
 
 public class BlockPanel implements LanternaComponent<Panel> {
+  private final BlockResult block;
+
+  public BlockPanel(final BlockResult block) {
+    this.block = block;
+  }
+
   @Override
   public Panel createComponent() {
-    return null;
+    Panel panel = new Panel();
+    panel.setLayoutManager(new GridLayout(2));
+
+    panel.addComponent(new Label("block time:"));
+    panel.addComponent(new Label(Instant.ofEpochMilli(block.getTimestamp()).toString()));
+
+    panel.addComponent(new Label("block number:"));
+    panel.addComponent(new Label(String.valueOf(block.getNumber())));
+
+    panel.addComponent(new Label("block hash:"));
+    panel.addComponent(new TextBox(block.getHash()));
+
+    panel.addComponent(new Label("parent hash:"));
+    panel.addComponent(new Label(block.getParentHash()));
+
+    panel.addComponent(new Label("difficulty:"));
+    panel.addComponent(new Label(block.getDifficulty()));
+
+    panel.addComponent(new Label("total difficulty:"));
+    panel.addComponent(new Label(block.getTotalDifficulty()));
+
+    panel.addComponent(new Label("state root:"));
+    panel.addComponent(new Label(block.getStateRoot()));
+
+    panel.addComponent(new Label("miner coinbase:"));
+    panel.addComponent(new Label(block.getMiner()));
+
+    panel.addComponent(new Label("gas limit:"));
+    panel.addComponent(new Label(String.valueOf(block.getGasLimit())));
+    panel.addComponent(new Label("gas used:"));
+    panel.addComponent(new Label(String.valueOf(block.getGasUsed())));
+    panel.addComponent(new Label("base fee:"));
+    panel.addComponent(new Label(String.valueOf(block.getBaseFeePerGas())));
+
+    panel.addComponent(new Label("transaction count:"));
+    panel.addComponent(new Label(String.valueOf(block.getTransactions().size())));
+    panel.addComponent(new Label("transactions root:"));
+    panel.addComponent(new Label(block.getTransactionsRoot()));
+    panel.addComponent(new Label("receipts root:"));
+    panel.addComponent(new Label(block.getReceiptsRoot()));
+
+    Panel outerPanel = new Panel();
+    outerPanel.setLayoutManager(new GridLayout(2));
+    outerPanel.addComponent(panel);
+    outerPanel.addComponent(new ScrollBar(Direction.VERTICAL));
+
+    return outerPanel;
   }
 }

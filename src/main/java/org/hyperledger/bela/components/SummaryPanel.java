@@ -5,8 +5,10 @@ import org.hyperledger.besu.ethereum.chain.ChainHead;
 import com.googlecode.lanterna.gui2.EmptySpace;
 import com.googlecode.lanterna.gui2.GridLayout;
 import com.googlecode.lanterna.gui2.Label;
+import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.TextBox;
+import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 
 public class SummaryPanel implements LanternaComponent<Panel>{
   private final String worldStateRoot;
@@ -22,13 +24,15 @@ public class SummaryPanel implements LanternaComponent<Panel>{
     Panel panel = new Panel();
     panel.setLayoutManager(new GridLayout(2));
 
-    panel.addComponent(new Label("db world state root"));
-    panel.addComponent(new TextBox(worldStateRoot));
-    panel.addComponent(new EmptySpace());
+    panel.addComponent(new Label("db world state root:"));
+    panel.addComponent(new Label(worldStateRoot));
 
-    panel.addComponent(new Label("chain head"));
-    panel.addComponent(new TextBox(""+chainHead.getHeight()));
-    panel.addComponent(new EmptySpace());
+    panel.addComponent(new Label("chain head:"));
+    panel.addComponent(new Label(String.valueOf(chainHead.getHeight())));
+
+    panel.addComponent(new Label("chain head hash:"));
+    panel.addComponent(new Label(chainHead.getHash().toHexString()));
+
 
     return panel;
   }

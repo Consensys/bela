@@ -25,7 +25,6 @@ import com.googlecode.lanterna.gui2.GridLayout;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.ScrollBar;
-import com.googlecode.lanterna.gui2.TextBox;
 import org.hyperledger.bela.model.BlockResult;
 
 public class BlockPanel implements LanternaComponent<Panel> {
@@ -47,7 +46,7 @@ public class BlockPanel implements LanternaComponent<Panel> {
     panel.addComponent(new Label(Instant.ofEpochSecond(block.getTimestamp()).toString()));
 
     panel.addComponent(new Label("block hash:"));
-    panel.addComponent(new TextBox(block.getHash()));
+    panel.addComponent(new Label(block.getHash()));
 
     panel.addComponent(new Label("parent hash:"));
     panel.addComponent(new Label(block.getParentHash()));

@@ -17,6 +17,10 @@
 
 package org.hyperledger.bela;
 
+import static com.googlecode.lanterna.input.KeyType.ArrowLeft;
+import static com.googlecode.lanterna.input.KeyType.ArrowRight;
+import static com.googlecode.lanterna.input.KeyType.Escape;
+
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueStorageProviderBuilder;
@@ -39,14 +43,18 @@ import com.googlecode.lanterna.gui2.Borders;
 import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.Window;
+import com.googlecode.lanterna.input.KeyStroke;
+import com.googlecode.lanterna.input.KeyType;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.Terminal;
+import org.hyperledger.bela.components.BlockPanel;
 import org.hyperledger.bela.components.SearchForBlockPanel;
 import org.hyperledger.bela.config.BelaConfigurationImpl;
 
 public class Bela {
+
   public static void main(final String[] args) throws Exception {
     final Path dataDir = Paths.get(args[0]);
     System.out.println("We are loading : " + dataDir);
@@ -64,32 +72,44 @@ public class Bela {
       MultiWindowTextGUI gui = new MultiWindowTextGUI(screen);
       gui.setTheme(new SimpleTheme(TextColor.ANSI.WHITE, TextColor.ANSI.BLACK));
 
-
       // Create window to hold the panel
       BasicWindow window = new BasicWindow("Bela DB Browser");
       window.setHints(List.of(Window.Hint.FULL_SCREEN));
 
-      //      window.setComponent(searchPanel.createComponent());
-      var summaryPanel = browser.showSummaryPanel();
-      var blockPanel = browser.headBlockPanel();
-      Panel panel = new Panel(new BorderLayout());
+      var blockPanelHolder = new Panel();
+      Panel panel = new Panel(new BorderLayout()) {
+        @Override
+        public boolean handleInput(final KeyStroke key) {
+          switch(key.getKeyType()) {
+            case Escape -> {
+              window.close();
+              return true;
+            }
+            case ArrowRight -> {
+              blockPanelHolder.removeAllComponents();
+              blockPanelHolder.addComponent(browser.moveForward().blockPanel().createComponent());
+              return true;
+            }
+            case ArrowLeft -> {
+              blockPanelHolder.removeAllComponents();
+              blockPanelHolder.addComponent(browser.moveBackward().blockPanel().createComponent());
+              return true;
+            }
+          }
+          return super.handleInput(key);
+        }
+      };
 
       // add summary panel
-      panel.addComponent(summaryPanel.createComponent()
+      panel.addComponent(browser.showSummaryPanel().createComponent()
           .withBorder(Borders.singleLine()), BorderLayout.Location.TOP);
 
       // add block detail panel
-      panel.addComponent(blockPanel.createComponent()
-              .withBorder(Borders.singleLine()), BorderLayout.Location.BOTTOM);
+      blockPanelHolder.addComponent(browser.blockPanel().createComponent());
+      panel.addComponent(blockPanelHolder, BorderLayout.Location.BOTTOM);
 
       window.setComponent(panel);
-//      Panel change
-//      searchPanel.onChange(
-//          blockNumber -> window.setComponent(browser.findBlockPanel(blockNumber).createComponent()));
-//      vs Dialog
-      searchPanel.onChange(blockNumber ->
-          browser.showFindBlockDialog(gui, blockNumber));
-
+      System.out.println(window.getFocusedInteractable());
       gui.addWindowAndWait(window);
 
     }

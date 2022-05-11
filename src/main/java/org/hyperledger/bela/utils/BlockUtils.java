@@ -1,8 +1,9 @@
-package org.hyperledger.bela;
+package org.hyperledger.bela.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import org.hyperledger.bela.Bela;
 import org.hyperledger.bela.model.BlockResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

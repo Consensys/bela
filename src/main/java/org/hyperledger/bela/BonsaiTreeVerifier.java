@@ -95,9 +95,9 @@ class BonsaiTraversal {
   int visited = 0;
 
   //    private final KeyValueStorage accountStorage;
-  private final KeyValueStorage codeStorage;
   //    private final KeyValueStorage storageStorage;
   private final KeyValueStorage trieBranchStorage;
+  private final KeyValueStorage codeStorage;
   private Node<Bytes> root;
   //    private final KeyValueStorage trieLogStorage;
   //    private final Pair<KeyValueStorage, KeyValueStorage> snapTrieBranchBucketsStorage;

@@ -30,10 +30,12 @@ import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBMetricsFactor
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBCLIOptions;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBFactoryConfiguration;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.SimpleTheme;
@@ -43,6 +45,9 @@ import com.googlecode.lanterna.gui2.Borders;
 import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.Window;
+import com.googlecode.lanterna.gui2.dialogs.DirectoryDialogBuilder;
+import com.googlecode.lanterna.gui2.dialogs.FileDialogBuilder;
+import com.googlecode.lanterna.gui2.dialogs.MessageDialogBuilder;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 import com.googlecode.lanterna.screen.Screen;
@@ -52,53 +57,33 @@ import com.googlecode.lanterna.terminal.Terminal;
 import org.hyperledger.bela.components.BlockPanel;
 import org.hyperledger.bela.components.SearchForBlockPanel;
 import org.hyperledger.bela.config.BelaConfigurationImpl;
+import org.identityconnectors.common.StringUtil;
 
 public class Bela {
 
   public static void main(final String[] args) throws Exception {
-    final Path dataDir = Paths.get(args[0]);
-    System.out.println("We are loading : " + dataDir);
-    final StorageProvider provider =
-        createKeyValueStorageProvider(dataDir, dataDir.resolve("database"));
-
-    BlockChainBrowser browser = BlockChainBrowser.fromProvider(provider);
 
     try (Terminal terminal = new DefaultTerminalFactory().createTerminal()) {
       Screen screen = new TerminalScreen(terminal);
       screen.startScreen();
-      SearchForBlockPanel searchPanel = new SearchForBlockPanel();
-
       // Create gui and start gui
       MultiWindowTextGUI gui = new MultiWindowTextGUI(screen);
-      gui.setTheme(new SimpleTheme(TextColor.ANSI.WHITE, TextColor.ANSI.BLACK));
 
       // Create window to hold the panel
       BasicWindow window = new BasicWindow("Bela DB Browser");
       window.setHints(List.of(Window.Hint.FULL_SCREEN));
 
+      Path dataDir = List.of(args).stream()
+          .findFirst()
+          .filter(StringUtil::isNotBlank)
+          .map(Paths::get)
+          .orElseGet(() -> resolveDataDir(gui));
+
+      final BlockChainBrowser browser = resolveDb(gui, dataDir);
+
+
+      Panel panel = new Panel(new BorderLayout());
       var blockPanelHolder = new Panel();
-      Panel panel = new Panel(new BorderLayout()) {
-        @Override
-        public boolean handleInput(final KeyStroke key) {
-          switch(key.getKeyType()) {
-            case Escape -> {
-              window.close();
-              return true;
-            }
-            case ArrowRight -> {
-              blockPanelHolder.removeAllComponents();
-              blockPanelHolder.addComponent(browser.moveForward().blockPanel().createComponent());
-              return true;
-            }
-            case ArrowLeft -> {
-              blockPanelHolder.removeAllComponents();
-              blockPanelHolder.addComponent(browser.moveBackward().blockPanel().createComponent());
-              return true;
-            }
-          }
-          return super.handleInput(key);
-        }
-      };
 
       // add summary panel
       panel.addComponent(browser.showSummaryPanel().createComponent()
@@ -113,6 +98,31 @@ public class Bela {
       gui.addWindowAndWait(window);
 
     }
+  }
+
+  private static BlockChainBrowser resolveDb(MultiWindowTextGUI gui, Path dataDir) {
+    while (true) {
+      try {
+        StorageProvider provider = createKeyValueStorageProvider(dataDir, dataDir.resolve("database"));
+        return BlockChainBrowser.fromProvider(provider);
+
+      } catch (IllegalArgumentException ex) {
+        new MessageDialogBuilder()
+            .setTitle("Error loading blockchain database")
+            .setText("Failed to load blockchain data: \n" + ex.getMessage())
+            .build()
+            .showDialog(gui);
+      }
+      dataDir = resolveDataDir(gui);
+    }
+  }
+  private static Path resolveDataDir(MultiWindowTextGUI gui) {
+    return new DirectoryDialogBuilder()
+        .setTitle("Open Data Directory")
+        .setDescription("Choose a directory")
+        .setActionLabel("Open")
+        .build()
+        .showDialog(gui).toPath();
   }
 
   private static StorageProvider createKeyValueStorageProvider(

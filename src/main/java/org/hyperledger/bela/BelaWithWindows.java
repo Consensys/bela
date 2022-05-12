@@ -22,7 +22,7 @@ public class BelaWithWindows {
             MainWindow mainWindow = new MainWindow(textGUI);
 
             final Preferences preferences = Preferences.userNodeForPackage(Bela.class);
-            final ConfigWindow config = new ConfigWindow(preferences);
+            final ConfigWindow config = new ConfigWindow(textGUI,preferences);
             mainWindow.registerWindow(config);
             mainWindow.registerWindow(new BlockChainBrowserWindow(config));
 

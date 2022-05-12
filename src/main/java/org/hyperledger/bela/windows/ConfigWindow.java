@@ -14,22 +14,21 @@ import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.gui2.dialogs.DirectoryDialogBuilder;
 import org.hyperledger.bela.config.BelaConfigurationImpl;
-import org.jetbrains.annotations.NotNull;
 
-public class ConfigWindow  implements LanternaWindow{
+import static org.hyperledger.bela.windows.Constants.DATA_PATH;
+import static org.hyperledger.bela.windows.Constants.DATA_PATH_DEFAULT;
+import static org.hyperledger.bela.windows.Constants.STORAGE_PATH;
+import static org.hyperledger.bela.windows.Constants.STORAGE_PATH_DEFAULT;
+
+public class ConfigWindow implements LanternaWindow {
 
     private WindowBasedTextGUI gui;
-    Preferences preferences ;
+    Preferences preferences;
 
     public ConfigWindow(final WindowBasedTextGUI gui, final Preferences preferences) {
         this.gui = gui;
         this.preferences = preferences;
     }
-
-    private static final  String DATA_PATH = "DATA_PATH";
-    private static final  String DATA_PATH_DEFAULT = ".";
-    private static final  String STORAGE_PATH = "STORAGE_PATH";
-    private static final  String STORAGE_PATH_DEFAULT = "./database";
 
 
     @Override
@@ -46,37 +45,37 @@ public class ConfigWindow  implements LanternaWindow{
     public Window createWindow() {
         Window window = new BasicWindow(label());
         Panel panel = new Panel(new GridLayout(3));
-        GridLayout gridLayout = (GridLayout)panel.getLayoutManager();
+        GridLayout gridLayout = (GridLayout) panel.getLayoutManager();
         gridLayout.setHorizontalSpacing(3);
 
 
         panel.addComponent(new Label("Data Path"));
-        final TextBox dataPath = new TextBox(preferences.get(DATA_PATH,DATA_PATH_DEFAULT));
+        final TextBox dataPath = new TextBox(preferences.get(DATA_PATH, DATA_PATH_DEFAULT));
         panel.addComponent(dataPath);
-        panel.addComponent(new Button("...",() -> {
+        panel.addComponent(new Button("...", () -> {
             final Optional<String> path = askForPath("Data Path Directory");
             path.ifPresent(dataPath::setText);
         }));
 
         panel.addComponent(new Label("Storage Path"));
-        final TextBox storagePath = new TextBox(preferences.get(STORAGE_PATH,STORAGE_PATH_DEFAULT));
+        final TextBox storagePath = new TextBox(preferences.get(STORAGE_PATH, STORAGE_PATH_DEFAULT));
         panel.addComponent(storagePath);
-        panel.addComponent(new Button("...",() -> {
+        panel.addComponent(new Button("...", () -> {
             final Optional<String> path = askForPath("Storage Path Directory");
             path.ifPresent(storagePath::setText);
         }));
 
         panel.addComponent(new Button("Cancel", window::close));
-        panel.addComponent(new Button("Apply",() ->{
-            preferences.put(DATA_PATH,dataPath.getText());
+        panel.addComponent(new Button("Apply", () -> {
+            preferences.put(DATA_PATH, dataPath.getText());
             preferences.put(STORAGE_PATH, storagePath.getText());
-        } ));
+        }));
 
-        panel.addComponent(new Button("Ok",() ->{
-            preferences.put(DATA_PATH,dataPath.getText());
+        panel.addComponent(new Button("Ok", () -> {
+            preferences.put(DATA_PATH, dataPath.getText());
             preferences.put(STORAGE_PATH, storagePath.getText());
             window.close();
-        } ));
+        }));
 
 
         window.setComponent(panel);

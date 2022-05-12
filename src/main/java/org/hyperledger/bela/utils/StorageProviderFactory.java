@@ -1,7 +1,9 @@
 package org.hyperledger.bela.utils;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.prefs.Preferences;
 import org.hyperledger.bela.config.BelaConfigurationImpl;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
@@ -12,9 +14,42 @@ import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBMetricsFactor
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBCLIOptions;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBFactoryConfiguration;
 
-public class DataUtils {
+import static org.hyperledger.bela.windows.Constants.DATA_PATH;
+import static org.hyperledger.bela.windows.Constants.DATA_PATH_DEFAULT;
+import static org.hyperledger.bela.windows.Constants.STORAGE_PATH;
+import static org.hyperledger.bela.windows.Constants.STORAGE_PATH_DEFAULT;
 
-    public static StorageProvider createKeyValueStorageProvider(
+public class StorageProviderFactory {
+    private final Preferences preferences;
+    private StorageProvider provider;
+    private Path dataPath;
+    private Path storagePath;
+
+    public StorageProviderFactory(final Preferences preferences) {
+        this.preferences = preferences;
+    }
+
+    public StorageProvider createProvider() {
+        Path data = Path.of(preferences.get(DATA_PATH, DATA_PATH_DEFAULT));
+        Path storage = Path.of(preferences.get(STORAGE_PATH, STORAGE_PATH_DEFAULT));
+        if (data.equals(dataPath) && storage.equals(storagePath)) {
+            return provider;
+        }
+
+        if (provider != null) {
+            try {
+                provider.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        dataPath = data;
+        storagePath = storage;
+        provider = createKeyValueStorageProvider(dataPath, storagePath);
+        return provider;
+    }
+
+    private static StorageProvider createKeyValueStorageProvider(
             final Path dataDir, final Path dbDir) {
         return new KeyValueStorageProviderBuilder()
                 .withStorageFactory(

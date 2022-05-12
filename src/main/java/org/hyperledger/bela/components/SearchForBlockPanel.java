@@ -20,7 +20,6 @@ package org.hyperledger.bela.components;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
-
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.Button;
 import com.googlecode.lanterna.gui2.EmptySpace;
@@ -30,34 +29,34 @@ import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.TextBox;
 
 public class SearchForBlockPanel implements LanternaComponent<Panel> {
-  long blockNumber;
-  private final List<BlockNumberSearchSubscriber> subscribers = new ArrayList<>();
+    long blockNumber;
+    private final List<BlockNumberSearchSubscriber> subscribers = new ArrayList<>();
 
-  @Override
-  public Panel createComponent() {
-    Panel panel = new Panel();
-    panel.setLayoutManager(new GridLayout(2));
+    @Override
+    public Panel createComponent() {
+        Panel panel = new Panel();
+        panel.setLayoutManager(new GridLayout(2));
 
-    final Label blkLbl = new Label("");
+        final Label blkLbl = new Label("");
 
-    panel.addComponent(new Label("Block Number"));
-    final TextBox blockNmr =
-        new TextBox().setValidationPattern(Pattern.compile("[0-9]*")).addTo(panel);
+        panel.addComponent(new Label("Block Number"));
+        final TextBox blockNmr =
+                new TextBox().setValidationPattern(Pattern.compile("[0-9]*")).addTo(panel);
 
-    final Button button = new Button("Search!", () -> change(Long.parseLong(blockNmr.getText())));
-    button.addTo(panel);
+        final Button button = new Button("Search!", () -> change(Long.parseLong(blockNmr.getText())));
+        button.addTo(panel);
 
-    panel.addComponent(new EmptySpace(new TerminalSize(0, 0)));
-    panel.addComponent(blkLbl);
-    return panel;
-  }
+        panel.addComponent(new EmptySpace(new TerminalSize(0, 0)));
+        panel.addComponent(blkLbl);
+        return panel;
+    }
 
-  private void change(final long newVal) {
-    this.blockNumber = newVal;
-    subscribers.forEach(s -> s.newBlockNumber(newVal));
-  }
+    private void change(final long newVal) {
+        this.blockNumber = newVal;
+        subscribers.forEach(s -> s.newBlockNumber(newVal));
+    }
 
-  public void onChange(final BlockNumberSearchSubscriber subscriber) {
-    this.subscribers.add(subscriber);
-  }
+    public void onChange(final BlockNumberSearchSubscriber subscriber) {
+        this.subscribers.add(subscriber);
+    }
 }

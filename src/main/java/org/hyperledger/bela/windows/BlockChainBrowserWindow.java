@@ -1,15 +1,11 @@
 package org.hyperledger.bela.windows;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import com.googlecode.lanterna.SGR;
 import com.googlecode.lanterna.TerminalPosition;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.BasicWindow;
-import com.googlecode.lanterna.gui2.BorderLayout;
 import com.googlecode.lanterna.gui2.Borders;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.Label;
@@ -20,30 +16,20 @@ import com.googlecode.lanterna.gui2.WindowListener;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 import org.hyperledger.bela.BlockChainBrowser;
-import org.hyperledger.bela.config.BelaConfigurationImpl;
-import org.hyperledger.besu.ethereum.storage.StorageProvider;
-import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
-import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueStorageProviderBuilder;
-import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
-import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBKeyValueStorageFactory;
-import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBMetricsFactory;
-import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBCLIOptions;
-import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBFactoryConfiguration;
+import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.jetbrains.annotations.NotNull;
 
 public class BlockChainBrowserWindow implements LanternaWindow, WindowListener {
 
     private static final String[] PREV_NEXT_BLOCK_COMMANDS = {"prev Block", "'<-'", "next Block", "'->'", "Close", "'c'"};
 
-    private ConfigWindow config;
     private BlockChainBrowser browser;
-    private StorageProvider provider;
     private BasicWindow window;
-    private Panel panel;
+    private StorageProviderFactory storageProviderFactory;
 
-    public BlockChainBrowserWindow(final ConfigWindow config) {
+    public BlockChainBrowserWindow(final StorageProviderFactory storageProviderFactory) {
+        this.storageProviderFactory = storageProviderFactory;
 
-        this.config = config;
     }
 
     @Override
@@ -58,23 +44,14 @@ public class BlockChainBrowserWindow implements LanternaWindow, WindowListener {
 
     @Override
     public Window createWindow() {
-        BelaConfigurationImpl belaConfiguration = config.createBelaConfiguration();
-        if (provider != null) {
-            try {
-                provider.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        provider = createKeyValueStorageProvider(belaConfiguration.getDataPath(), belaConfiguration.getStoragePath());
-        browser = BlockChainBrowser.fromProvider(provider);
+        browser = BlockChainBrowser.fromProvider(storageProviderFactory.createProvider());
 
         // Create window to hold the panel
 
         window = new BasicWindow("Bela DB Browser");
         window.setHints(List.of(Window.Hint.FULL_SCREEN));
 
-        panel = new Panel(new LinearLayout());
+        Panel panel = new Panel(new LinearLayout());
 
         Panel commands = getCommandsPanel(PREV_NEXT_BLOCK_COMMANDS);
 
@@ -92,29 +69,11 @@ public class BlockChainBrowserWindow implements LanternaWindow, WindowListener {
         window.handleInput(new KeyStroke(KeyType.Escape));
         window.handleInput(new KeyStroke(KeyType.ArrowLeft));
         window.handleInput(new KeyStroke(KeyType.ArrowRight));
-        window.handleInput(new KeyStroke('c',false,false,false));
+        window.handleInput(new KeyStroke('c', false, false, false));
         window.setComponent(panel);
         return window;
     }
 
-
-    private static StorageProvider createKeyValueStorageProvider(
-            final Path dataDir, final Path dbDir) {
-        return new KeyValueStorageProviderBuilder()
-                .withStorageFactory(
-                        new RocksDBKeyValueStorageFactory(
-                                () ->
-                                        new RocksDBFactoryConfiguration(
-                                                RocksDBCLIOptions.DEFAULT_MAX_OPEN_FILES,
-                                                RocksDBCLIOptions.DEFAULT_MAX_BACKGROUND_COMPACTIONS,
-                                                RocksDBCLIOptions.DEFAULT_BACKGROUND_THREAD_COUNT,
-                                                RocksDBCLIOptions.DEFAULT_CACHE_CAPACITY),
-                                Arrays.asList(KeyValueSegmentIdentifier.values()),
-                                RocksDBMetricsFactory.PUBLIC_ROCKS_DB_METRICS))
-                .withCommonConfiguration(new BelaConfigurationImpl(dataDir, dbDir))
-                .withMetricsSystem(new NoOpMetricsSystem())
-                .build();
-    }
 
     @NotNull
     private static Panel getCommandsPanel(final String[] strings) {
@@ -146,7 +105,7 @@ public class BlockChainBrowserWindow implements LanternaWindow, WindowListener {
 
     @Override
     public void onInput(final Window basePane, final KeyStroke keyStroke, final AtomicBoolean deliverEvent) {
-        switch(keyStroke.getKeyType()) {
+        switch (keyStroke.getKeyType()) {
             case ArrowLeft:
                 browser = browser.moveBackward();
                 break;

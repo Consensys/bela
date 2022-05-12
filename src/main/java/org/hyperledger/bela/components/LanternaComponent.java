@@ -21,5 +21,5 @@ import com.googlecode.lanterna.gui2.Component;
 
 public interface LanternaComponent<T extends Component> {
 
-  T createComponent();
+    T createComponent();
 }

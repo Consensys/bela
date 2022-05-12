@@ -22,19 +22,19 @@ import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
 
 public class MessagePanel implements LanternaComponent<Panel> {
-  private final String message;
+    private final String message;
 
-  public MessagePanel(final String message) {
-    this.message = message;
-  }
+    public MessagePanel(final String message) {
+        this.message = message;
+    }
 
-  @Override
-  public Panel createComponent() {
-    Panel panel = new Panel();
-    panel.setLayoutManager(new GridLayout(2));
+    @Override
+    public Panel createComponent() {
+        Panel panel = new Panel();
+        panel.setLayoutManager(new GridLayout(2));
 
-    final Label messageLbl = new Label(message);
-    panel.addComponent(messageLbl);
-    return panel;
-  }
+        final Label messageLbl = new Label(message);
+        panel.addComponent(messageLbl);
+        return panel;
+    }
 }

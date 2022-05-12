@@ -1,7 +1,6 @@
-package org.hyperledger.bela.trie;
+package org.hyperledger.bela.utils.bonsai;
 
 import javax.annotation.Nullable;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -18,37 +17,81 @@ import org.hyperledger.besu.ethereum.trie.TrieNodeDecoder;
 import org.hyperledger.besu.ethereum.worldstate.StateTrieAccountValue;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 
-public class TrieTraversal {
+public class BonsaiTraversal {
 
-    private static final Bytes CHAIN_HEAD_KEY =
-            Bytes.wrap("chainHeadHash".getBytes(StandardCharsets.UTF_8));
-    private static final Bytes VARIABLES_PREFIX = Bytes.of(1);
+    int visited = 0;
 
-    private final NodeRetriever storageNodeFinder;
-    private final NodeFoundListener nodeFoundListener;
+    //    private final KeyValueStorage accountStorage;
+    //    private final KeyValueStorage storageStorage;
+    private final KeyValueStorage trieBranchStorage;
+    private BonsaiListener listener;
+    private final KeyValueStorage codeStorage;
+    private Node<Bytes> root;
+    //    private final KeyValueStorage trieLogStorage;
+    //    private final Pair<KeyValueStorage, KeyValueStorage> snapTrieBranchBucketsStorage;
 
-    private final KeyValueStorage blockchainStorage;
+    public BonsaiTraversal(final StorageProvider provider, BonsaiListener listener) {
+        //        accountStorage =
+        //
+        // provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_INFO_STATE);
+        codeStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.CODE_STORAGE);
+        //        storageStorage =
+        //
+        // provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_STORAGE_STORAGE);
+        trieBranchStorage =
+                provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_BRANCH_STORAGE);
+        //        trieLogStorage =
+        //
+        // provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_LOG_STORAGE);
 
-    public TrieTraversal(final StorageProvider storageProvider, final NodeRetriever storageNodeFinder, final NodeFoundListener nodeFoundListener) {
-        this.storageNodeFinder = storageNodeFinder;
-        blockchainStorage = storageProvider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.BLOCKCHAIN);
-        this.nodeFoundListener = nodeFoundListener;
+        this.listener = listener;
     }
 
-    public void start() {
-        final Bytes32 rootHash = blockchainStorage.get(Bytes.concatenate(VARIABLES_PREFIX, CHAIN_HEAD_KEY)
-                        .toArrayUnsafe()).map(Bytes32::wrap)
-                .orElseThrow(() -> new RuntimeException("root hash not found"));
+    public void traverse() {
 
-        Node<Bytes> root = getAccountNodeValue(rootHash, Bytes.EMPTY);
+        final Hash x =
+                trieBranchStorage
+                        .get(Bytes.EMPTY.toArrayUnsafe())
+                        .map(Bytes::wrap)
+                        .map(Hash::hash)
+                        .orElseThrow();
+        root = getAccountNodeValue(x, Bytes.EMPTY);
+        //        breakTree(x);
+        listener.root(root.getHash());
         traverseAccountTrie(root);
     }
 
+  /*    private void breakTree(final Hash x) {
+      MerklePatriciaTrie<Bytes,Bytes> trie =  new StoredMerklePatriciaTrie<>(
+              new StoredNodeFactory<>(
+                      (location, hash) -> Optional.ofNullable(getAccountNodeValue(hash, location).getRlp()), Function.identity(), Function.identity()),
+              x);
+      trie.entriesFrom(Bytes32.ZERO, 1).entrySet().stream().findFirst().ifPresent(
+              account -> {
+                  final StateTrieAccountValue accountValue = StateTrieAccountValue.readFrom(RLP.input(account.getValue()));
+                  final StateTrieAccountValue updatedAccountValue
+                          = new StateTrieAccountValue(accountValue.getNonce(), accountValue.getBalance().add(Wei.ONE), accountValue.getStorageRoot(), accountValue.getCodeHash());
+                  final Bytes dataToSave = RLP.encode(updatedAccountValue::writeTo);
+                  trie.put(account.getKey(), dataToSave);
+                  final KeyValueStorageTransaction transaction = trieBranchStorage.startTransaction();
+                  final AtomicInteger countNode = new AtomicInteger();
+                  trie.commit((location, hash, value) -> {
+                      if(countNode.getAndIncrement()==0){
+                          System.out.println("Updated account node "+account.getKey()+" with "+value);
+                          transaction.put(location.toArrayUnsafe(), dataToSave.toArrayUnsafe());
+                      }
+                  });
+                  transaction.commit();
+              }
+      );
+  }*/
 
     public void traverseAccountTrie(final Node<Bytes> parentNode) {
         if (parentNode == null) {
             return;
         }
+        listener.visited(BonsaiTraversalTrieType.Account);
+
         final List<Node<Bytes>> nodes =
                 TrieNodeDecoder.decodeNodes(parentNode.getLocation().orElseThrow(), parentNode.getRlp());
         nodes.forEach(
@@ -67,24 +110,18 @@ public class TrieTraversal {
                                                             Bytes.concatenate(
                                                                     parentNode.getLocation()
                                                                             .orElseThrow(), node.getPath()))));
-                            System.out.println("Found account hash " + accountHash);
                             // Add code, if appropriate
                             if (!accountValue.getCodeHash().equals(Hash.EMPTY)) {
                                 // traverse code
                                 final Optional<Bytes> code =
-                                        storageNodeFinder.getCode(accountHash, accountValue.getCodeHash());
+                                        codeStorage.get(accountHash.toArrayUnsafe()).map(Bytes::wrap);
                                 if (code.isEmpty()) {
-                                    System.err.format(
-                                            "missing code hash %s for account %s",
-                                            accountValue.getCodeHash(), accountHash);
+                                    listener.missingCodeHash(accountValue.getCodeHash(), accountHash);
                                 } else {
                                     final Hash foundCodeHash = Hash.hash(code.orElseThrow());
                                     if (!foundCodeHash.equals(accountValue.getCodeHash())) {
-                                        System.err.format(
-                                                "invalid code for account %s (expected %s and found %s)",
-                                                accountHash, accountValue.getCodeHash(), foundCodeHash);
+                                        listener.invalidCode(accountHash, accountValue.getCodeHash(), foundCodeHash);
                                     }
-                                    nodeFoundListener.onCode(accountHash, code.orElseThrow());
                                 }
                             }
                             // Add storage, if appropriate
@@ -94,17 +131,18 @@ public class TrieTraversal {
                                         getStorageNodeValue(accountValue.getStorageRoot(), accountHash, Bytes.EMPTY));
                             }
                         } else {
-                            System.err.println("Missing value for node " + node.getHash().toHexString());
+                            listener.missingValueForNode(node.getHash());
                         }
                     }
                 });
     }
 
-
     public void traverseStorageTrie(final Bytes32 accountHash, final Node<Bytes> parentNode) {
         if (parentNode == null) {
             return;
         }
+        listener.visited(BonsaiTraversalTrieType.Storage);
+
         final List<Node<Bytes>> nodes =
                 TrieNodeDecoder.decodeNodes(parentNode.getLocation().orElseThrow(), parentNode.getRlp());
         nodes.forEach(
@@ -119,19 +157,15 @@ public class TrieTraversal {
 
     @Nullable
     private Node<Bytes> getAccountNodeValue(final Bytes32 hash, final Bytes location) {
-        final Optional<Bytes> bytes = storageNodeFinder.getAccountNode(location, hash);
+        final Optional<Bytes> bytes = trieBranchStorage.get(location.toArrayUnsafe()).map(Bytes::wrap);
         if (bytes.isEmpty()) {
-            System.err.format("missing account trie node for hash %s and location %s", hash, location);
+            listener.missingAccountTrieForHash(hash, location);
             return null;
         }
         final Hash foundHashNode = Hash.hash(bytes.orElseThrow());
         if (!foundHashNode.equals(hash)) {
-            System.err.format(
-                    "invalid account trie node for hash %s and location %s (found %s)",
-                    hash, location, foundHashNode);
+            listener.invalidAccountTrieForHash(hash, location, foundHashNode);
             return null;
-        } else {
-            nodeFoundListener.onAccountNode(location, bytes.orElseThrow());
         }
         return TrieNodeDecoder.decode(location, bytes.get());
     }
@@ -139,19 +173,17 @@ public class TrieTraversal {
     private Node<Bytes> getStorageNodeValue(
             final Bytes32 hash, final Bytes32 accountHash, final Bytes location) {
         final Optional<Bytes> bytes =
-                storageNodeFinder.getStorageNode(accountHash, location, hash);
+                trieBranchStorage
+                        .get(Bytes.concatenate(accountHash, location).toArrayUnsafe())
+                        .map(Bytes::wrap);
         if (bytes.isEmpty()) {
-            System.err.format("missing storage trie node for hash %s and location %s", hash, location);
+            listener.missingStorageTrieForHash(hash, location);
             return null;
         }
         final Hash foundHashNode = Hash.hash(bytes.orElseThrow());
         if (!foundHashNode.equals(hash)) {
-            System.err.format(
-                    "invalid storage trie node for hash %s and location %s (found %s)",
-                    hash, location, foundHashNode);
+            listener.invalidStorageTrieForHash(hash, location, foundHashNode);
             return null;
-        } else {
-            nodeFoundListener.onStorageNode(accountHash, location, bytes.orElseThrow());
         }
         return TrieNodeDecoder.decode(location, bytes.get());
     }
@@ -161,4 +193,8 @@ public class TrieTraversal {
         return !Objects.equals(node.getHash(), parentNode.getHash()) && node.isReferencedByHash();
     }
 
+
+    public String getRoot() {
+        return root.getHash().toHexString();
+    }
 }

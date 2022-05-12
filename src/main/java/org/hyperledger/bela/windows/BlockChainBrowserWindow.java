@@ -17,7 +17,7 @@ import com.googlecode.lanterna.gui2.WindowListener;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
 import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
 import com.googlecode.lanterna.input.KeyStroke;
-import org.hyperledger.bela.BlockChainBrowser;
+import org.hyperledger.bela.utils.BlockChainBrowser;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.datatypes.Hash;
 import org.jetbrains.annotations.NotNull;

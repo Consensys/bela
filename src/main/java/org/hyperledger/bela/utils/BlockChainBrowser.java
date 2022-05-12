@@ -15,12 +15,12 @@
  *
  */
 
-package org.hyperledger.bela;
+package org.hyperledger.bela.utils;
 
 import java.util.Optional;
 import com.googlecode.lanterna.gui2.Component;
 import com.googlecode.lanterna.gui2.Panel;
-import org.hyperledger.bela.ConsensusDetector.CONSENSUS_TYPE;
+import org.hyperledger.bela.utils.ConsensusDetector.CONSENSUS_TYPE;
 import org.hyperledger.bela.components.BlockPanel;
 import org.hyperledger.bela.components.LanternaComponent;
 import org.hyperledger.bela.components.SummaryPanel;

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.google.common.base.CharMatcher;
 import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
@@ -64,7 +65,7 @@ public class MainWindow implements LanternaWindow {
             gui.addWindowAndWait(window.createWindow());
         } catch (Exception e) {
             e.printStackTrace();
-            MessageDialog.showMessageDialog(gui, "error", e.getMessage());
+            MessageDialog.showMessageDialog(gui, "error", CharMatcher.javaIsoControl().removeFrom(e.getMessage()));
 
         }
     }

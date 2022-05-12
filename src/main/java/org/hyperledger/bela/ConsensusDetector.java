@@ -18,11 +18,15 @@ public class ConsensusDetector {
     var genesisBlockHeader = storage.getBlockHeader(genesisHash).orElseThrow();
     var extraData = genesisBlockHeader.getExtraData();
 
-    if (isIbft2ExtraData(extraData)) {
-      return CONSENSUS_TYPE.IBFT2;
-    } else if (isQbftExtraData(extraData)) {
-      return CONSENSUS_TYPE.QBFT;
-    } else {
+    try {
+      if (isIbft2ExtraData(extraData)) {
+        return CONSENSUS_TYPE.IBFT2;
+      } else if (isQbftExtraData(extraData)) {
+        return CONSENSUS_TYPE.QBFT;
+      } else {
+        return CONSENSUS_TYPE.ETH_HASH;
+      }
+    } catch (Exception e) {
       return CONSENSUS_TYPE.ETH_HASH;
     }
   }

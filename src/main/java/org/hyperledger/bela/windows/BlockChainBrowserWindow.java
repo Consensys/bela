@@ -51,7 +51,7 @@ public class BlockChainBrowserWindow implements LanternaWindow {
                 throw new RuntimeException(e);
             }
         }
-        provider = createKeyValueStorageProvider(belaConfiguration.getStoragePath(), belaConfiguration.getDataPath());
+        provider = createKeyValueStorageProvider(belaConfiguration.getDataPath(), belaConfiguration.getStoragePath());
         browser = BlockChainBrowser.fromProvider(provider);
 
         // Create window to hold the panel

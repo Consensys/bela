@@ -21,7 +21,9 @@ public class ConfigWindow  implements LanternaWindow{
     }
 
     private static final  String DATA_PATH = "DATA_PATH";
+    private static final  String DATA_PATH_DEFAULT = ".";
     private static final  String STORAGE_PATH = "STORAGE_PATH";
+    private static final  String STORAGE_PATH_DEFAULT = "./database";
 
 
     @Override
@@ -43,13 +45,13 @@ public class ConfigWindow  implements LanternaWindow{
 
 
         panel.addComponent(new Label("Data Path"));
-        final TextBox dataPath = new TextBox(preferences.get(DATA_PATH,"."));
+        final TextBox dataPath = new TextBox(preferences.get(DATA_PATH,DATA_PATH_DEFAULT));
         final Pattern pathPattern = Pattern.compile("^/|(/[a-zA-Z0-9_-]+)+$");
         dataPath.setValidationPattern(pathPattern);
         panel.addComponent(dataPath);
 
         panel.addComponent(new Label("Storage Path"));
-        final TextBox storagePath = new TextBox(preferences.get(STORAGE_PATH,".").toString());
+        final TextBox storagePath = new TextBox(preferences.get(STORAGE_PATH,STORAGE_PATH_DEFAULT));
         storagePath.setValidationPattern(pathPattern);
         panel.addComponent(storagePath);
 
@@ -63,5 +65,9 @@ public class ConfigWindow  implements LanternaWindow{
 
         window.setComponent(panel);
         return window;
+    }
+
+    public BelaConfigurationImpl createBelaConfiguration() {
+        return new BelaConfigurationImpl(Path.of(preferences.get(DATA_PATH,DATA_PATH_DEFAULT)),Path.of(STORAGE_PATH, STORAGE_PATH_DEFAULT));
     }
 }

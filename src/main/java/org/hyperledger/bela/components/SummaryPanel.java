@@ -3,6 +3,7 @@ package org.hyperledger.bela.components;
 import com.googlecode.lanterna.gui2.GridLayout;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
+import org.hyperledger.besu.ethereum.core.Block;
 
 public class SummaryPanel implements LanternaComponent<Panel> {
     private final Label worldStateRoot = new Label("empty");
@@ -35,5 +36,10 @@ public class SummaryPanel implements LanternaComponent<Panel> {
 
 
         return panel;
+    }
+
+    public void updateWith(final Block chainHeadBlock) {
+        updateWith(chainHeadBlock.getHeader().getStateRoot().toHexString(), String.valueOf(chainHeadBlock.getHeader()
+                .getNumber()), chainHeadBlock.getHash().toHexString());
     }
 }

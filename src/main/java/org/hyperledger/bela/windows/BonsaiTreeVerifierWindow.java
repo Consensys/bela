@@ -74,10 +74,6 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, WindowListener,
 
         window.addWindowListener(this);
 
-        window.handleInput(new KeyStroke('a', false, false, false));
-        window.handleInput(new KeyStroke('s', false, false, false));
-        window.handleInput(new KeyStroke('c', false, false, false));
-
         window.setComponent(panel);
 
         return window;

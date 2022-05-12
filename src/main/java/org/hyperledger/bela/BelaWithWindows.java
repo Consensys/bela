@@ -26,7 +26,7 @@ public class BelaWithWindows {
             final StorageProviderFactory storageProviderFactory = new StorageProviderFactory(preferences);
 
             mainWindow.registerWindow(config);
-            mainWindow.registerWindow(new BlockChainBrowserWindow(storageProviderFactory));
+            mainWindow.registerWindow(new BlockChainBrowserWindow(storageProviderFactory, textGUI));
             mainWindow.registerWindow(new BonsaiTreeVerifierWindow(storageProviderFactory));
 
             textGUI.addWindowAndWait(mainWindow.createWindow());

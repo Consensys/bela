@@ -29,7 +29,6 @@ import org.hyperledger.besu.consensus.common.bft.BftBlockHeaderFunctions;
 import org.hyperledger.besu.consensus.qbft.QbftExtraDataCodec;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateKeyValueStorage;
-import org.hyperledger.besu.ethereum.chain.Blockchain;
 import org.hyperledger.besu.ethereum.chain.DefaultBlockchain;
 import org.hyperledger.besu.ethereum.core.Block;
 import org.hyperledger.besu.ethereum.core.BlockHeaderFunctions;
@@ -44,14 +43,14 @@ import static org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIden
 public class BlockChainBrowser {
 
     private final BonsaiWorldStateKeyValueStorage worldStateStorage;
-    private final Blockchain blockchain;
+    private final DefaultBlockchain blockchain;
     private Optional<BlockResult> blockResult;
     private BlockPanel blockPanel;
     private SummaryPanel summaryPanel;
 
 
     public BlockChainBrowser(
-            final Blockchain blockchain,
+            final DefaultBlockchain blockchain,
             final BonsaiWorldStateKeyValueStorage worldStateStorage) {
         this.blockchain = blockchain;
         this.worldStateStorage = worldStateStorage;
@@ -82,7 +81,7 @@ public class BlockChainBrowser {
                 .create(blockchainStorage, new NoOpMetricsSystem(), 0L);
 
         var worldStateStorage = new BonsaiWorldStateKeyValueStorage(provider);
-        return new BlockChainBrowser(blockchain/*, worldStateArchive*/, worldStateStorage);
+        return new BlockChainBrowser((DefaultBlockchain) blockchain/*, worldStateArchive*/, worldStateStorage);
     }
 
 
@@ -110,9 +109,7 @@ public class BlockChainBrowser {
 
     private void updatePanels(final Optional<BlockResult> blockResult) {
         this.blockResult.ifPresent(result -> blockPanel.updateWithBlock(result));
-        this.blockResult.ifPresent(result -> this.summaryPanel.updateWith(
-                result.getStateRoot(),
-                String.valueOf(result.getNumber()), result.getHash()));
+        this.blockResult.ifPresent(result -> this.summaryPanel.updateWith(blockchain.getChainHeadBlock()));
     }
 
     public BlockChainBrowser moveForward() {
@@ -142,5 +139,27 @@ public class BlockChainBrowser {
 
     public String getBlockHash() {
         return blockResult.get().getHash();
+    }
+
+    public void rollHead() {
+        if (blockResult.isPresent()) {
+            blockchain.rewindToBlock(Hash.fromHexString(blockResult.get().getHash()));
+            updateSummary();
+        }
+    }
+
+    private void updateSummary() {
+        final Block chainHeadBlock = blockchain.getChainHeadBlock();
+        summaryPanel.updateWith(chainHeadBlock);
+    }
+
+    public void moveByHash(final Hash hash) {
+        blockResult = getBlockByHash(hash);
+        updatePanels(blockResult);
+    }
+
+    public void moveByNumber(final long number) {
+        blockResult = getBlockByNumber(number);
+        updatePanels(blockResult);
     }
 }

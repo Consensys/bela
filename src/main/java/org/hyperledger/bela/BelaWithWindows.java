@@ -8,6 +8,7 @@ import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import org.hyperledger.bela.config.BelaConfigurationImpl;
+import org.hyperledger.bela.windows.BlockChainBrowserWindow;
 import org.hyperledger.bela.windows.ConfigWindow;
 import org.hyperledger.bela.windows.MainWindow;
 
@@ -20,7 +21,10 @@ public class BelaWithWindows {
 
             MainWindow mainWindow = new MainWindow(textGUI);
 
-            mainWindow.registerWindow(new ConfigWindow(Preferences.userNodeForPackage(Bela.class)));
+            final Preferences preferences = Preferences.userNodeForPackage(Bela.class);
+            final ConfigWindow config = new ConfigWindow(preferences);
+            mainWindow.registerWindow(config);
+            mainWindow.registerWindow(new BlockChainBrowserWindow(config));
 
             textGUI.addWindowAndWait(mainWindow.createWindow());
         } catch (IOException e) {

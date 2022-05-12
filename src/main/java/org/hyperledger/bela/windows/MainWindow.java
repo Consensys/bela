@@ -1,18 +1,18 @@
 package org.hyperledger.bela.windows;
 
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.fasterxml.jackson.databind.deser.std.CollectionDeserializer;
 import com.googlecode.lanterna.gui2.BasicWindow;
-import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
+import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
+import com.googlecode.lanterna.gui2.dialogs.MessageDialogBuilder;
 import com.googlecode.lanterna.gui2.menu.Menu;
 import com.googlecode.lanterna.gui2.menu.MenuBar;
 import com.googlecode.lanterna.gui2.menu.MenuItem;
+import org.hyperledger.bela.components.MessagePanel;
 
 public class MainWindow implements LanternaWindow{
 
@@ -51,7 +51,7 @@ public class MainWindow implements LanternaWindow{
             bar.add(groups.get(menuGroup));
         }
         for (LanternaWindow lanternaWindow : windows) {
-            groups.get(lanternaWindow.group()).add(new MenuItem(lanternaWindow.label(),()->launchWindow(lanternaWindow.createWindow())));
+            groups.get(lanternaWindow.group()).add(new MenuItem(lanternaWindow.label(),()->launchWindow(lanternaWindow)));
         }
 
         groups.get(MenuGroup.FILE).add(new MenuItem("Close...", window::close));
@@ -60,7 +60,12 @@ public class MainWindow implements LanternaWindow{
         return window;
     }
 
-    private void launchWindow(final Window window) {
-        gui.addWindowAndWait(window);
+    private void launchWindow(final LanternaWindow window) {
+        try {
+            gui.addWindowAndWait(window.createWindow());
+        } catch (Exception e){
+            MessageDialog.showMessageDialog(gui,"error",e.getMessage());
+
+        }
     }
 }

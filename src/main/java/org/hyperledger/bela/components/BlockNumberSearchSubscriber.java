@@ -18,5 +18,5 @@
 package org.hyperledger.bela.components;
 
 public interface BlockNumberSearchSubscriber {
-  void newBlockNumber(long blockNumber);
+    void newBlockNumber(long blockNumber);
 }

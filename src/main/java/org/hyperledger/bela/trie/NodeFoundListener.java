@@ -2,7 +2,6 @@ package org.hyperledger.bela.trie;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.hyperledger.besu.datatypes.Hash;
 
 public interface NodeFoundListener {
 

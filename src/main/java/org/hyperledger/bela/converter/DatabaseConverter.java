@@ -1,5 +1,8 @@
 package org.hyperledger.bela.converter;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.trie.NodeFoundListener;
@@ -13,21 +16,17 @@ import org.hyperledger.besu.ethereum.trie.MerklePatriciaTrie;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorageTransaction;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Optional;
-
 public class DatabaseConverter {
 
     private final StorageProvider provider;
 
-    public DatabaseConverter(final Path dataDir){
+    public DatabaseConverter(final Path dataDir) {
         this.provider =
                 DataUtils.createKeyValueStorageProvider(dataDir, dataDir.resolve("database"));
     }
 
 
-    public void convertToBonsai(){
+    public void convertToBonsai() {
         KeyValueStorage forestBranchStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.WORLD_STATE);
         KeyValueStorage trieBranchStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_BRANCH_STORAGE);
         KeyValueStorage codeStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.CODE_STORAGE);
@@ -66,7 +65,8 @@ public class DatabaseConverter {
             @Override
             public void onStorageNode(Bytes32 accountHash, Bytes location, Bytes value) {
                 KeyValueStorageTransaction keyValueStorageTransaction = trieBranchStorage.startTransaction();
-                keyValueStorageTransaction.put(Bytes.concatenate(accountHash, location).toArrayUnsafe(), value.toArrayUnsafe());
+                keyValueStorageTransaction.put(Bytes.concatenate(accountHash, location)
+                        .toArrayUnsafe(), value.toArrayUnsafe());
                 keyValueStorageTransaction.commit();
             }
 
@@ -80,7 +80,7 @@ public class DatabaseConverter {
         tr.start();
     }
 
-    public void convertToForest(){
+    public void convertToForest() {
         KeyValueStorage forestBranchStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.WORLD_STATE);
         KeyValueStorage trieBranchStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_BRANCH_STORAGE);
         TrieTraversal tr = new TrieTraversal(provider, new NodeRetriever() {
@@ -137,9 +137,9 @@ public class DatabaseConverter {
         final Path dataDir = Paths.get(args[0]);
         DatabaseConverter d = new DatabaseConverter(dataDir);
         final String convertTo = args[1];
-        if(convertTo.equals("Bonsai")){
+        if (convertTo.equals("Bonsai")) {
             d.convertToBonsai();
-        }else {
+        } else {
             d.convertToForest();
         }
     }

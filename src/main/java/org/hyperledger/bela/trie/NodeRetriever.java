@@ -1,9 +1,8 @@
 package org.hyperledger.bela.trie;
 
+import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-
-import java.util.Optional;
 
 public interface NodeRetriever {
 

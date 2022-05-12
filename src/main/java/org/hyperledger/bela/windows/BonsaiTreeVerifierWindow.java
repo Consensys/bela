@@ -42,6 +42,7 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, WindowListener,
 
     public BonsaiTreeVerifierWindow(final StorageProviderFactory storageProviderFactory) {
         this.storageProviderFactory = storageProviderFactory;
+        logTextBox.setReadOnly(true);
     }
 
     @Override
@@ -56,9 +57,6 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, WindowListener,
 
     @Override
     public Window createWindow() {
-        if (window != null) {
-            return window;
-        }
         window = new BasicWindow("BonsaiTreeVerifier");
         window.setHints(List.of(Window.Hint.FULL_SCREEN));
 
@@ -140,6 +138,7 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, WindowListener,
 
     private void startVerifier() {
         if (execution == null) {
+            logTextBox.setText("");
             visited.set(0);
             final StorageProvider provider = storageProviderFactory.createProvider();
             execution = executorService.submit(() -> {
@@ -158,7 +157,7 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, WindowListener,
 
     @Override
     public void root(final Bytes32 hash) {
-        logTextBox.addLine("Working with root " + hash);
+        logTextBox.setText("Working with root " + hash);
     }
 
     @Override
@@ -181,6 +180,7 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, WindowListener,
     @Override
     public void visited(final BonsaiTraversalTrieType type) {
         counterLabel.setText(String.valueOf(visited.incrementAndGet()));
+        Thread.yield();
     }
 
     @Override

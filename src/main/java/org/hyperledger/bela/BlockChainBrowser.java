@@ -20,11 +20,9 @@ package org.hyperledger.bela;
 import java.util.Optional;
 import com.googlecode.lanterna.gui2.Component;
 import com.googlecode.lanterna.gui2.Panel;
-import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.bela.ConsensusDetector.CONSENSUS_TYPE;
 import org.hyperledger.bela.components.BlockPanel;
 import org.hyperledger.bela.components.LanternaComponent;
-import org.hyperledger.bela.components.MessagePanel;
 import org.hyperledger.bela.components.SummaryPanel;
 import org.hyperledger.bela.model.BlockResult;
 import org.hyperledger.besu.consensus.common.bft.BftBlockHeaderFunctions;
@@ -48,6 +46,8 @@ public class BlockChainBrowser {
     private final BonsaiWorldStateKeyValueStorage worldStateStorage;
     private final Blockchain blockchain;
     private Optional<BlockResult> blockResult;
+    private BlockPanel blockPanel;
+    private SummaryPanel summaryPanel;
 
 
     public BlockChainBrowser(
@@ -57,7 +57,13 @@ public class BlockChainBrowser {
         this.worldStateStorage = worldStateStorage;
         //fixme
         this.blockResult = getChainHead();
+        blockResult.ifPresent(result -> this.blockPanel = new BlockPanel(result));
+        blockResult.ifPresent(result -> this.summaryPanel = new SummaryPanel(
+                result.getStateRoot(),
+                String.valueOf(result.getNumber()), result.getHash()));
+
     }
+
 
     public static BlockChainBrowser fromProvider(final StorageProvider provider) {
         final KeyValueStorage keyValueStorage = provider.getStorageBySegmentIdentifier(BLOCKCHAIN);
@@ -81,32 +87,41 @@ public class BlockChainBrowser {
 
 
     public LanternaComponent<Panel> blockPanel() {
-        return (blockResult)
-                .<LanternaComponent<Panel>>map(BlockPanel::new)
-                .orElseGet(() -> new MessagePanel("block not found"));
+        return blockPanel;
     }
 
-  public LanternaComponent<? extends Component> showSummaryPanel() {
-    final String stateRoot = blockResult.get().getStateRoot();
-    return new SummaryPanel(
-            stateRoot,
-        blockchain.getBlockByNumber(blockResult.get().getNumber()));
-  }
+    public LanternaComponent<? extends Component> showSummaryPanel() {
+        return summaryPanel;
+    }
 
     public Optional<BlockResult> getChainHead() {
         return getBlockByHash(blockchain.getChainHead().getHash());
     }
 
     public BlockChainBrowser moveBackward() {
-        blockResult.ifPresent(res -> getBlockByHash(Hash.fromHexString(res.getParentHash()))
-                .ifPresent(newResult -> this.blockResult = Optional.of(newResult)));
+        if (blockResult.isPresent()) {
+            blockResult = getBlockByHash(Hash.fromHexString(blockResult.get().getParentHash()));
+        } else {
+            blockResult = getChainHead();
+        }
+        updatePanels(blockResult);
         return this;
     }
 
+    private void updatePanels(final Optional<BlockResult> blockResult) {
+        this.blockResult.ifPresent(result -> blockPanel.updateWithBlock(result));
+        this.blockResult.ifPresent(result -> this.summaryPanel.updateWith(
+                result.getStateRoot(),
+                String.valueOf(result.getNumber()), result.getHash()));
+    }
+
     public BlockChainBrowser moveForward() {
-        blockResult.ifPresent(res ->
-                getBlockByNumber(res.getNumber() + 1)
-                        .ifPresent(newResult -> this.blockResult = Optional.of(newResult)));
+        if (blockResult.isPresent()) {
+            blockResult = getBlockByNumber(blockResult.get().getNumber() + 1);
+        } else {
+            blockResult = getBlockByNumber(0);
+        }
+        updatePanels(blockResult);
         return this;
     }
 
@@ -115,17 +130,17 @@ public class BlockChainBrowser {
                 .flatMap(this::getBlockByHash);
     }
 
-  public Optional<BlockResult> getBlockByHash(final Hash blockHash) {
-    return blockchain.getBlockHeader(blockHash)
-        .flatMap(header -> blockchain.getBlockBody(header.getHash())
-            .map(body -> new Block(header, body)))
-        .map(block -> new BlockResult(
-            block,
-            blockchain.getTotalDifficultyByHash(block.getHash()))
-        );
-  }
+    public Optional<BlockResult> getBlockByHash(final Hash blockHash) {
+        return blockchain.getBlockHeader(blockHash)
+                .flatMap(header -> blockchain.getBlockBody(header.getHash())
+                        .map(body -> new Block(header, body)))
+                .map(block -> new BlockResult(
+                        block,
+                        blockchain.getTotalDifficultyByHash(block.getHash()))
+                );
+    }
 
-  public String getBlockHash() {
-    return blockResult.get().getHash();
-  }
+    public String getBlockHash() {
+        return blockResult.get().getHash();
+    }
 }

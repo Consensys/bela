@@ -17,14 +17,19 @@
 
 package org.hyperledger.bela;
 
+import static org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier.BLOCKCHAIN;
+
+import org.hyperledger.bela.ConsensusDetector.CONSENSUS_TYPE;
+import org.hyperledger.besu.consensus.common.bft.BftBlockHeaderFunctions;
+import org.hyperledger.besu.consensus.qbft.QbftExtraDataCodec;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateKeyValueStorage;
 import org.hyperledger.besu.ethereum.chain.Blockchain;
 import org.hyperledger.besu.ethereum.chain.DefaultBlockchain;
 import org.hyperledger.besu.ethereum.core.Block;
+import org.hyperledger.besu.ethereum.core.BlockHeaderFunctions;
 import org.hyperledger.besu.ethereum.mainnet.MainnetBlockHeaderFunctions;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
-import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueStoragePrefixedKeyBlockchainStorage;
 import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
 
@@ -32,15 +37,13 @@ import java.util.Optional;
 
 import com.googlecode.lanterna.gui2.Component;
 import com.googlecode.lanterna.gui2.Panel;
-import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.bela.components.BlockPanel;
 import org.hyperledger.bela.components.LanternaComponent;
 import org.hyperledger.bela.components.MessagePanel;
 import org.hyperledger.bela.components.SummaryPanel;
 import org.hyperledger.bela.model.BlockResult;
+import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 
 public class BlockChainBrowser {
 
@@ -59,9 +62,17 @@ public class BlockChainBrowser {
   }
 
   public static BlockChainBrowser fromProvider(final StorageProvider provider) {
-    var blockchainStorage = new KeyValueStoragePrefixedKeyBlockchainStorage(
-        provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.BLOCKCHAIN),
-        new MainnetBlockHeaderFunctions());
+    final KeyValueStorage keyValueStorage = provider.getStorageBySegmentIdentifier(BLOCKCHAIN);
+    final CONSENSUS_TYPE consensusType = ConsensusDetector.detectConsensusMechanism(
+        keyValueStorage);
+    final BlockHeaderFunctions blockHeaderFunction = switch (consensusType) {
+      case IBFT2 -> BftBlockHeaderFunctions.forOnchainBlock(new QbftExtraDataCodec());
+      case QBFT -> BftBlockHeaderFunctions.forOnchainBlock(new QbftExtraDataCodec());
+      default -> new MainnetBlockHeaderFunctions();
+    };
+
+    var blockchainStorage = new KeyValueStoragePrefixedKeyBlockchainStorage(keyValueStorage,
+        blockHeaderFunction);
 
     var blockchain = DefaultBlockchain
         .create(blockchainStorage,new NoOpMetricsSystem(), 0L);
@@ -69,6 +80,7 @@ public class BlockChainBrowser {
     var worldStateStorage = new BonsaiWorldStateKeyValueStorage(provider);
     return new BlockChainBrowser(blockchain/*, worldStateArchive*/, worldStateStorage);
   }
+
 
   public LanternaComponent<Panel> blockPanel() {
     return (blockResult)

@@ -1,6 +1,7 @@
 package org.hyperledger.bela.windows;
 
 import java.nio.file.Path;
+import java.util.prefs.Preferences;
 import java.util.regex.Pattern;
 import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.Button;
@@ -13,11 +14,15 @@ import org.hyperledger.bela.config.BelaConfigurationImpl;
 
 public class ConfigWindow  implements LanternaWindow{
 
-    BelaConfigurationImpl configuration;
+    Preferences preferences ;
 
-    public ConfigWindow(final BelaConfigurationImpl configuration) {
-        this.configuration = configuration;
+    public ConfigWindow(final Preferences preferences) {
+        this.preferences = preferences;
     }
+
+    private static final  String DATA_PATH = "DATA_PATH";
+    private static final  String STORAGE_PATH = "STORAGE_PATH";
+
 
     @Override
     public String label() {
@@ -38,19 +43,19 @@ public class ConfigWindow  implements LanternaWindow{
 
 
         panel.addComponent(new Label("Data Path"));
-        final TextBox dataPath = new TextBox(configuration.getDataPath().toString());
+        final TextBox dataPath = new TextBox(preferences.get(DATA_PATH,"."));
         final Pattern pathPattern = Pattern.compile("^/|(/[a-zA-Z0-9_-]+)+$");
         dataPath.setValidationPattern(pathPattern);
         panel.addComponent(dataPath);
 
         panel.addComponent(new Label("Storage Path"));
-        final TextBox storagePath = new TextBox(configuration.getStoragePath().toString());
+        final TextBox storagePath = new TextBox(preferences.get(STORAGE_PATH,".").toString());
         storagePath.setValidationPattern(pathPattern);
         panel.addComponent(storagePath);
 
         panel.addComponent(new Button("Update...",() ->{
-            configuration.setDataPath(Path.of(dataPath.getText()));
-            configuration.setStoragePath(Path.of(storagePath.getText()));
+            preferences.put(DATA_PATH,dataPath.getText());
+            preferences.put(STORAGE_PATH, storagePath.getText());
         } ));
 
         panel.addComponent(new Button("Cancel...", window::close));

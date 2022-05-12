@@ -46,13 +46,10 @@ public class ConfigWindow  implements LanternaWindow{
 
         panel.addComponent(new Label("Data Path"));
         final TextBox dataPath = new TextBox(preferences.get(DATA_PATH,DATA_PATH_DEFAULT));
-        final Pattern pathPattern = Pattern.compile("^/|(/[a-zA-Z0-9_-]+)+$");
-        dataPath.setValidationPattern(pathPattern);
         panel.addComponent(dataPath);
 
         panel.addComponent(new Label("Storage Path"));
         final TextBox storagePath = new TextBox(preferences.get(STORAGE_PATH,STORAGE_PATH_DEFAULT));
-        storagePath.setValidationPattern(pathPattern);
         panel.addComponent(storagePath);
 
         panel.addComponent(new Button("Update...",() ->{

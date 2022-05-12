@@ -2,6 +2,7 @@ package org.hyperledger.bela;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.prefs.Preferences;
 import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.screen.Screen;
@@ -19,7 +20,7 @@ public class BelaWithWindows {
 
             MainWindow mainWindow = new MainWindow(textGUI);
 
-            mainWindow.registerWindow(new ConfigWindow(new BelaConfigurationImpl(Path.of(""), Path.of(""))));
+            mainWindow.registerWindow(new ConfigWindow(Preferences.userNodeForPackage(Bela.class)));
 
             textGUI.addWindowAndWait(mainWindow.createWindow());
         } catch (IOException e) {

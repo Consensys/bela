@@ -12,24 +12,29 @@ import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.Window;
+import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.gui2.WindowListener;
+import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
+import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
 import com.googlecode.lanterna.input.KeyStroke;
-import com.googlecode.lanterna.input.KeyType;
 import org.hyperledger.bela.BlockChainBrowser;
 import org.hyperledger.bela.utils.StorageProviderFactory;
+import org.hyperledger.besu.datatypes.Hash;
 import org.jetbrains.annotations.NotNull;
 
 public class BlockChainBrowserWindow implements LanternaWindow, WindowListener {
 
-    private static final String[] PREV_NEXT_BLOCK_COMMANDS = {"prev Block", "'<-'", "next Block", "'->'", "Close", "'c'"};
+    private static final String[] PREV_NEXT_BLOCK_COMMANDS = {"prev Block", "'<-'", "next Block", "'->'", "Close", "'c'", "roll Head", "'r'", "Hash?", "'h'", "Number?", "'n'"};
 
     private BlockChainBrowser browser;
     private BasicWindow window;
     private StorageProviderFactory storageProviderFactory;
+    private WindowBasedTextGUI gui;
 
-    public BlockChainBrowserWindow(final StorageProviderFactory storageProviderFactory) {
+    public BlockChainBrowserWindow(final StorageProviderFactory storageProviderFactory, final WindowBasedTextGUI gui) {
         this.storageProviderFactory = storageProviderFactory;
 
+        this.gui = gui;
     }
 
     @Override
@@ -66,10 +71,6 @@ public class BlockChainBrowserWindow implements LanternaWindow, WindowListener {
         panel.addComponent(browser.blockPanel().createComponent());
 
         window.addWindowListener(this);
-        window.handleInput(new KeyStroke(KeyType.Escape));
-        window.handleInput(new KeyStroke(KeyType.ArrowLeft));
-        window.handleInput(new KeyStroke(KeyType.ArrowRight));
-        window.handleInput(new KeyStroke('c', false, false, false));
         window.setComponent(panel);
         return window;
     }
@@ -122,10 +123,45 @@ public class BlockChainBrowserWindow implements LanternaWindow, WindowListener {
                     case 'c':
                         window.close();
                         break;
+                    case 'r':
+                        browser.rollHead();
+                        break;
+                    case 'h':
+                        findByHash();
+                        break;
+                    case 'n':
+                        findByNumber();
+                        break;
                     default:
                 }
                 break;
             default:
+        }
+    }
+
+    private void findByNumber() {
+        final String s = TextInputDialog.showDialog(gui, "Enter Number", "Number", "");
+        if (s == null) {
+            return;
+        }
+        try {
+            browser.moveByNumber(Long.parseLong(s));
+        } catch (Exception e) {
+            e.printStackTrace();
+            MessageDialog.showMessageDialog(gui, "error", e.getMessage());
+        }
+    }
+
+    private void findByHash() {
+        final String s = TextInputDialog.showDialog(gui, "Enter Hash", "Hash", browser.getBlockHash());
+        if (s == null) {
+            return;
+        }
+        try {
+            browser.moveByHash(Hash.fromHexString(s));
+        } catch (Exception e) {
+            e.printStackTrace();
+            MessageDialog.showMessageDialog(gui, "error", e.getMessage());
         }
     }
 

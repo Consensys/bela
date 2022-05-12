@@ -86,11 +86,12 @@ public class BlockChainBrowser {
                 .orElseGet(() -> new MessagePanel("block not found"));
     }
 
-    public LanternaComponent<? extends Component> showSummaryPanel() {
-        return new SummaryPanel(
-                worldStateStorage.getWorldStateRootHash().map(Bytes::toHexString).orElse(null),
-                blockchain.getChainHead());
-    }
+  public LanternaComponent<? extends Component> showSummaryPanel() {
+    final String stateRoot = blockResult.get().getStateRoot();
+    return new SummaryPanel(
+            stateRoot,
+        blockchain.getBlockByNumber(blockResult.get().getNumber()));
+  }
 
     public Optional<BlockResult> getChainHead() {
         return getBlockByHash(blockchain.getChainHead().getHash());
@@ -114,14 +115,17 @@ public class BlockChainBrowser {
                 .flatMap(this::getBlockByHash);
     }
 
-    public Optional<BlockResult> getBlockByHash(final Hash blockHash) {
-        return blockchain.getBlockHeader(blockHash)
-                .flatMap(header -> blockchain.getBlockBody(header.getHash())
-                        .map(body -> new Block(header, body)))
-                .map(block -> new BlockResult(
-                        block,
-                        blockchain.getTotalDifficultyByHash(block.getHash()))
-                );
-    }
+  public Optional<BlockResult> getBlockByHash(final Hash blockHash) {
+    return blockchain.getBlockHeader(blockHash)
+        .flatMap(header -> blockchain.getBlockBody(header.getHash())
+            .map(body -> new Block(header, body)))
+        .map(block -> new BlockResult(
+            block,
+            blockchain.getTotalDifficultyByHash(block.getHash()))
+        );
+  }
 
+  public String getBlockHash() {
+    return blockResult.get().getHash();
+  }
 }

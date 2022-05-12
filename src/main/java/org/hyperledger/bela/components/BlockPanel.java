@@ -80,7 +80,7 @@ public class BlockPanel implements LanternaComponent<Panel> {
     Panel outerPanel = new Panel();
     outerPanel.setLayoutManager(new BorderLayout());
     outerPanel.addComponent(panel, BorderLayout.Location.LEFT);
-    outerPanel.addComponent(new ScrollBar(Direction.VERTICAL), BorderLayout.Location.RIGHT);
+//    outerPanel.addComponent(new ScrollBar(Direction.VERTICAL), BorderLayout.Location.RIGHT);
 
     return outerPanel;
   }

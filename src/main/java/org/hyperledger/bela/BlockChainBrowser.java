@@ -32,10 +32,6 @@ import java.util.Optional;
 
 import com.googlecode.lanterna.gui2.Component;
 import com.googlecode.lanterna.gui2.Panel;
-import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
-import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.bela.components.BlockPanel;
 import org.hyperledger.bela.components.LanternaComponent;
 import org.hyperledger.bela.components.MessagePanel;
@@ -77,9 +73,10 @@ public class BlockChainBrowser {
   }
 
   public LanternaComponent<? extends Component> showSummaryPanel() {
+    final String stateRoot = blockResult.get().getStateRoot();
     return new SummaryPanel(
-        worldStateStorage.getWorldStateRootHash().map(Bytes::toHexString).orElse(null),
-        blockchain.getChainHead());
+            stateRoot,
+        blockchain.getBlockByNumber(blockResult.get().getNumber()));
   }
 
   public Optional<BlockResult> getChainHead() {
@@ -112,5 +109,9 @@ public class BlockChainBrowser {
             block,
             blockchain.getTotalDifficultyByHash(block.getHash()))
         );
+  }
+
+  public String getBlockHash() {
+    return blockResult.get().getHash();
   }
 }

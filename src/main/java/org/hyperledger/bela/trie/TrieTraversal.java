@@ -25,12 +25,12 @@ public class TrieTraversal {
             Bytes.wrap("chainHeadHash".getBytes(StandardCharsets.UTF_8));
     private static final Bytes VARIABLES_PREFIX = Bytes.of(1);
 
-    private final StorageNodeFinder storageNodeFinder;
+    private final NodeRetriever storageNodeFinder;
     private final NodeFoundListener nodeFoundListener;
 
     private final KeyValueStorage blockchainStorage;
 
-    public TrieTraversal(final StorageProvider storageProvider, final StorageNodeFinder storageNodeFinder, final NodeFoundListener nodeFoundListener) {
+    public TrieTraversal(final StorageProvider storageProvider, final NodeRetriever storageNodeFinder, final NodeFoundListener nodeFoundListener) {
         this.storageNodeFinder = storageNodeFinder;
         blockchainStorage = storageProvider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.BLOCKCHAIN);
         this.nodeFoundListener = nodeFoundListener;

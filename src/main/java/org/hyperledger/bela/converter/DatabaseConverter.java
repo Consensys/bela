@@ -3,12 +3,13 @@ package org.hyperledger.bela.converter;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.trie.NodeFoundListener;
-import org.hyperledger.bela.trie.StorageNodeFinder;
+import org.hyperledger.bela.trie.NodeRetriever;
 import org.hyperledger.bela.trie.TrieTraversal;
 import org.hyperledger.bela.utils.DataUtils;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
+import org.hyperledger.besu.ethereum.trie.MerklePatriciaTrie;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorageTransaction;
 
@@ -30,17 +31,24 @@ public class DatabaseConverter {
         KeyValueStorage forestBranchStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.WORLD_STATE);
         KeyValueStorage trieBranchStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_BRANCH_STORAGE);
         KeyValueStorage codeStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.CODE_STORAGE);
-        TrieTraversal tr = new TrieTraversal(provider, new StorageNodeFinder() {
+        TrieTraversal tr = new TrieTraversal(provider, new NodeRetriever() {
             @Override
             public Optional<Bytes> getAccountNode(Bytes location, Bytes32 hash) {
-                return forestBranchStorage.get(hash.toArrayUnsafe()).map(Bytes::wrap);
+                if (hash.equals(MerklePatriciaTrie.EMPTY_TRIE_NODE_HASH)) {
+                    return Optional.of(MerklePatriciaTrie.EMPTY_TRIE_NODE);
+                } else {
+                    return forestBranchStorage.get(hash.toArrayUnsafe()).map(Bytes::wrap);
+                }
+
             }
 
             @Override
             public Optional<Bytes> getStorageNode(Bytes32 accountHash, Bytes location, Bytes32 hash) {
-                return forestBranchStorage
-                        .get(hash.toArrayUnsafe())
-                        .map(Bytes::wrap);
+                if (hash.equals(MerklePatriciaTrie.EMPTY_TRIE_NODE_HASH)) {
+                    return Optional.of(MerklePatriciaTrie.EMPTY_TRIE_NODE);
+                } else {
+                    return forestBranchStorage.get(hash.toArrayUnsafe()).map(Bytes::wrap);
+                }
             }
 
             @Override
@@ -75,17 +83,25 @@ public class DatabaseConverter {
     public void convertToForest(){
         KeyValueStorage forestBranchStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.WORLD_STATE);
         KeyValueStorage trieBranchStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_BRANCH_STORAGE);
-        TrieTraversal tr = new TrieTraversal(provider, new StorageNodeFinder() {
+        TrieTraversal tr = new TrieTraversal(provider, new NodeRetriever() {
             @Override
             public Optional<Bytes> getAccountNode(Bytes location, Bytes32 hash) {
-                return trieBranchStorage.get(location.toArrayUnsafe()).map(Bytes::wrap);
+                if (hash.equals(MerklePatriciaTrie.EMPTY_TRIE_NODE_HASH)) {
+                    return Optional.of(MerklePatriciaTrie.EMPTY_TRIE_NODE);
+                } else {
+                    return trieBranchStorage.get(location.toArrayUnsafe()).map(Bytes::wrap);
+                }
             }
 
             @Override
             public Optional<Bytes> getStorageNode(Bytes32 accountHash, Bytes location, Bytes32 hash) {
-                return trieBranchStorage
-                        .get(Bytes.concatenate(accountHash, location).toArrayUnsafe())
-                        .map(Bytes::wrap);
+                if (hash.equals(MerklePatriciaTrie.EMPTY_TRIE_NODE_HASH)) {
+                    return Optional.of(MerklePatriciaTrie.EMPTY_TRIE_NODE);
+                } else {
+                    return trieBranchStorage
+                            .get(Bytes.concatenate(accountHash, location).toArrayUnsafe())
+                            .map(Bytes::wrap);
+                }
             }
 
             @Override

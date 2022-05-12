@@ -2,11 +2,10 @@ package org.hyperledger.bela.trie;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.hyperledger.besu.datatypes.Hash;
 
 import java.util.Optional;
 
-public interface StorageNodeFinder {
+public interface NodeRetriever {
 
     Optional<Bytes> getAccountNode(final Bytes location, final Bytes32 hash);
 

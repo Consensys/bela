@@ -1,26 +1,32 @@
 package org.hyperledger.bela.converter;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Optional;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
-import org.hyperledger.bela.trie.NodeFoundListener;
-import org.hyperledger.bela.trie.NodeRetriever;
-import org.hyperledger.bela.trie.TrieTraversal;
-import org.hyperledger.bela.utils.DataUtils;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.ethereum.trie.MerklePatriciaTrie;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorageTransaction;
+import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.DatabaseMetadata;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
+
+import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
+import org.hyperledger.bela.trie.NodeFoundListener;
+import org.hyperledger.bela.trie.NodeRetriever;
+import org.hyperledger.bela.trie.TrieTraversal;
+import org.hyperledger.bela.utils.DataUtils;
 
 public class DatabaseConverter {
 
     private final StorageProvider provider;
+    private final Path dataDir;
 
     public DatabaseConverter(final Path dataDir) {
+        this.dataDir = dataDir;
         this.provider =
                 DataUtils.createKeyValueStorageProvider(dataDir, dataDir.resolve("database"));
     }
@@ -78,6 +84,7 @@ public class DatabaseConverter {
             }
         });
         tr.start();
+        setDbMetadataVersion(2);
     }
 
     public void convertToForest() {
@@ -131,6 +138,7 @@ public class DatabaseConverter {
             }
         });
         tr.start();
+        setDbMetadataVersion(1);
     }
 
     public static void main(final String[] args) {
@@ -144,5 +152,14 @@ public class DatabaseConverter {
         }
     }
 
+    private void setDbMetadataVersion(int version) {
+        try {
+            new DatabaseMetadata(2, Optional.empty())
+                .writeToDirectory(dataDir);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new IllegalStateException("Failed to write bonsai db metadata version");
+        }
+    }
 
 }

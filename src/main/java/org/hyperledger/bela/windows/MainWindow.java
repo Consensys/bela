@@ -8,13 +8,11 @@ import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialogBuilder;
 import com.googlecode.lanterna.gui2.menu.Menu;
 import com.googlecode.lanterna.gui2.menu.MenuBar;
 import com.googlecode.lanterna.gui2.menu.MenuItem;
-import org.hyperledger.bela.components.MessagePanel;
 
-public class MainWindow implements LanternaWindow{
+public class MainWindow implements LanternaWindow {
 
 
     private List<LanternaWindow> windows = new ArrayList<>();
@@ -25,7 +23,7 @@ public class MainWindow implements LanternaWindow{
         this.gui = gui;
     }
 
-    public void registerWindow(LanternaWindow window){
+    public void registerWindow(LanternaWindow window) {
         this.windows.add(window);
     }
 
@@ -44,14 +42,15 @@ public class MainWindow implements LanternaWindow{
         final Window window = new BasicWindow(label());
         final MenuBar bar = new MenuBar();
 
-        Map<MenuGroup,Menu> groups = new HashMap<>();
+        Map<MenuGroup, Menu> groups = new HashMap<>();
 
         for (MenuGroup menuGroup : MenuGroup.values()) {
-            groups.put(menuGroup,new Menu(menuGroup.name()));
+            groups.put(menuGroup, new Menu(menuGroup.name()));
             bar.add(groups.get(menuGroup));
         }
         for (LanternaWindow lanternaWindow : windows) {
-            groups.get(lanternaWindow.group()).add(new MenuItem(lanternaWindow.label(),()->launchWindow(lanternaWindow)));
+            groups.get(lanternaWindow.group())
+                    .add(new MenuItem(lanternaWindow.label(), () -> launchWindow(lanternaWindow)));
         }
 
         groups.get(MenuGroup.FILE).add(new MenuItem("Exit...", window::close));
@@ -63,9 +62,9 @@ public class MainWindow implements LanternaWindow{
     private void launchWindow(final LanternaWindow window) {
         try {
             gui.addWindowAndWait(window.createWindow());
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-            MessageDialog.showMessageDialog(gui,"error",e.getMessage());
+            MessageDialog.showMessageDialog(gui, "error", e.getMessage());
 
         }
     }

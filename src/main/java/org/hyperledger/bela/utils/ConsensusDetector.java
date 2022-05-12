@@ -1,4 +1,4 @@
-package org.hyperledger.bela;
+package org.hyperledger.bela.utils;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.besu.consensus.ibft.IbftExtraDataCodec;

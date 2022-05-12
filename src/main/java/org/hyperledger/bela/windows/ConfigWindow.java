@@ -94,6 +94,6 @@ public class ConfigWindow  implements LanternaWindow{
     }
 
     public BelaConfigurationImpl createBelaConfiguration() {
-        return new BelaConfigurationImpl(Path.of(preferences.get(DATA_PATH,DATA_PATH_DEFAULT)),Path.of(STORAGE_PATH, STORAGE_PATH_DEFAULT));
+        return new BelaConfigurationImpl(Path.of(preferences.get(DATA_PATH, DATA_PATH_DEFAULT)), Path.of(preferences.get(STORAGE_PATH, STORAGE_PATH_DEFAULT)));
     }
 }

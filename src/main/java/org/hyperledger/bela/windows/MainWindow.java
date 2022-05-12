@@ -64,6 +64,7 @@ public class MainWindow implements LanternaWindow{
         try {
             gui.addWindowAndWait(window.createWindow());
         } catch (Exception e){
+            e.printStackTrace();
             MessageDialog.showMessageDialog(gui,"error",e.getMessage());
 
         }

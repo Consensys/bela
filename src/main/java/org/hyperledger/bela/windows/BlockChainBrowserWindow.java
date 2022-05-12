@@ -1,5 +1,6 @@
 package org.hyperledger.bela.windows;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -19,10 +20,11 @@ import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBMetricsFactor
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBCLIOptions;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBFactoryConfiguration;
 
-public class BlockChainBrowserWindow implements LanternaWindow{
+public class BlockChainBrowserWindow implements LanternaWindow {
 
     private ConfigWindow config;
     private BlockChainBrowser browser;
+    private StorageProvider provider;
 
     public BlockChainBrowserWindow(final ConfigWindow config) {
 
@@ -41,11 +43,16 @@ public class BlockChainBrowserWindow implements LanternaWindow{
 
     @Override
     public Window createWindow() {
-        if (browser== null){
-            final BelaConfigurationImpl belaConfiguration = config.createBelaConfiguration();
-            final StorageProvider provider = createKeyValueStorageProvider(belaConfiguration.getStoragePath(), belaConfiguration.getDataPath());
-            browser = BlockChainBrowser.fromProvider(provider);
+        BelaConfigurationImpl belaConfiguration = config.createBelaConfiguration();
+        if (provider != null) {
+            try {
+                provider.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
+        provider = createKeyValueStorageProvider(belaConfiguration.getStoragePath(), belaConfiguration.getDataPath());
+        browser = BlockChainBrowser.fromProvider(provider);
 
         // Create window to hold the panel
 
@@ -68,7 +75,7 @@ public class BlockChainBrowserWindow implements LanternaWindow{
     }
 
 
-    private StorageProvider createKeyValueStorageProvider(
+    private static StorageProvider createKeyValueStorageProvider(
             final Path dataDir, final Path dbDir) {
         return new KeyValueStorageProviderBuilder()
                 .withStorageFactory(

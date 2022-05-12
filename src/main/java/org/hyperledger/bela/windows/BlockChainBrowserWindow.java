@@ -22,6 +22,7 @@ import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksD
 public class BlockChainBrowserWindow implements LanternaWindow{
 
     private ConfigWindow config;
+    private BlockChainBrowser browser;
 
     public BlockChainBrowserWindow(final ConfigWindow config) {
 
@@ -40,11 +41,13 @@ public class BlockChainBrowserWindow implements LanternaWindow{
 
     @Override
     public Window createWindow() {
-        // Create window to hold the panel
+        if (browser== null){
+            final BelaConfigurationImpl belaConfiguration = config.createBelaConfiguration();
+            final StorageProvider provider = createKeyValueStorageProvider(belaConfiguration.getStoragePath(), belaConfiguration.getDataPath());
+            browser = BlockChainBrowser.fromProvider(provider);
+        }
 
-        final BelaConfigurationImpl belaConfiguration = config.createBelaConfiguration();
-        final StorageProvider provider = createKeyValueStorageProvider(belaConfiguration.getStoragePath(), belaConfiguration.getDataPath());
-        BlockChainBrowser browser =BlockChainBrowser.fromProvider(provider);
+        // Create window to hold the panel
 
         BasicWindow window = new BasicWindow("Bela DB Browser");
         window.setHints(List.of(Window.Hint.FULL_SCREEN));

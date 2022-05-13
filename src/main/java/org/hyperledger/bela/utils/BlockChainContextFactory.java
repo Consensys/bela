@@ -1,7 +1,5 @@
 package org.hyperledger.bela.utils;
 
-import static org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier.BLOCKCHAIN;
-
 import org.hyperledger.bela.utils.ConsensusDetector.CONSENSUS_TYPE;
 import org.hyperledger.besu.consensus.common.bft.BftBlockHeaderFunctions;
 import org.hyperledger.besu.consensus.qbft.QbftExtraDataCodec;
@@ -14,27 +12,29 @@ import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueStoragePrefixedKey
 import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 
+import static org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier.BLOCKCHAIN;
+
 public class BlockChainContextFactory {
 
-  public static BlockChainContext createBlockChainContext(final StorageProvider provider) {
-    final KeyValueStorage keyValueStorage = provider.getStorageBySegmentIdentifier(BLOCKCHAIN);
-    final CONSENSUS_TYPE consensusType = ConsensusDetector.detectConsensusMechanism(
-        keyValueStorage);
-    final BlockHeaderFunctions blockHeaderFunction = switch (consensusType) {
-      case IBFT2 -> BftBlockHeaderFunctions.forOnchainBlock(new QbftExtraDataCodec());
-      case QBFT -> BftBlockHeaderFunctions.forOnchainBlock(new QbftExtraDataCodec());
-      default -> new MainnetBlockHeaderFunctions();
-    };
+    public static BlockChainContext createBlockChainContext(final StorageProvider provider) {
+        final KeyValueStorage keyValueStorage = provider.getStorageBySegmentIdentifier(BLOCKCHAIN);
+        final CONSENSUS_TYPE consensusType = ConsensusDetector.detectConsensusMechanism(
+                keyValueStorage);
+        final BlockHeaderFunctions blockHeaderFunction = switch (consensusType) {
+            case IBFT2 -> BftBlockHeaderFunctions.forOnchainBlock(new QbftExtraDataCodec());
+            case QBFT -> BftBlockHeaderFunctions.forOnchainBlock(new QbftExtraDataCodec());
+            default -> new MainnetBlockHeaderFunctions();
+        };
 
-    var blockchainStorage = new KeyValueStoragePrefixedKeyBlockchainStorage(keyValueStorage,
-        blockHeaderFunction);
+        var blockchainStorage = new KeyValueStoragePrefixedKeyBlockchainStorage(keyValueStorage,
+                blockHeaderFunction);
 
-    var blockchain = DefaultBlockchain
-        .create(blockchainStorage, new NoOpMetricsSystem(), 0L);
+        var blockchain = DefaultBlockchain
+                .create(blockchainStorage, new NoOpMetricsSystem(), 0L);
 
-    var worldStateStorage = new BonsaiWorldStateKeyValueStorage(provider);
+        var worldStateStorage = new BonsaiWorldStateKeyValueStorage(provider);
 
-    return new BlockChainContext(blockchain, worldStateStorage);
-  }
+        return new BlockChainContext(blockchain, worldStateStorage);
+    }
 
 }

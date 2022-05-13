@@ -29,6 +29,8 @@ dependencies {
     implementation 'org.hyperledger.besu.internal:plugins-rocksdb:22.4.0'
     implementation 'org.hyperledger.besu.internal:metrics-core:22.4.0'
     implementation 'org.hyperledger.besu.internal:trie:22.4.0'
+    implementation 'org.hyperledger.besu.internal:p2p:22.4.0'
+    implementation 'org.hyperledger.besu.internal:eth:22.4.0'
     implementation 'org.hyperledger.besu:besu-datatypes:22.4.0'
     implementation 'org.hyperledger.besu.internal:rlp:22.4.0'
     implementation 'org.hyperledger.besu.internal:common:22.4.0'
@@ -36,10 +38,13 @@ dependencies {
     implementation 'org.hyperledger.besu.internal:qbft:22.4.0'
     implementation 'org.hyperledger.besu.internal:ibft:22.4.0'
     implementation 'org.hyperledger.besu:evm:22.4.0'
+
+
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.2.2'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.13.2'
-
     implementation 'com.googlecode.lanterna:lanterna:3.1.1'
+    implementation 'io.vertx:vertx-core:4.2.7'
+
 
 }
 

@@ -31,7 +31,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class BonsaiTreeVerifierWindow implements LanternaWindow, WindowListener, BonsaiListener {
     private BasicWindow window;
-    private static final String[] START_STOP_VERIFIER_COMMANDS = {"start", "'a'", "stop", "'s'", "Close", "'c'"};
+    private static final String[] START_STOP_VERIFIER_COMMANDS = {"start", "'a'", "Close", "'c'"};
     private final StorageProviderFactory storageProviderFactory;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private Future<?> execution;
@@ -117,9 +117,6 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, WindowListener,
                     case 'a':
                         startVerifier();
                         break;
-                    case 's':
-                        stopVerifier();
-                        break;
                     default:
                 }
                 break;
@@ -138,13 +135,14 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, WindowListener,
 
     private void startVerifier() {
         if (execution == null) {
+            runningLabel.setText("Initialising...");
+            Thread.yield();
             logTextBox.setText("");
             visited.set(0);
             final StorageProvider provider = storageProviderFactory.createProvider();
             execution = executorService.submit(() -> {
                 new BonsaiTraversal(provider, this).traverse();
-                runningLabel.setText("NotRunning");
-
+                stopVerifier();
             });
             runningLabel.setText("Running...");
         }

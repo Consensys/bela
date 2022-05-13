@@ -19,8 +19,8 @@ targetCompatibility = 15
 
 dependencies {
     implementation 'org.hyperledger.besu.internal:core:22.4.0'
+    implementation 'org.hyperledger.besu.internal:crypto:22.4.0'
     implementation 'org.hyperledger.besu.internal:plugins-rocksdb:22.4.0'
-//    implementation 'org.hyperledger.besu.internal:besu:22.4.0'
     implementation 'org.hyperledger.besu.internal:metrics-core:22.4.0'
     implementation 'org.hyperledger.besu.internal:trie:22.4.0'
     implementation 'org.hyperledger.besu:besu-datatypes:22.4.0'

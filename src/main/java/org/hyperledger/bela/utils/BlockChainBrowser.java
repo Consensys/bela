@@ -64,24 +64,8 @@ public class BlockChainBrowser {
     }
 
 
-    public static BlockChainBrowser fromProvider(final StorageProvider provider) {
-        final KeyValueStorage keyValueStorage = provider.getStorageBySegmentIdentifier(BLOCKCHAIN);
-        final CONSENSUS_TYPE consensusType = ConsensusDetector.detectConsensusMechanism(
-                keyValueStorage);
-        final BlockHeaderFunctions blockHeaderFunction = switch (consensusType) {
-            case IBFT2 -> BftBlockHeaderFunctions.forOnchainBlock(new QbftExtraDataCodec());
-            case QBFT -> BftBlockHeaderFunctions.forOnchainBlock(new QbftExtraDataCodec());
-            default -> new MainnetBlockHeaderFunctions();
-        };
-
-        var blockchainStorage = new KeyValueStoragePrefixedKeyBlockchainStorage(keyValueStorage,
-                blockHeaderFunction);
-
-        var blockchain = DefaultBlockchain
-                .create(blockchainStorage, new NoOpMetricsSystem(), 0L);
-
-        var worldStateStorage = new BonsaiWorldStateKeyValueStorage(provider);
-        return new BlockChainBrowser((DefaultBlockchain) blockchain/*, worldStateArchive*/, worldStateStorage);
+    public static BlockChainBrowser fromBlockChainContext(final BlockChainContext blockChainContext) {
+        return new BlockChainBrowser((DefaultBlockchain) blockChainContext.getBlockchain()/*, worldStateArchive*/, blockChainContext.getWorldStateStorage());
     }
 
 

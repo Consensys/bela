@@ -16,6 +16,7 @@ import org.hyperledger.bela.windows.ConfigWindow;
 import org.hyperledger.bela.windows.Constants;
 import org.hyperledger.bela.windows.DatabaseConversionWindow;
 import org.hyperledger.bela.windows.MainWindow;
+import org.hyperledger.bela.windows.TransactionBrowserWindow;
 
 public class Bela {
     public static void main(String[] args) throws Exception {

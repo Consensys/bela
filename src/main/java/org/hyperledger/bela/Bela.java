@@ -19,7 +19,7 @@ import org.hyperledger.bela.windows.MainWindow;
 public class Bela {
     public static void main(String[] args) throws Exception {
         final Preferences preferences = Preferences.userNodeForPackage(Bela.class);
-        processArgs(preferences,args);
+        processArgs(preferences, args);
 
         DefaultTerminalFactory terminalFactory = new DefaultTerminalFactory();
         try (Screen screen = terminalFactory.createScreen();) {
@@ -41,9 +41,9 @@ public class Bela {
     }
 
     private static void processArgs(final Preferences preferences, final String[] args) {
-        if (args.length>0){
-            preferences.put(Constants.DATA_PATH,args[0]);
-            preferences.put(Constants.STORAGE_PATH,args[0]+"/database");
+        if (args.length > 0) {
+            preferences.put(Constants.DATA_PATH, args[0]);
+            preferences.put(Constants.STORAGE_PATH, args[0] + "/database");
         }
     }
 }

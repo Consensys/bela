@@ -1,7 +1,5 @@
 package org.hyperledger.bela.windows;
 
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import com.googlecode.lanterna.SGR;
 import com.googlecode.lanterna.TerminalPosition;
 import com.googlecode.lanterna.TerminalSize;
@@ -15,36 +13,35 @@ import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.gui2.WindowListener;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialogBuilder;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
 import com.googlecode.lanterna.input.KeyStroke;
-import org.hyperledger.bela.utils.BlockChainBrowser;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.hyperledger.bela.utils.BlockChainContext;
-import org.hyperledger.bela.utils.BlockChainContextFactory;
-import org.hyperledger.bela.utils.StorageProviderFactory;
+import org.hyperledger.bela.utils.TransactionBrowser;
 import org.hyperledger.besu.datatypes.Hash;
 import org.jetbrains.annotations.NotNull;
 
-public class BlockChainBrowserWindow implements LanternaWindow, WindowListener {
+public class TransactionBrowserWindow implements LanternaWindow, WindowListener {
 
-    private static final String[] PREV_NEXT_BLOCK_COMMANDS = {"prev Block", "'<-'", "next Block", "'->'", "Close", "'c'", "roll Head", "'r'", "Hash?", "'h'", "Number?", "'n'", "Transactions", "'t"};
+    private static final String[] PREV_NEXT_BLOCK_COMMANDS = {"prev Transaction", "'<-'", "next Transaction", "'->'", "Close", "'c'", "Hash?", "'h'"};
 
-    private BlockChainBrowser browser;
+    private TransactionBrowser browser;
     private BasicWindow window;
-    private StorageProviderFactory storageProviderFactory;
-    private WindowBasedTextGUI gui;
-    private BlockChainContext context;
+    private final BlockChainContext context;
+    private final WindowBasedTextGUI gui;
+    private final Hash blockHash;
 
-    public BlockChainBrowserWindow(final StorageProviderFactory storageProviderFactory, final WindowBasedTextGUI gui) {
-        this.storageProviderFactory = storageProviderFactory;
-
+    public TransactionBrowserWindow(final BlockChainContext context,
+        final WindowBasedTextGUI gui, final Hash blockHash) {
+        this.context = context;
         this.gui = gui;
+        this.blockHash = blockHash;
     }
 
     @Override
     public String label() {
-        return "Blockchain Browser";
+        return "Transaction Browser";
     }
 
     @Override
@@ -54,12 +51,11 @@ public class BlockChainBrowserWindow implements LanternaWindow, WindowListener {
 
     @Override
     public Window createWindow() {
-        context = BlockChainContextFactory.createBlockChainContext(storageProviderFactory.createProvider());
-        browser = BlockChainBrowser.fromBlockChainContext(context);
+        browser = new TransactionBrowser(context, blockHash);
 
         // Create window to hold the panel
 
-        window = new BasicWindow("Bela DB Browser");
+        window = new BasicWindow("Bela Transaction Browser");
         window.setHints(List.of(Window.Hint.FULL_SCREEN));
 
         Panel panel = new Panel(new LinearLayout());
@@ -69,12 +65,8 @@ public class BlockChainBrowserWindow implements LanternaWindow, WindowListener {
         // add possible actions
         panel.addComponent(commands);
 
-        // add summary panel
-        panel.addComponent(browser.showSummaryPanel().createComponent()
-                .withBorder(Borders.singleLine()));
-
-        // add block detail panel
-        panel.addComponent(browser.blockPanel().createComponent());
+        // add transaction detail panel
+        panel.addComponent(browser.transactionPanel().createComponent());
 
         window.addWindowListener(this);
         window.setComponent(panel);
@@ -127,10 +119,7 @@ public class BlockChainBrowserWindow implements LanternaWindow, WindowListener {
             case Character:
                 switch (keyStroke.getCharacter()) {
                     case 'c' -> window.close();
-                    case 'r' -> rollHead();
                     case 'h' -> findByHash();
-                    case 'n' -> findByNumber();
-                    case 't' -> transactions();
                     default -> {}
                 }
                 break;
@@ -138,55 +127,21 @@ public class BlockChainBrowserWindow implements LanternaWindow, WindowListener {
         }
     }
 
-    private void rollHead() {
-
-        final MessageDialogButton messageDialogButton = new MessageDialogBuilder()
-                .setTitle("Are you sure?")
-                .setText("Danger! You will override current head:\n" + browser.getChainHead().orElseThrow().getHash())
-                .addButton(MessageDialogButton.Cancel)
-                .addButton(MessageDialogButton.OK)
-                .build()
-                .showDialog(gui);
-        if (messageDialogButton.equals(MessageDialogButton.OK)) {
-            browser.rollHead();
-        }
-
-    }
-
-    private void findByNumber() {
-        final String s = TextInputDialog.showDialog(gui, "Enter Number", "Number", "");
-        if (s == null) {
-            return;
-        }
-        try {
-            browser.moveByNumber(Long.parseLong(s));
-        } catch (Exception e) {
-            e.printStackTrace();
-            MessageDialog.showMessageDialog(gui, "error", e.getMessage());
-        }
-    }
-
-    private void findByHash() {
-        final String s = TextInputDialog.showDialog(gui, "Enter Hash", "Hash", browser.getBlockHash());
-        if (s == null) {
-            return;
-        }
-        try {
-            browser.moveByHash(Hash.fromHexString(s));
-        } catch (Exception e) {
-            e.printStackTrace();
-            MessageDialog.showMessageDialog(gui, "error", e.getMessage());
-        }
-    }
-
-    private void transactions() {
-            final TransactionBrowserWindow transactionBrowserWindow = new TransactionBrowserWindow(
-                context, gui, Hash.fromHexString(browser.getBlockHash()));
-            gui.addWindowAndWait(transactionBrowserWindow.createWindow());
-    }
-
     @Override
     public void onUnhandledInput(final Window basePane, final KeyStroke keyStroke, final AtomicBoolean hasBeenHandled) {
 
+    }
+
+    private void findByHash() {
+        final String s = TextInputDialog.showDialog(gui, "Enter Hash", "Hash", "");
+        if (s == null) {
+            return;
+        }
+        try {
+            browser.moveByHash(Hash.fromHexStringLenient(s));
+        } catch (Exception e) {
+            e.printStackTrace();
+            MessageDialog.showMessageDialog(gui, "error", e.getMessage());
+        }
     }
 }

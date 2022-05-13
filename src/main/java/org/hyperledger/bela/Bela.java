@@ -2,21 +2,19 @@ package org.hyperledger.bela;
 
 import java.io.IOException;
 import java.util.prefs.Preferences;
-
 import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import org.hyperledger.bela.utils.StorageProviderFactory;
-import org.hyperledger.bela.windows.LogoWindow;
 import org.hyperledger.bela.windows.BlockChainBrowserWindow;
 import org.hyperledger.bela.windows.BonsaiTreeVerifierWindow;
 import org.hyperledger.bela.windows.ConfigWindow;
 import org.hyperledger.bela.windows.Constants;
 import org.hyperledger.bela.windows.DatabaseConversionWindow;
+import org.hyperledger.bela.windows.LogoWindow;
 import org.hyperledger.bela.windows.MainWindow;
-import org.hyperledger.bela.windows.TransactionBrowserWindow;
 
 public class Bela {
     public static void main(String[] args) throws Exception {

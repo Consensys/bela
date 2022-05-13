@@ -1,5 +1,13 @@
 package org.hyperledger.bela.trie;
 
+import javax.annotation.Nullable;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
+import org.hyperledger.bela.utils.bonsai.BonsaiListener;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.core.BlockHeader;
 import org.hyperledger.besu.ethereum.core.BlockHeaderFunctions;
@@ -13,16 +21,6 @@ import org.hyperledger.besu.ethereum.trie.Node;
 import org.hyperledger.besu.ethereum.trie.TrieNodeDecoder;
 import org.hyperledger.besu.ethereum.worldstate.StateTrieAccountValue;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
-
-import javax.annotation.Nullable;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
-import org.hyperledger.bela.utils.bonsai.BonsaiListener;
 
 public class TrieTraversal {
 
@@ -40,19 +38,19 @@ public class TrieTraversal {
     private final BonsaiListener listener;
 
     public TrieTraversal(
-        final StorageProvider storageProvider,
-        final NodeRetriever storageNodeFinder,
-        final NodeFoundListener nodeFoundListener,
-        final BonsaiListener listener) {
+            final StorageProvider storageProvider,
+            final NodeRetriever storageNodeFinder,
+            final NodeFoundListener nodeFoundListener,
+            final BonsaiListener listener) {
         this(storageProvider, storageNodeFinder, nodeFoundListener, new MainnetBlockHeaderFunctions(), listener);
     }
 
     public TrieTraversal(
-        final StorageProvider storageProvider,
-        final NodeRetriever storageNodeFinder,
-        final NodeFoundListener nodeFoundListener,
-        final BlockHeaderFunctions blockHeaderFunctions,
-        final BonsaiListener listener) {
+            final StorageProvider storageProvider,
+            final NodeRetriever storageNodeFinder,
+            final NodeFoundListener nodeFoundListener,
+            final BlockHeaderFunctions blockHeaderFunctions,
+            final BonsaiListener listener) {
         this.storageNodeFinder = storageNodeFinder;
         blockchainStorage = storageProvider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.BLOCKCHAIN);
         this.nodeFoundListener = nodeFoundListener;
@@ -60,19 +58,20 @@ public class TrieTraversal {
         this.listener = listener;
     }
 
-    public void start(){
+    public void start() {
         final Hash rootHash = blockchainStorage.get(Bytes.concatenate(VARIABLES_PREFIX, CHAIN_HEAD_KEY)
-                .toArrayUnsafe()).map(Bytes32::wrap)
-            .flatMap(blockHash -> get(BLOCK_HEADER_PREFIX, blockHash)
-                .map(b -> BlockHeader.readFrom(RLP.input(b), blockHeaderFunctions)))
-            .map(BlockHeader::getStateRoot)
-            .orElseThrow(() -> new RuntimeException("chain head not found"));
+                        .toArrayUnsafe()).map(Bytes32::wrap)
+                .flatMap(blockHash -> get(BLOCK_HEADER_PREFIX, blockHash)
+                        .map(b -> BlockHeader.readFrom(RLP.input(b), blockHeaderFunctions)))
+                .map(BlockHeader::getStateRoot)
+                .orElseThrow(() -> new RuntimeException("chain head not found"));
         Node<Bytes> root = getAccountNodeValue(rootHash, Bytes.EMPTY);
         traverseAccountTrie(root);
     }
 
     Optional<Bytes> get(final org.apache.tuweni.bytes.Bytes prefix, final org.apache.tuweni.bytes.Bytes key) {
-        return blockchainStorage.get(org.apache.tuweni.bytes.Bytes.concatenate(prefix, key).toArrayUnsafe()).map(org.apache.tuweni.bytes.Bytes::wrap);
+        return blockchainStorage.get(org.apache.tuweni.bytes.Bytes.concatenate(prefix, key).toArrayUnsafe())
+                .map(org.apache.tuweni.bytes.Bytes::wrap);
     }
 
 

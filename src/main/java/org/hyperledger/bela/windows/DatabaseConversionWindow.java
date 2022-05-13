@@ -1,44 +1,31 @@
 package org.hyperledger.bela.windows;
 
-import org.hyperledger.besu.datatypes.Hash;
-import org.hyperledger.besu.ethereum.storage.StorageProvider;
-import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.DatabaseMetadata;
-
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import com.googlecode.lanterna.SGR;
-import com.googlecode.lanterna.TerminalPosition;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.BasicWindow;
-import com.googlecode.lanterna.gui2.Borders;
-import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.TextBox;
 import com.googlecode.lanterna.gui2.Window;
-import com.googlecode.lanterna.gui2.WindowListener;
-import com.googlecode.lanterna.input.KeyStroke;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.converter.DatabaseConverter;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.bela.utils.bonsai.BonsaiListener;
-import org.hyperledger.bela.utils.bonsai.BonsaiTraversal;
 import org.hyperledger.bela.utils.bonsai.BonsaiTraversalTrieType;
-import org.jetbrains.annotations.NotNull;
+import org.hyperledger.besu.datatypes.Hash;
+import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.DatabaseMetadata;
 
-public class DatabaseConversionWindow implements LanternaWindow, WindowListener, BonsaiListener {
+public class DatabaseConversionWindow implements LanternaWindow, BonsaiListener {
     private BasicWindow window;
-    private static final String[] START_STOP_VERIFIER_COMMANDS = {"Convert to Forest", "'F'", "Convert to Bonsai", "'B'", "Close", "'c'"};
     private final StorageProviderFactory storageProviderFactory;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private Future<?> execution;
@@ -46,11 +33,9 @@ public class DatabaseConversionWindow implements LanternaWindow, WindowListener,
     private final Label counterLabel = new Label("0");
     AtomicInteger visited = new AtomicInteger(0);
     private final TextBox logTextBox = new TextBox(new TerminalSize(80, 7));
-    private final DatabaseConverter databaseConverter;
 
     public DatabaseConversionWindow(final StorageProviderFactory storageProviderFactory) {
         this.storageProviderFactory = storageProviderFactory;
-        this.databaseConverter = new DatabaseConverter(storageProviderFactory.createProvider(), this);
     }
 
     @Override
@@ -72,79 +57,29 @@ public class DatabaseConversionWindow implements LanternaWindow, WindowListener,
         window.setHints(List.of(Window.Hint.FULL_SCREEN));
 
         Panel panel = new Panel(new LinearLayout());
-        Panel commands = getCommandsPanel(START_STOP_VERIFIER_COMMANDS);
 
-        panel.addComponent(commands);
+        KeyControls controls = new KeyControls()
+                .addControl("Convert to Forest", 'f', this::convertToForest)
+                .addControl("Convert to Bonsai", 'b', this::convertToBonsai)
+                .addControl("close", 'c', window::close);
+        window.addWindowListener(controls);
+        panel.addComponent(controls.createComponent());
 
         panel.addComponent(runningLabel);
         panel.addComponent(counterLabel);
         panel.addComponent(logTextBox);
 
 
-        window.addWindowListener(this);
-
         window.setComponent(panel);
 
         return window;
     }
 
-
-    @NotNull
-    private static Panel getCommandsPanel(final String[] strings) {
-        Panel commands = new Panel(new LinearLayout(Direction.HORIZONTAL));
-        Panel key = new Panel(new LinearLayout());
-        key.addComponent(new Label("action").addStyle(SGR.BOLD));
-        key.addComponent(new Label("key").addStyle(SGR.BOLD));
-        commands.addComponent(key.withBorder(Borders.singleLine()));
-
-        int i = 0;
-        while (i < strings.length) {
-            Panel a = new Panel(new LinearLayout());
-            a.addComponent(new Label(strings[i++]).setLayoutData(LinearLayout.createLayoutData(LinearLayout.Alignment.Center, LinearLayout.GrowPolicy.None)));
-            a.addComponent(new Label(strings[i++]).setLayoutData(LinearLayout.createLayoutData(LinearLayout.Alignment.Center, LinearLayout.GrowPolicy.None)));
-            commands.addComponent(a.withBorder(Borders.singleLine()));
-        }
-        return commands;
-    }
-
-    @Override
-    public void onResized(final Window window, final TerminalSize oldSize, final TerminalSize newSize) {
-
-    }
-
-    @Override
-    public void onMoved(final Window window, final TerminalPosition oldPosition, final TerminalPosition newPosition) {
-
-    }
-
-    @Override
-    public void onInput(final Window basePane, final KeyStroke keyStroke, final AtomicBoolean deliverEvent) {
-        switch (keyStroke.getKeyType()) {
-            case Character:
-                switch (keyStroke.getCharacter()) {
-                    case 'c':
-                        window.close();
-                        break;
-                    case 'B':
-                        convertToBonsai();
-                        break;
-                    case 'F':
-                        convertToForest();
-                        break;
-                    default:
-                }
-                break;
-            default:
-        }
-    }
-
-
     private void convertToBonsai() {
         if (execution == null) {
             visited.set(0);
-            final StorageProvider provider = storageProviderFactory.createProvider();
             execution = executorService.submit(() -> {
-                databaseConverter.convertToBonsai();
+                new DatabaseConverter(storageProviderFactory.createProvider(), this).convertToBonsai();
                 runningLabel.setText("Converting Worldstate to Bonsai");
 
             });
@@ -155,9 +90,8 @@ public class DatabaseConversionWindow implements LanternaWindow, WindowListener,
     private void convertToForest() {
         if (execution == null) {
             visited.set(0);
-            final StorageProvider provider = storageProviderFactory.createProvider();
             execution = executorService.submit(() -> {
-                databaseConverter.convertToForest();
+                new DatabaseConverter(storageProviderFactory.createProvider(), this).convertToForest();
                 runningLabel.setText("Converting Worldstate to Forest");
 
             });
@@ -168,17 +102,11 @@ public class DatabaseConversionWindow implements LanternaWindow, WindowListener,
     private void setDbMetadataVersion(int version) {
         try {
             new DatabaseMetadata(2, Optional.empty())
-                .writeToDirectory(storageProviderFactory.getDataPath());
+                    .writeToDirectory(storageProviderFactory.getDataPath());
         } catch (IOException e) {
             e.printStackTrace();
             throw new IllegalStateException("Failed to write db metadata version");
         }
-    }
-
-
-    @Override
-    public void onUnhandledInput(final Window basePane, final KeyStroke keyStroke, final AtomicBoolean hasBeenHandled) {
-
     }
 
     @Override

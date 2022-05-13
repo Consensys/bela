@@ -9,6 +9,7 @@ import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import org.hyperledger.bela.utils.StorageProviderFactory;
+import org.hyperledger.bela.windows.LogoWindow;
 import org.hyperledger.bela.windows.BlockChainBrowserWindow;
 import org.hyperledger.bela.windows.BonsaiTreeVerifierWindow;
 import org.hyperledger.bela.windows.ConfigWindow;
@@ -33,6 +34,7 @@ public class Bela {
             mainWindow.registerWindow(new BlockChainBrowserWindow(storageProviderFactory, gui));
             mainWindow.registerWindow(new BonsaiTreeVerifierWindow(storageProviderFactory));
             mainWindow.registerWindow(new DatabaseConversionWindow(storageProviderFactory));
+            mainWindow.registerWindow(new LogoWindow());
             final Window window = mainWindow.createWindow();
             gui.addWindowAndWait(window);
         } catch (IOException e) {

@@ -15,6 +15,8 @@ import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.gui2.WindowListener;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
+import com.googlecode.lanterna.gui2.dialogs.MessageDialogBuilder;
+import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
 import com.googlecode.lanterna.input.KeyStroke;
 import org.hyperledger.bela.utils.BlockChainBrowser;
@@ -124,7 +126,8 @@ public class BlockChainBrowserWindow implements LanternaWindow, WindowListener {
                         window.close();
                         break;
                     case 'r':
-                        browser.rollHead();
+
+                        rollHead();
                         break;
                     case 'h':
                         findByHash();
@@ -137,6 +140,21 @@ public class BlockChainBrowserWindow implements LanternaWindow, WindowListener {
                 break;
             default:
         }
+    }
+
+    private void rollHead() {
+
+        final MessageDialogButton messageDialogButton = new MessageDialogBuilder()
+                .setTitle("Are you sure?")
+                .setText("Danger! You will override current head:\n" + browser.getChainHead().orElseThrow().getHash())
+                .addButton(MessageDialogButton.Cancel)
+                .addButton(MessageDialogButton.OK)
+                .build()
+                .showDialog(gui);
+        if (messageDialogButton.equals(MessageDialogButton.OK)) {
+            browser.rollHead();
+        }
+
     }
 
     private void findByNumber() {

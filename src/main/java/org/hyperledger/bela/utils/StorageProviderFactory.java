@@ -69,4 +69,8 @@ public class StorageProviderFactory {
                 .build();
     }
 
+    public Path getDataPath() {
+        return dataPath;
+    }
+
 }

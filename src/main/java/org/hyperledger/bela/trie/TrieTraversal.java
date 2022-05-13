@@ -22,6 +22,7 @@ import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.hyperledger.bela.utils.bonsai.BonsaiListener;
 
 public class TrieTraversal {
 
@@ -36,16 +37,27 @@ public class TrieTraversal {
 
     private final KeyValueStorage blockchainStorage;
     private final BlockHeaderFunctions blockHeaderFunctions;
+    private final BonsaiListener listener;
 
-    public TrieTraversal(final StorageProvider storageProvider, final NodeRetriever storageNodeFinder, final NodeFoundListener nodeFoundListener) {
-        this(storageProvider, storageNodeFinder, nodeFoundListener, new MainnetBlockHeaderFunctions());
+    public TrieTraversal(
+        final StorageProvider storageProvider,
+        final NodeRetriever storageNodeFinder,
+        final NodeFoundListener nodeFoundListener,
+        final BonsaiListener listener) {
+        this(storageProvider, storageNodeFinder, nodeFoundListener, new MainnetBlockHeaderFunctions(), listener);
     }
 
-    public TrieTraversal(final StorageProvider storageProvider, final NodeRetriever storageNodeFinder, final NodeFoundListener nodeFoundListener, final BlockHeaderFunctions blockHeaderFunctions) {
+    public TrieTraversal(
+        final StorageProvider storageProvider,
+        final NodeRetriever storageNodeFinder,
+        final NodeFoundListener nodeFoundListener,
+        final BlockHeaderFunctions blockHeaderFunctions,
+        final BonsaiListener listener) {
         this.storageNodeFinder = storageNodeFinder;
         blockchainStorage = storageProvider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.BLOCKCHAIN);
         this.nodeFoundListener = nodeFoundListener;
         this.blockHeaderFunctions = blockHeaderFunctions;
+        this.listener = listener;
     }
 
     public void start(){
@@ -86,22 +98,17 @@ public class TrieTraversal {
                                                             Bytes.concatenate(
                                                                     parentNode.getLocation()
                                                                             .orElseThrow(), node.getPath()))));
-                            System.out.println("Found account hash " + accountHash);
                             // Add code, if appropriate
                             if (!accountValue.getCodeHash().equals(Hash.EMPTY)) {
                                 // traverse code
                                 final Optional<Bytes> code =
                                         storageNodeFinder.getCode(accountHash, accountValue.getCodeHash());
                                 if (code.isEmpty()) {
-                                    System.err.format(
-                                            "missing code hash %s for account %s",
-                                            accountValue.getCodeHash(), accountHash);
+                                    listener.missingCodeHash(accountValue.getCodeHash(), accountHash);
                                 } else {
                                     final Hash foundCodeHash = Hash.hash(code.orElseThrow());
                                     if (!foundCodeHash.equals(accountValue.getCodeHash())) {
-                                        System.err.format(
-                                                "invalid code for account %s (expected %s and found %s)",
-                                                accountHash, accountValue.getCodeHash(), foundCodeHash);
+                                        listener.invalidCode(accountHash, accountValue.getCodeHash(), foundCodeHash);
                                     }
                                     nodeFoundListener.onCode(accountHash, code.orElseThrow());
                                 }
@@ -113,7 +120,7 @@ public class TrieTraversal {
                                         getStorageNodeValue(accountValue.getStorageRoot(), accountHash, Bytes.EMPTY));
                             }
                         } else {
-                            System.err.println("Missing value for node " + node.getHash().toHexString());
+                            listener.missingValueForNode(node.getHash());
                         }
                     }
                 });
@@ -140,14 +147,12 @@ public class TrieTraversal {
     private Node<Bytes> getAccountNodeValue(final Bytes32 hash, final Bytes location) {
         final Optional<Bytes> bytes = storageNodeFinder.getAccountNode(location, hash);
         if (bytes.isEmpty()) {
-            System.err.format("missing account trie node for hash %s and location %s", hash, location);
+            listener.missingAccountTrieForHash(hash, location);
             return null;
         }
         final Hash foundHashNode = Hash.hash(bytes.orElseThrow());
         if (!foundHashNode.equals(hash)) {
-            System.err.format(
-                    "invalid account trie node for hash %s and location %s (found %s)",
-                    hash, location, foundHashNode);
+            listener.invalidAccountTrieForHash(hash, location, foundHashNode);
             return null;
         } else {
             nodeFoundListener.onAccountNode(location, bytes.orElseThrow());
@@ -160,14 +165,12 @@ public class TrieTraversal {
         final Optional<Bytes> bytes =
                 storageNodeFinder.getStorageNode(accountHash, location, hash);
         if (bytes.isEmpty()) {
-            System.err.format("missing storage trie node for hash %s and location %s", hash, location);
+            listener.missingStorageTrieForHash(hash, location);
             return null;
         }
         final Hash foundHashNode = Hash.hash(bytes.orElseThrow());
         if (!foundHashNode.equals(hash)) {
-            System.err.format(
-                    "invalid storage trie node for hash %s and location %s (found %s)",
-                    hash, location, foundHashNode);
+            listener.invalidStorageTrieForHash(hash, location, foundHashNode);
             return null;
         } else {
             nodeFoundListener.onStorageNode(accountHash, location, bytes.orElseThrow());

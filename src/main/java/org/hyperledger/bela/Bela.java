@@ -2,6 +2,7 @@ package org.hyperledger.bela;
 
 import java.io.IOException;
 import java.util.prefs.Preferences;
+
 import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
@@ -12,6 +13,7 @@ import org.hyperledger.bela.windows.BlockChainBrowserWindow;
 import org.hyperledger.bela.windows.BonsaiTreeVerifierWindow;
 import org.hyperledger.bela.windows.ConfigWindow;
 import org.hyperledger.bela.windows.Constants;
+import org.hyperledger.bela.windows.DatabaseConversionWindow;
 import org.hyperledger.bela.windows.MainWindow;
 
 public class Bela {
@@ -30,6 +32,7 @@ public class Bela {
             mainWindow.registerWindow(config);
             mainWindow.registerWindow(new BlockChainBrowserWindow(storageProviderFactory, gui));
             mainWindow.registerWindow(new BonsaiTreeVerifierWindow(storageProviderFactory));
+            mainWindow.registerWindow(new DatabaseConversionWindow(storageProviderFactory));
             final Window window = mainWindow.createWindow();
             gui.addWindowAndWait(window);
         } catch (IOException e) {

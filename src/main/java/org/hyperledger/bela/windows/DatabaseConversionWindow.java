@@ -2,8 +2,12 @@ package org.hyperledger.bela.windows;
 
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
+import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.DatabaseMetadata;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -25,15 +29,16 @@ import com.googlecode.lanterna.gui2.WindowListener;
 import com.googlecode.lanterna.input.KeyStroke;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.hyperledger.bela.converter.DatabaseConverter;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.bela.utils.bonsai.BonsaiListener;
 import org.hyperledger.bela.utils.bonsai.BonsaiTraversal;
 import org.hyperledger.bela.utils.bonsai.BonsaiTraversalTrieType;
 import org.jetbrains.annotations.NotNull;
 
-public class BonsaiTreeVerifierWindow implements LanternaWindow, WindowListener, BonsaiListener {
+public class DatabaseConversionWindow implements LanternaWindow, WindowListener, BonsaiListener {
     private BasicWindow window;
-    private static final String[] START_STOP_VERIFIER_COMMANDS = {"start", "'a'", "Close", "'c'"};
+    private static final String[] START_STOP_VERIFIER_COMMANDS = {"Convert to Forest", "'F'", "Convert to Bonsai", "'B'", "Close", "'c'"};
     private final StorageProviderFactory storageProviderFactory;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private Future<?> execution;
@@ -41,15 +46,16 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, WindowListener,
     private final Label counterLabel = new Label("0");
     AtomicInteger visited = new AtomicInteger(0);
     private final TextBox logTextBox = new TextBox(new TerminalSize(80, 7));
+    private final DatabaseConverter databaseConverter;
 
-    public BonsaiTreeVerifierWindow(final StorageProviderFactory storageProviderFactory) {
+    public DatabaseConversionWindow(final StorageProviderFactory storageProviderFactory) {
         this.storageProviderFactory = storageProviderFactory;
-        logTextBox.setReadOnly(true);
+        this.databaseConverter = new DatabaseConverter(storageProviderFactory.createProvider(), this);
     }
 
     @Override
     public String label() {
-        return "Bonsai Tree Verifier";
+        return "Database Storage Format Converter";
     }
 
     @Override
@@ -59,7 +65,10 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, WindowListener,
 
     @Override
     public Window createWindow() {
-        window = new BasicWindow("BonsaiTreeVerifier");
+        if (window != null) {
+            return window;
+        }
+        window = new BasicWindow("DatabaseConverter");
         window.setHints(List.of(Window.Hint.FULL_SCREEN));
 
         Panel panel = new Panel(new LinearLayout());
@@ -73,6 +82,7 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, WindowListener,
 
 
         window.addWindowListener(this);
+
         window.setComponent(panel);
 
         return window;
@@ -115,8 +125,11 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, WindowListener,
                     case 'c':
                         window.close();
                         break;
-                    case 'a':
-                        startVerifier();
+                    case 'B':
+                        convertToBonsai();
+                        break;
+                    case 'F':
+                        convertToForest();
                         break;
                     default:
                 }
@@ -126,28 +139,42 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, WindowListener,
     }
 
 
-    private void stopVerifier() {
-        if (execution != null) {
-            execution.cancel(true);
-            execution = null;
-            runningLabel.setText("Not Running...");
-        }
-    }
-
-    private void startVerifier() {
+    private void convertToBonsai() {
         if (execution == null) {
-            runningLabel.setText("Initialising...");
-            Thread.yield();
-            logTextBox.setText("");
             visited.set(0);
             final StorageProvider provider = storageProviderFactory.createProvider();
             execution = executorService.submit(() -> {
-                new BonsaiTraversal(provider, this).traverse();
-                stopVerifier();
+                databaseConverter.convertToBonsai();
+                runningLabel.setText("Converting Worldstate to Bonsai");
+
             });
             runningLabel.setText("Running...");
         }
     }
+
+    private void convertToForest() {
+        if (execution == null) {
+            visited.set(0);
+            final StorageProvider provider = storageProviderFactory.createProvider();
+            execution = executorService.submit(() -> {
+                databaseConverter.convertToForest();
+                runningLabel.setText("Converting Worldstate to Forest");
+
+            });
+            runningLabel.setText("Running...");
+        }
+    }
+
+    private void setDbMetadataVersion(int version) {
+        try {
+            new DatabaseMetadata(2, Optional.empty())
+                .writeToDirectory(storageProviderFactory.getDataPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new IllegalStateException("Failed to write db metadata version");
+        }
+    }
+
 
     @Override
     public void onUnhandledInput(final Window basePane, final KeyStroke keyStroke, final AtomicBoolean hasBeenHandled) {
@@ -156,7 +183,7 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, WindowListener,
 
     @Override
     public void root(final Bytes32 hash) {
-        logTextBox.setText("Working with root " + hash);
+        logTextBox.addLine("Working with root " + hash);
     }
 
     @Override
@@ -179,7 +206,6 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, WindowListener,
     @Override
     public void visited(final BonsaiTraversalTrieType type) {
         counterLabel.setText(String.valueOf(visited.incrementAndGet()));
-        Thread.yield();
     }
 
     @Override

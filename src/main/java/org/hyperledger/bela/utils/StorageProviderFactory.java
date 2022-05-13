@@ -5,6 +5,8 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.prefs.Preferences;
 import org.hyperledger.bela.config.BelaConfigurationImpl;
+import org.hyperledger.bela.converter.RocksDBKeyValueStorageConverterFactory;
+
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueStorageProviderBuilder;
@@ -53,7 +55,7 @@ public class StorageProviderFactory {
             final Path dataDir, final Path dbDir) {
         return new KeyValueStorageProviderBuilder()
                 .withStorageFactory(
-                        new RocksDBKeyValueStorageFactory(
+                        new RocksDBKeyValueStorageConverterFactory(
                                 () ->
                                         new RocksDBFactoryConfiguration(
                                                 RocksDBCLIOptions.DEFAULT_MAX_OPEN_FILES,
@@ -65,6 +67,10 @@ public class StorageProviderFactory {
                 .withCommonConfiguration(new BelaConfigurationImpl(dataDir, dbDir))
                 .withMetricsSystem(new NoOpMetricsSystem())
                 .build();
+    }
+
+    public Path getDataPath() {
+        return dataPath;
     }
 
 }

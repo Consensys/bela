@@ -1,14 +1,5 @@
 package org.hyperledger.bela.converter;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Optional;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
-import org.hyperledger.bela.trie.NodeFoundListener;
-import org.hyperledger.bela.trie.NodeRetriever;
-import org.hyperledger.bela.trie.TrieTraversal;
-import org.hyperledger.bela.utils.DataUtils;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
@@ -16,13 +7,23 @@ import org.hyperledger.besu.ethereum.trie.MerklePatriciaTrie;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorageTransaction;
 
+import java.util.Optional;
+
+import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
+import org.hyperledger.bela.trie.NodeFoundListener;
+import org.hyperledger.bela.trie.NodeRetriever;
+import org.hyperledger.bela.trie.TrieTraversal;
+import org.hyperledger.bela.utils.bonsai.BonsaiListener;
+
 public class DatabaseConverter {
 
     private final StorageProvider provider;
+    private final BonsaiListener listener;
 
-    public DatabaseConverter(final Path dataDir) {
-        this.provider =
-                DataUtils.createKeyValueStorageProvider(dataDir, dataDir.resolve("database"));
+    public DatabaseConverter(final StorageProvider storageProvider, BonsaiListener listener) {
+        this.provider = storageProvider;
+        this.listener = listener;
     }
 
 
@@ -76,7 +77,7 @@ public class DatabaseConverter {
                 keyValueStorageTransaction.put(accountHash.toArrayUnsafe(), value.toArrayUnsafe());
                 keyValueStorageTransaction.commit();
             }
-        });
+        }, listener);
         tr.start();
     }
 
@@ -129,20 +130,20 @@ public class DatabaseConverter {
                 keyValueStorageTransaction.put(Hash.hash(value).toArrayUnsafe(), value.toArrayUnsafe());
                 keyValueStorageTransaction.commit();
             }
-        });
+        }, listener);
         tr.start();
     }
 
-    public static void main(final String[] args) {
-        final Path dataDir = Paths.get(args[0]);
-        DatabaseConverter d = new DatabaseConverter(dataDir);
-        final String convertTo = args[1];
-        if (convertTo.equals("Bonsai")) {
-            d.convertToBonsai();
-        } else {
-            d.convertToForest();
-        }
-    }
+//    public static void main(final String[] args) {
+//        final Path dataDir = Paths.get(args[0]);
+//        DatabaseConverter d = new DatabaseConverter(dataDir);
+//        final String convertTo = args[1];
+//        if (convertTo.equals("Bonsai")) {
+//            d.convertToBonsai();
+//        } else {
+//            d.convertToForest();
+//        }
+//    }
 
 
 }

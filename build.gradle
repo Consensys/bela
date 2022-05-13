@@ -14,21 +14,22 @@ repositories {
 description("BEsu LAterna commandline interrogation tool")
 
 apply plugin: 'java'
-sourceCompatibility = 17
-targetCompatibility = 17
+sourceCompatibility = 15
+targetCompatibility = 15
 
 dependencies {
-    implementation 'org.hyperledger.besu.internal:core:22.4.0-RC2'
-    implementation 'org.hyperledger.besu.internal:plugins-rocksdb:22.4.0-RC2'
-//    implementation 'org.hyperledger.besu.internal:besu:22.4.0-RC2'
-    implementation 'org.hyperledger.besu.internal:metrics-core:22.4.0-RC2'
-    implementation 'org.hyperledger.besu.internal:trie:22.4.0-RC2'
-    implementation 'org.hyperledger.besu:besu-datatypes:22.4.0-RC2'
-    implementation 'org.hyperledger.besu.internal:rlp:22.4.0-RC2'
-    implementation 'org.hyperledger.besu.internal:common:22.4.0-RC2'
-    implementation 'org.hyperledger.besu.internal:qbft:22.4.0-RC2'
-    implementation 'org.hyperledger.besu.internal:ibft:22.4.0-RC2'
-    implementation 'org.hyperledger.besu:evm:22.4.0-RC2'
+    implementation 'org.hyperledger.besu.internal:core:22.4.0'
+    implementation 'org.hyperledger.besu.internal:plugins-rocksdb:22.4.0'
+//    implementation 'org.hyperledger.besu.internal:besu:22.4.0'
+    implementation 'org.hyperledger.besu.internal:metrics-core:22.4.0'
+    implementation 'org.hyperledger.besu.internal:trie:22.4.0'
+    implementation 'org.hyperledger.besu:besu-datatypes:22.4.0'
+    implementation 'org.hyperledger.besu.internal:rlp:22.4.0'
+    implementation 'org.hyperledger.besu.internal:common:22.4.0'
+    implementation 'org.hyperledger.besu.internal:kvstore:22.4.0'
+    implementation 'org.hyperledger.besu.internal:qbft:22.4.0'
+    implementation 'org.hyperledger.besu.internal:ibft:22.4.0'
+    implementation 'org.hyperledger.besu:evm:22.4.0'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.2.2'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.13.2'
 

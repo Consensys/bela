@@ -17,6 +17,8 @@ import org.hyperledger.bela.config.BelaConfigurationImpl;
 
 import static org.hyperledger.bela.windows.Constants.DATA_PATH;
 import static org.hyperledger.bela.windows.Constants.DATA_PATH_DEFAULT;
+import static org.hyperledger.bela.windows.Constants.GENESIS_PATH;
+import static org.hyperledger.bela.windows.Constants.GENESIS_PATH_DEFAULT;
 import static org.hyperledger.bela.windows.Constants.STORAGE_PATH;
 import static org.hyperledger.bela.windows.Constants.STORAGE_PATH_DEFAULT;
 
@@ -65,15 +67,25 @@ public class ConfigWindow implements LanternaWindow {
             path.ifPresent(storagePath::setText);
         }));
 
+        panel.addComponent(new Label("Storage Path"));
+        final TextBox genesisPath = new TextBox(preferences.get(GENESIS_PATH, GENESIS_PATH_DEFAULT));
+        panel.addComponent(genesisPath);
+        panel.addComponent(new Button("...", () -> {
+            final Optional<String> path = askForPath("Genesis Path Directory");
+            path.ifPresent(genesisPath::setText);
+        }));
+
         panel.addComponent(new Button("Cancel", window::close));
         panel.addComponent(new Button("Apply", () -> {
             preferences.put(DATA_PATH, dataPath.getText());
             preferences.put(STORAGE_PATH, storagePath.getText());
+            preferences.put(GENESIS_PATH, genesisPath.getText());
         }));
 
         panel.addComponent(new Button("Ok", () -> {
             preferences.put(DATA_PATH, dataPath.getText());
             preferences.put(STORAGE_PATH, storagePath.getText());
+            preferences.put(GENESIS_PATH, genesisPath.getText());
             window.close();
         }));
 

@@ -135,4 +135,8 @@ public class BlockChainBrowser {
         blockResult = getBlockByNumber(number);
         updatePanels(blockResult);
     }
+
+    public boolean hasTransactions() {
+        return blockResult.map(r -> !r.getTransactions().isEmpty()).orElse(false);
+    }
 }

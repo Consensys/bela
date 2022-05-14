@@ -77,11 +77,15 @@ public class DatabaseConverter {
             }
         }, listener);
         tr.start();
+        if(!tr.isInvalidWorldstate()) {
+            forestBranchStorage.clear();
+        }
     }
 
     public void convertToForest() {
         KeyValueStorage forestBranchStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.WORLD_STATE);
         KeyValueStorage trieBranchStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_BRANCH_STORAGE);
+        KeyValueStorage codeStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.CODE_STORAGE);
         TrieTraversal tr = new TrieTraversal(provider, new NodeRetriever() {
             @Override
             public Optional<Bytes> getAccountNode(Bytes location, Bytes32 hash) {
@@ -105,7 +109,7 @@ public class DatabaseConverter {
 
             @Override
             public Optional<Bytes> getCode(Bytes32 accountHash, Bytes32 hash) {
-                return trieBranchStorage.get(accountHash.toArrayUnsafe()).map(Bytes::wrap);
+                return codeStorage.get(accountHash.toArrayUnsafe()).map(Bytes::wrap);
             }
         }, new NodeFoundListener() {
             @Override
@@ -130,18 +134,12 @@ public class DatabaseConverter {
             }
         }, listener);
         tr.start();
+        if(!tr.isInvalidWorldstate()) {
+            trieBranchStorage.clear();
+            codeStorage.clear();
+        }
     }
 
-//    public static void main(final String[] args) {
-//        final Path dataDir = Paths.get(args[0]);
-//        DatabaseConverter d = new DatabaseConverter(dataDir);
-//        final String convertTo = args[1];
-//        if (convertTo.equals("Bonsai")) {
-//            d.convertToBonsai();
-//        } else {
-//            d.convertToForest();
-//        }
-//    }
 
 
 }

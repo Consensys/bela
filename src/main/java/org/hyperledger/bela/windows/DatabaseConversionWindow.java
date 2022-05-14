@@ -84,7 +84,7 @@ public class DatabaseConversionWindow implements LanternaWindow, BonsaiListener 
             visited.set(0);
             execution = executorService.submit(() -> {
                 new DatabaseConverter(storageProviderFactory.createProvider(), this).convertToBonsai();
-                runningLabel.setText("Converting Worldstate to Bonsai");
+                runningLabel.setText("Converted Worldstate to Bonsai");
 
             });
             runningLabel.setText("Running...");
@@ -96,7 +96,7 @@ public class DatabaseConversionWindow implements LanternaWindow, BonsaiListener 
             visited.set(0);
             execution = executorService.submit(() -> {
                 new DatabaseConverter(storageProviderFactory.createProvider(), this).convertToForest();
-                runningLabel.setText("Converting Worldstate to Forest");
+                runningLabel.setText("Converted Worldstate to Forest");
 
             });
             runningLabel.setText("Running...");

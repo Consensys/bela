@@ -36,6 +36,7 @@ public class TrieTraversal {
     private final KeyValueStorage blockchainStorage;
     private final BlockHeaderFunctions blockHeaderFunctions;
     private final BonsaiListener listener;
+    private boolean isInvalidWorldstate;
 
     public TrieTraversal(
             final StorageProvider storageProvider,
@@ -66,6 +67,7 @@ public class TrieTraversal {
                 .map(BlockHeader::getStateRoot)
                 .orElseThrow(() -> new RuntimeException("chain head not found"));
         Node<Bytes> root = getAccountNodeValue(rootHash, Bytes.EMPTY);
+        listener.root(rootHash);
         traverseAccountTrie(root);
     }
 
@@ -103,13 +105,16 @@ public class TrieTraversal {
                                 final Optional<Bytes> code =
                                         storageNodeFinder.getCode(accountHash, accountValue.getCodeHash());
                                 if (code.isEmpty()) {
+                                    isInvalidWorldstate = true;
                                     listener.missingCodeHash(accountValue.getCodeHash(), accountHash);
                                 } else {
                                     final Hash foundCodeHash = Hash.hash(code.orElseThrow());
                                     if (!foundCodeHash.equals(accountValue.getCodeHash())) {
+                                        isInvalidWorldstate = true;
                                         listener.invalidCode(accountHash, accountValue.getCodeHash(), foundCodeHash);
+                                    } else {
+                                        nodeFoundListener.onCode(accountHash, code.orElseThrow());
                                     }
-                                    nodeFoundListener.onCode(accountHash, code.orElseThrow());
                                 }
                             }
                             // Add storage, if appropriate
@@ -118,8 +123,6 @@ public class TrieTraversal {
                                         accountHash,
                                         getStorageNodeValue(accountValue.getStorageRoot(), accountHash, Bytes.EMPTY));
                             }
-                        } else {
-                            listener.missingValueForNode(node.getHash());
                         }
                     }
                 });
@@ -146,11 +149,13 @@ public class TrieTraversal {
     private Node<Bytes> getAccountNodeValue(final Bytes32 hash, final Bytes location) {
         final Optional<Bytes> bytes = storageNodeFinder.getAccountNode(location, hash);
         if (bytes.isEmpty()) {
+            isInvalidWorldstate = true;
             listener.missingAccountTrieForHash(hash, location);
             return null;
         }
         final Hash foundHashNode = Hash.hash(bytes.orElseThrow());
         if (!foundHashNode.equals(hash)) {
+            isInvalidWorldstate = true;
             listener.invalidAccountTrieForHash(hash, location, foundHashNode);
             return null;
         } else {
@@ -164,11 +169,13 @@ public class TrieTraversal {
         final Optional<Bytes> bytes =
                 storageNodeFinder.getStorageNode(accountHash, location, hash);
         if (bytes.isEmpty()) {
+            isInvalidWorldstate = true;
             listener.missingStorageTrieForHash(hash, location);
             return null;
         }
         final Hash foundHashNode = Hash.hash(bytes.orElseThrow());
         if (!foundHashNode.equals(hash)) {
+            isInvalidWorldstate = true;
             listener.invalidStorageTrieForHash(hash, location, foundHashNode);
             return null;
         } else {
@@ -182,4 +189,7 @@ public class TrieTraversal {
         return !Objects.equals(node.getHash(), parentNode.getHash()) && node.isReferencedByHash();
     }
 
+    public boolean isInvalidWorldstate() {
+        return isInvalidWorldstate;
+    }
 }

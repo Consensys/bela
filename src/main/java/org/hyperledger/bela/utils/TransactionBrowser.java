@@ -57,4 +57,7 @@ public class TransactionBrowser {
         transactionPanel.updateWithTransaction(transactionResult);
     }
 
+    public TransactionResult getTransactionResult() {
+        return transactionResults.get(transactionIndex);
+    }
 }

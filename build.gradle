@@ -9,6 +9,8 @@ repositories {
     mavenCentral()
     maven { url "https://hyperledger.jfrog.io/hyperledger/besu-maven" }
     maven { url "https://artifacts.consensys.net/public/maven/maven/" }
+    maven { url "https://splunk.jfrog.io/splunk/ext-releases-local" }
+    maven { url "https://dl.cloudsmith.io/public/consensys/quorum-mainnet-launcher/maven/"}
 }
 
 description("BEsu LAterna commandline interrogation tool")
@@ -18,6 +20,10 @@ sourceCompatibility = 15
 targetCompatibility = 15
 
 dependencies {
+    implementation 'org.hyperledger.besu.internal:api:22.4.0'
+    implementation 'org.hyperledger.besu.internal:besu:22.4.0'
+    implementation 'org.hyperledger.besu.internal:clique:22.4.0'
+    implementation 'org.hyperledger.besu.internal:config:22.4.0'
     implementation 'org.hyperledger.besu.internal:core:22.4.0'
     implementation 'org.hyperledger.besu.internal:crypto:22.4.0'
     implementation 'org.hyperledger.besu.internal:plugins-rocksdb:22.4.0'

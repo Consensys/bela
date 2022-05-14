@@ -30,7 +30,7 @@ public class Bela {
             MainWindow mainWindow = new MainWindow(gui);
             final ConfigWindow config = new ConfigWindow(gui, preferences);
             mainWindow.registerWindow(config);
-            mainWindow.registerWindow(new BlockChainBrowserWindow(storageProviderFactory, gui));
+            mainWindow.registerWindow(new BlockChainBrowserWindow(storageProviderFactory, gui, preferences));
             mainWindow.registerWindow(new BonsaiTreeVerifierWindow(storageProviderFactory));
             mainWindow.registerWindow(new DatabaseConversionWindow(storageProviderFactory));
             mainWindow.registerWindow(new LogoWindow());
@@ -45,6 +45,9 @@ public class Bela {
         if (args.length > 0) {
             preferences.put(Constants.DATA_PATH, args[0]);
             preferences.put(Constants.STORAGE_PATH, args[0] + "/database");
+        }
+        if (args.length > 1) {
+            preferences.put(Constants.GENESIS_PATH, args[1]);
         }
     }
 }

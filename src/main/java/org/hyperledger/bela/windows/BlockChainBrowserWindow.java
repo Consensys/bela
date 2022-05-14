@@ -11,6 +11,7 @@ import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialogBuilder;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
+import java.util.prefs.Preferences;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.utils.BlockChainBrowser;
 import org.hyperledger.bela.utils.BlockChainContext;
@@ -27,12 +28,14 @@ public class BlockChainBrowserWindow implements LanternaWindow {
     private BasicWindow window;
     private StorageProviderFactory storageProviderFactory;
     private WindowBasedTextGUI gui;
+    private final Preferences preferences;
     private BlockChainContext context;
 
-    public BlockChainBrowserWindow(final StorageProviderFactory storageProviderFactory, final WindowBasedTextGUI gui) {
+    public BlockChainBrowserWindow(final StorageProviderFactory storageProviderFactory,
+        final WindowBasedTextGUI gui, final Preferences preferences) {
         this.storageProviderFactory = storageProviderFactory;
-
         this.gui = gui;
+        this.preferences = preferences;
     }
 
     @Override
@@ -62,6 +65,7 @@ public class BlockChainBrowserWindow implements LanternaWindow {
         KeyControls controls = new KeyControls()
                 .addControl("prev Block", ArrowLeft, () -> browser = browser.moveBackward())
                 .addControl("next Block", ArrowRight, () -> browser = browser.moveForward())
+                .addControl("Transactions", 't', this::viewTransactions)
                 .addControl("close", 'c', window::close)
                 .addControl("roll Head", 'r', this::rollHead)
                 .addControl("Hash?", 'h', this::findByHash)
@@ -122,10 +126,12 @@ public class BlockChainBrowserWindow implements LanternaWindow {
         }
     }
 
-    private void transactions() {
-        final TransactionBrowserWindow transactionBrowserWindow = new TransactionBrowserWindow(
+    private void viewTransactions() {
+        if (browser.hasTransactions()) {
+            final TransactionBrowserWindow transactionBrowserWindow = new TransactionBrowserWindow(preferences,
                 context, gui, Hash.fromHexString(browser.getBlockHash()));
-        gui.addWindowAndWait(transactionBrowserWindow.createWindow());
+            gui.addWindowAndWait(transactionBrowserWindow.createWindow());
+        }
     }
 
 }

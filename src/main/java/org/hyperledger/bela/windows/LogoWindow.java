@@ -10,7 +10,7 @@ import com.googlecode.lanterna.gui2.Window;
 public class LogoWindow implements LanternaWindow {
     @Override
     public String label() {
-        return "Bela";
+        return "About";
     }
 
     @Override
@@ -20,7 +20,7 @@ public class LogoWindow implements LanternaWindow {
 
     @Override
     public Window createWindow() {
-        Window window = new BasicWindow(label());
+        Window window = new BasicWindow("Bela");
         Panel panel = new Panel(new LinearLayout());
         final Label logo = new Label("""
                                                                                                \s

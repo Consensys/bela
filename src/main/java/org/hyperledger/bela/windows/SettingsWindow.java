@@ -25,12 +25,12 @@ import static org.hyperledger.bela.windows.Constants.OVERRIDE_STORAGE_PATH;
 import static org.hyperledger.bela.windows.Constants.STORAGE_PATH;
 import static org.hyperledger.bela.windows.Constants.STORAGE_PATH_DEFAULT;
 
-public class ConfigWindow implements LanternaWindow {
+public class SettingsWindow implements LanternaWindow {
 
     private WindowBasedTextGUI gui;
     Preferences preferences;
 
-    public ConfigWindow(final WindowBasedTextGUI gui, final Preferences preferences) {
+    public SettingsWindow(final WindowBasedTextGUI gui, final Preferences preferences) {
         this.gui = gui;
         this.preferences = preferences;
     }
@@ -48,7 +48,7 @@ public class ConfigWindow implements LanternaWindow {
 
     @Override
     public Window createWindow() {
-        Window window = new BasicWindow(label());
+        Window window = new BasicWindow("Settings");
         Panel panel = new Panel(new GridLayout(3));
         GridLayout gridLayout = (GridLayout) panel.getLayoutManager();
         gridLayout.setHorizontalSpacing(3);

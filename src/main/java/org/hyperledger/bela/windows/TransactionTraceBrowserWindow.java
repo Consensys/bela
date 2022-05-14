@@ -44,7 +44,7 @@ public class TransactionTraceBrowserWindow implements LanternaWindow, WindowList
 
     @Override
     public MenuGroup group() {
-        return MenuGroup.ACTIONS;
+        return MenuGroup.DATABASE;
     }
 
     @Override

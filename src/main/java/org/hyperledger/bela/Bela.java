@@ -15,17 +15,17 @@ import org.hyperledger.bela.windows.Constants;
 import org.hyperledger.bela.windows.DatabaseConversionWindow;
 import org.hyperledger.bela.windows.LogoWindow;
 import org.hyperledger.bela.windows.MainWindow;
-import org.hyperledger.besu.ethereum.storage.StorageProvider;
+
+import static org.hyperledger.bela.windows.Constants.DATA_PATH;
 
 public class Bela {
     public static void main(String[] args) throws Exception {
         final Preferences preferences = Preferences.userNodeForPackage(Bela.class);
         processArgs(preferences, args);
-        final StorageProviderFactory storageProviderFactory = new StorageProviderFactory(preferences);
 
         DefaultTerminalFactory terminalFactory = new DefaultTerminalFactory();
         try (Screen screen = terminalFactory.createScreen();
-             StorageProvider provider = storageProviderFactory.createProvider()) {
+             StorageProviderFactory storageProviderFactory = new StorageProviderFactory(preferences)) {
             screen.startScreen();
             final WindowBasedTextGUI gui = new MultiWindowTextGUI(screen);
 
@@ -46,7 +46,7 @@ public class Bela {
 
     private static void processArgs(final Preferences preferences, final String[] args) {
         if (args.length > 0) {
-            preferences.put(Constants.DATA_PATH, args[0]);
+            preferences.put(DATA_PATH, args[0]);
             preferences.put(Constants.STORAGE_PATH, args[0] + "/database");
         }
         if (args.length > 1) {

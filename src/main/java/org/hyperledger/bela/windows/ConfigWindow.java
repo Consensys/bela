@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.prefs.Preferences;
 import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.Button;
+import com.googlecode.lanterna.gui2.CheckBoxList;
+import com.googlecode.lanterna.gui2.EmptySpace;
 import com.googlecode.lanterna.gui2.GridLayout;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
@@ -19,6 +21,7 @@ import static org.hyperledger.bela.windows.Constants.DATA_PATH;
 import static org.hyperledger.bela.windows.Constants.DATA_PATH_DEFAULT;
 import static org.hyperledger.bela.windows.Constants.GENESIS_PATH;
 import static org.hyperledger.bela.windows.Constants.GENESIS_PATH_DEFAULT;
+import static org.hyperledger.bela.windows.Constants.OVERRIDE_STORAGE_PATH;
 import static org.hyperledger.bela.windows.Constants.STORAGE_PATH;
 import static org.hyperledger.bela.windows.Constants.STORAGE_PATH_DEFAULT;
 
@@ -59,6 +62,13 @@ public class ConfigWindow implements LanternaWindow {
             path.ifPresent(dataPath::setText);
         }));
 
+        CheckBoxList<String> checkBoxList = new CheckBoxList<>();
+        checkBoxList.addItem("Assume Storage path", preferences.getBoolean(OVERRIDE_STORAGE_PATH, true));
+        panel.addComponent(new EmptySpace());
+        panel.addComponent(checkBoxList);
+        panel.addComponent(new EmptySpace());
+
+
         panel.addComponent(new Label("Storage Path"));
         final TextBox storagePath = new TextBox(preferences.get(STORAGE_PATH, STORAGE_PATH_DEFAULT));
         panel.addComponent(storagePath);
@@ -67,7 +77,15 @@ public class ConfigWindow implements LanternaWindow {
             path.ifPresent(storagePath::setText);
         }));
 
-        panel.addComponent(new Label("Storage Path"));
+        checkBoxList.addListener((itemIndex, checked) -> {
+            if (itemIndex == 0) {
+                updateStoragePath(storagePath, checked);
+            }
+        });
+        updateStoragePath(storagePath, checkBoxList.isChecked(0));
+
+
+        panel.addComponent(new Label("Genesis Path"));
         final TextBox genesisPath = new TextBox(preferences.get(GENESIS_PATH, GENESIS_PATH_DEFAULT));
         panel.addComponent(genesisPath);
         panel.addComponent(new Button("...", () -> {
@@ -80,18 +98,28 @@ public class ConfigWindow implements LanternaWindow {
             preferences.put(DATA_PATH, dataPath.getText());
             preferences.put(STORAGE_PATH, storagePath.getText());
             preferences.put(GENESIS_PATH, genesisPath.getText());
+            preferences.putBoolean(OVERRIDE_STORAGE_PATH, checkBoxList.isChecked(0));
         }));
 
         panel.addComponent(new Button("Ok", () -> {
             preferences.put(DATA_PATH, dataPath.getText());
             preferences.put(STORAGE_PATH, storagePath.getText());
             preferences.put(GENESIS_PATH, genesisPath.getText());
+            preferences.putBoolean(OVERRIDE_STORAGE_PATH, checkBoxList.isChecked(0));
             window.close();
         }));
 
 
         window.setComponent(panel);
         return window;
+    }
+
+    private void updateStoragePath(final TextBox storagePath, final boolean readOnly) {
+        storagePath.setReadOnly(readOnly);
+        if (readOnly) {
+            final String defaultCalculatedPath = preferences.get(DATA_PATH, DATA_PATH_DEFAULT) + "/" + STORAGE_PATH_DEFAULT;
+            storagePath.setText(defaultCalculatedPath);
+        }
     }
 
     private Optional<String> askForPath(final String title) {

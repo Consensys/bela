@@ -19,7 +19,7 @@ import static org.hyperledger.bela.windows.Constants.DATA_PATH_DEFAULT;
 import static org.hyperledger.bela.windows.Constants.STORAGE_PATH;
 import static org.hyperledger.bela.windows.Constants.STORAGE_PATH_DEFAULT;
 
-public class StorageProviderFactory {
+public class StorageProviderFactory implements AutoCloseable {
     private final Preferences preferences;
     private StorageProvider provider;
     private Path dataPath;
@@ -71,4 +71,10 @@ public class StorageProviderFactory {
         return dataPath;
     }
 
+    @Override
+    public void close() throws Exception {
+        if (provider != null) {
+            provider.close();
+        }
+    }
 }

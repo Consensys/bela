@@ -5,7 +5,8 @@ public class Constants {
     public static final String DATA_PATH = "DATA_PATH";
     public static final String DATA_PATH_DEFAULT = ".";
     public static final String STORAGE_PATH = "STORAGE_PATH";
-    public static final String STORAGE_PATH_DEFAULT = "./database";
+    public static final String OVERRIDE_STORAGE_PATH = "OVERRIDE_STORAGE_PATH";
+    public static final String STORAGE_PATH_DEFAULT = "database";
     public static final String GENESIS_PATH = "GENESIS_PATH";
     public static final String GENESIS_PATH_DEFAULT = "";
     public static final String NODE_KEY = "NODE_KEY";

@@ -15,18 +15,20 @@ import org.hyperledger.bela.windows.Constants;
 import org.hyperledger.bela.windows.DatabaseConversionWindow;
 import org.hyperledger.bela.windows.LogoWindow;
 import org.hyperledger.bela.windows.MainWindow;
+import org.hyperledger.besu.ethereum.storage.StorageProvider;
 
 public class Bela {
     public static void main(String[] args) throws Exception {
         final Preferences preferences = Preferences.userNodeForPackage(Bela.class);
         processArgs(preferences, args);
+        final StorageProviderFactory storageProviderFactory = new StorageProviderFactory(preferences);
 
         DefaultTerminalFactory terminalFactory = new DefaultTerminalFactory();
-        try (Screen screen = terminalFactory.createScreen();) {
+        try (Screen screen = terminalFactory.createScreen();
+             StorageProvider provider = storageProviderFactory.createProvider()) {
             screen.startScreen();
             final WindowBasedTextGUI gui = new MultiWindowTextGUI(screen);
 
-            final StorageProviderFactory storageProviderFactory = new StorageProviderFactory(preferences);
             MainWindow mainWindow = new MainWindow(gui);
             final ConfigWindow config = new ConfigWindow(gui, preferences);
             mainWindow.registerWindow(config);
@@ -39,6 +41,7 @@ public class Bela {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        System.out.println("Bye bye...");
     }
 
     private static void processArgs(final Preferences preferences, final String[] args) {

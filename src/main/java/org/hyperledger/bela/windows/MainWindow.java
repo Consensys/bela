@@ -54,7 +54,7 @@ public class MainWindow implements LanternaWindow {
                     .add(new MenuItem(lanternaWindow.label(), () -> launchWindow(lanternaWindow)));
         }
 
-        groups.get(MenuGroup.FILE).add(new MenuItem("Exit...", window::close));
+        groups.get(MenuGroup.FILE).add(new MenuItem("Exit", window::close));
 
         window.setMenuBar(bar);
         return window;

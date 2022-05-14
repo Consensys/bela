@@ -49,7 +49,7 @@ public class TransactionBrowserWindow implements LanternaWindow {
 
     @Override
     public MenuGroup group() {
-        return MenuGroup.ACTIONS;
+        return MenuGroup.DATABASE;
     }
 
     @Override

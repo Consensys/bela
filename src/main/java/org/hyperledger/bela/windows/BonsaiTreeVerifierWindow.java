@@ -46,7 +46,7 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, BonsaiListener 
 
     @Override
     public MenuGroup group() {
-        return MenuGroup.ACTIONS;
+        return MenuGroup.DATABASE;
     }
 
     @Override

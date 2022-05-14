@@ -21,6 +21,9 @@ import org.hyperledger.bela.utils.bonsai.BonsaiTraversal;
 import org.hyperledger.bela.utils.bonsai.BonsaiTraversalTrieType;
 import org.hyperledger.besu.datatypes.Hash;
 
+import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
+import static org.hyperledger.bela.windows.Constants.KEY_START;
+
 public class BonsaiTreeVerifierWindow implements LanternaWindow, BonsaiListener {
     private BasicWindow window;
     private final StorageProviderFactory storageProviderFactory;
@@ -54,8 +57,8 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, BonsaiListener 
         Panel panel = new Panel(new LinearLayout());
 
         KeyControls controls = new KeyControls()
-                .addControl("start", 's', this::startVerifier)
-                .addControl("close", 'c', window::close);
+                .addControl("Start", KEY_START, this::startVerifier)
+                .addControl("Close", KEY_CLOSE, window::close);
         window.addWindowListener(controls);
         panel.addComponent(controls.createComponent());
 

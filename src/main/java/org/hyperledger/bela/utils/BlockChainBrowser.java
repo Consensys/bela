@@ -136,6 +136,18 @@ public class BlockChainBrowser {
         updatePanels(blockResult);
     }
 
+    public BlockChainBrowser moveToHead() {
+        blockResult = getChainHead();
+        updatePanels(blockResult);
+        return this;
+    }
+
+    public BlockChainBrowser moveToStart() {
+        blockResult = getBlockByNumber(0);
+        updatePanels(blockResult);
+        return this;
+    }
+
     public boolean hasTransactions() {
         return blockResult.map(r -> !r.getTransactions().isEmpty()).orElse(false);
     }

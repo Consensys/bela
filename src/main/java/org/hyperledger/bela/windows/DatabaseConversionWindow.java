@@ -24,6 +24,10 @@ import org.hyperledger.bela.utils.bonsai.BonsaiTraversalTrieType;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.DatabaseMetadata;
 
+import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
+import static org.hyperledger.bela.windows.Constants.KEY_CONVERT_TO_BONSAI;
+import static org.hyperledger.bela.windows.Constants.KEY_CONVERT_TO_FOREST;
+
 public class DatabaseConversionWindow implements LanternaWindow, BonsaiListener {
     private BasicWindow window;
     private final StorageProviderFactory storageProviderFactory;
@@ -59,9 +63,9 @@ public class DatabaseConversionWindow implements LanternaWindow, BonsaiListener 
         Panel panel = new Panel(new LinearLayout());
 
         KeyControls controls = new KeyControls()
-                .addControl("Convert to Forest", 'f', this::convertToForest)
-                .addControl("Convert to Bonsai", 'b', this::convertToBonsai)
-                .addControl("close", 'c', window::close);
+                .addControl("Convert to Forest", KEY_CONVERT_TO_FOREST, this::convertToForest)
+                .addControl("Convert to Bonsai", KEY_CONVERT_TO_BONSAI, this::convertToBonsai)
+                .addControl("Close", KEY_CLOSE, window::close);
         window.addWindowListener(controls);
         panel.addComponent(controls.createComponent());
 

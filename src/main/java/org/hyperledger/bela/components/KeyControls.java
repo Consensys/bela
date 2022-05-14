@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.googlecode.lanterna.TerminalPosition;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.Borders;
+import com.googlecode.lanterna.gui2.Button;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.LinearLayout;
@@ -25,7 +26,7 @@ public class KeyControls implements LanternaComponent<Panel>, WindowListener {
 
     public KeyControls addControl(String label, Character c, Runnable action) {
         characterRunnableMap.put(c, action);
-        controls.add(newControlPanel(label, "'" + c + "'"));
+        controls.add(newControlPanel(label, "'" + c + "'", action));
         return this;
     }
 
@@ -34,7 +35,7 @@ public class KeyControls implements LanternaComponent<Panel>, WindowListener {
             throw new IllegalArgumentException("Use the other add control to add characters...");
         }
         keyStrokeRunnableMap.put(keyType, action);
-        controls.add(newControlPanel(label, key(keyType)));
+        controls.add(newControlPanel(label, key(keyType), action));
         return this;
     }
 
@@ -48,10 +49,10 @@ public class KeyControls implements LanternaComponent<Panel>, WindowListener {
 
     ;
 
-    private Panel newControlPanel(final String label, final String key) {
+    private Panel newControlPanel(final String label, final String key, Runnable action) {
         Panel panel = new Panel(new LinearLayout());
-        panel.addComponent(new Label(label).setLayoutData(LinearLayout.createLayoutData(LinearLayout.Alignment.Center, LinearLayout.GrowPolicy.None)));
-        panel.addComponent(new Label(key).setLayoutData(LinearLayout.createLayoutData(LinearLayout.Alignment.Center, LinearLayout.GrowPolicy.None)));
+        panel.addComponent(new Button(label, action).setLayoutData(LinearLayout.createLayoutData(LinearLayout.Alignment.Center, LinearLayout.GrowPolicy.None)));
+        panel.addComponent(new Label("(" + key + ")").setLayoutData(LinearLayout.createLayoutData(LinearLayout.Alignment.Center, LinearLayout.GrowPolicy.None)));
         return panel;
     }
 

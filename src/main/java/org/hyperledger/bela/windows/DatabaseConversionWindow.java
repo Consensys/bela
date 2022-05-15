@@ -14,6 +14,7 @@ import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.TextBox;
 import com.googlecode.lanterna.gui2.Window;
+import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.components.KeyControls;
@@ -24,11 +25,14 @@ import org.hyperledger.bela.utils.bonsai.BonsaiTraversalTrieType;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.DatabaseMetadata;
 
+import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 import static org.hyperledger.bela.windows.Constants.KEY_CONVERT_TO_BONSAI;
 import static org.hyperledger.bela.windows.Constants.KEY_CONVERT_TO_FOREST;
 
 public class DatabaseConversionWindow implements LanternaWindow, BonsaiListener {
+    private static final LambdaLogger log = getLogger(DatabaseConversionWindow.class);
+
     private BasicWindow window;
     private final StorageProviderFactory storageProviderFactory;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -108,7 +112,7 @@ public class DatabaseConversionWindow implements LanternaWindow, BonsaiListener 
             new DatabaseMetadata(2, Optional.empty())
                     .writeToDirectory(storageProviderFactory.getDataPath());
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("There was an error when setting the metadata version to version {}",version,e);
             throw new IllegalStateException("Failed to write db metadata version");
         }
     }

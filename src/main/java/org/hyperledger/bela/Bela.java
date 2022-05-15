@@ -10,12 +10,12 @@ import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.bela.windows.BlockChainBrowserWindow;
 import org.hyperledger.bela.windows.BonsaiTreeVerifierWindow;
-import org.hyperledger.bela.windows.P2PManagementWindow;
-import org.hyperledger.bela.windows.SettingsWindow;
 import org.hyperledger.bela.windows.Constants;
 import org.hyperledger.bela.windows.DatabaseConversionWindow;
 import org.hyperledger.bela.windows.LogoWindow;
 import org.hyperledger.bela.windows.MainWindow;
+import org.hyperledger.bela.windows.P2PManagementWindow;
+import org.hyperledger.bela.windows.SettingsWindow;
 
 import static org.hyperledger.bela.windows.Constants.DATA_PATH;
 
@@ -37,7 +37,7 @@ public class Bela {
             mainWindow.registerWindow(new BonsaiTreeVerifierWindow(storageProviderFactory));
             mainWindow.registerWindow(new DatabaseConversionWindow(storageProviderFactory));
             mainWindow.registerWindow(new LogoWindow());
-            mainWindow.registerWindow(new P2PManagementWindow(storageProviderFactory));
+            mainWindow.registerWindow(new P2PManagementWindow(gui, storageProviderFactory));
             final Window window = mainWindow.createWindow();
             gui.addWindowAndWait(window);
         } catch (IOException e) {

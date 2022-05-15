@@ -2,7 +2,9 @@ package org.hyperledger.bela.windows;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.googlecode.lanterna.gui2.BasicWindow;
@@ -14,6 +16,7 @@ import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
 import io.vertx.core.Vertx;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.apache.tuweni.bytes.Bytes32;
+import org.hyperledger.bela.components.Counter;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.crypto.KeyPair;
@@ -25,18 +28,28 @@ import org.hyperledger.besu.ethereum.eth.EthProtocol;
 import org.hyperledger.besu.ethereum.p2p.config.NetworkingConfiguration;
 import org.hyperledger.besu.ethereum.p2p.network.DefaultP2PNetwork;
 import org.hyperledger.besu.ethereum.p2p.network.P2PNetwork;
+import org.hyperledger.besu.ethereum.p2p.rlpx.ConnectCallback;
+import org.hyperledger.besu.ethereum.p2p.rlpx.DisconnectCallback;
+import org.hyperledger.besu.ethereum.p2p.rlpx.MessageCallback;
+import org.hyperledger.besu.ethereum.p2p.rlpx.connections.PeerConnection;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.Capability;
+import org.hyperledger.besu.ethereum.p2p.rlpx.wire.Message;
+import org.hyperledger.besu.ethereum.p2p.rlpx.wire.messages.DisconnectMessage;
 import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 
-public class P2PManagementWindow implements LanternaWindow {
-private static final LambdaLogger log = getLogger(P2PManagementWindow.class);
+public class P2PManagementWindow implements LanternaWindow, MessageCallback, ConnectCallback, DisconnectCallback {
+    private static final LambdaLogger log = getLogger(P2PManagementWindow.class);
 
     private final StorageProviderFactory storageProviderFactory;
     private P2PNetwork network;
     private WindowBasedTextGUI gui;
+
+    Map<Capability, Counter> counters = new HashMap<>();
+    Counter connect = new Counter("connect");
+    Counter disconnect = new Counter("disconnect");
 
     public P2PManagementWindow(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory) {
         this.gui = gui;
@@ -66,6 +79,20 @@ private static final LambdaLogger log = getLogger(P2PManagementWindow.class);
                 .addControl("Close", KEY_CLOSE, window::close);
         window.addWindowListener(controls);
         panel.addComponent(controls.createComponent());
+
+        final List<Capability> supportedCapabilities = calculateCapabilities(false);
+
+        panel.addComponent(connect.createComponent());
+        panel.addComponent(disconnect.createComponent());
+
+
+        supportedCapabilities.forEach(c -> {
+            final Counter counter = new Counter(c.getName() + "" + c.getVersion());
+            counters.put(c, counter);
+            panel.addComponent(counter.createComponent());
+        });
+
+
         window.setComponent(panel);
         return window;
     }
@@ -84,11 +111,12 @@ private static final LambdaLogger log = getLogger(P2PManagementWindow.class);
             if (network != null) {
                 network.close();
             }
+            final List<Capability> supportedCapabilities = calculateCapabilities(false);
             network = DefaultP2PNetwork.builder()
                     .vertx(Vertx.vertx())
                     .nodeKey(NodeKeyUtils.generate())
                     .config(networkingConfiguration)
-                    .supportedCapabilities(calculateCapabilities(false))
+                    .supportedCapabilities(supportedCapabilities)
                     .metricsSystem(new NoOpMetricsSystem())
                     .storageProvider(storageProviderFactory.createProvider())
 //                .natService(natService)
@@ -100,9 +128,17 @@ private static final LambdaLogger log = getLogger(P2PManagementWindow.class);
 //
 //        final RlpxAgent build = RlpxAgent.builder().build();
 
+
+            for (Capability capability : supportedCapabilities) {
+                network.subscribe(capability,this);
+            }
+
+            network.subscribeConnect(this);
+            network.subscribeDisconnect(this);
+
             network.start();
         } catch (IOException e) {
-            log.error("There was an error when starting network",e);
+            log.error("There was an error when starting network", e);
             MessageDialog.showMessageDialog(gui, "error", CharMatcher.javaIsoControl().removeFrom(e.getMessage()));
 
         }
@@ -115,7 +151,7 @@ private static final LambdaLogger log = getLogger(P2PManagementWindow.class);
                 network.close();
             }
         } catch (IOException e) {
-            log.error("There was an error when stopping the network",e);
+            log.error("There was an error when stopping the network", e);
             MessageDialog.showMessageDialog(gui, "error", CharMatcher.javaIsoControl().removeFrom(e.getMessage()));
         }
     }
@@ -132,6 +168,21 @@ private static final LambdaLogger log = getLogger(P2PManagementWindow.class);
         capabilities.add(EthProtocol.ETH66);
 
         return capabilities.build();
+    }
+
+    @Override
+    public void onMessage(final Capability capability, final Message message) {
+        counters.get(capability).add(1);
+    }
+
+    @Override
+    public void onConnect(final PeerConnection peer) {
+        connect.add(1);
+    }
+
+    @Override
+    public void onDisconnect(final PeerConnection connection, final DisconnectMessage.DisconnectReason reason, final boolean initiatedByPeer) {
+        disconnect.add(1);
     }
 }
 

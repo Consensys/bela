@@ -10,6 +10,7 @@ import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
 import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
+import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.model.TransactionResult;
 import org.hyperledger.bela.utils.BlockChainContext;
@@ -18,6 +19,7 @@ import org.hyperledger.bela.utils.TransactionBrowser;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.api.jsonrpc.internal.results.tracing.flat.FlatTrace;
 
+import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.KEY_BACK;
 import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 import static org.hyperledger.bela.windows.Constants.KEY_FORWARD;
@@ -25,6 +27,7 @@ import static org.hyperledger.bela.windows.Constants.KEY_LOOKUP_BY_HASH;
 import static org.hyperledger.bela.windows.Constants.KEY_TRACE_TRANSACTION;
 
 public class TransactionBrowserWindow implements LanternaWindow {
+private static final LambdaLogger log = getLogger(TransactionBrowserWindow.class);
 
 
     private TransactionBrowser browser;
@@ -87,7 +90,7 @@ public class TransactionBrowserWindow implements LanternaWindow {
         try {
             browser.moveByHash(Hash.fromHexStringLenient(s));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("There was an error when moving browser",e);
             MessageDialog.showMessageDialog(gui, "error", e.getMessage());
         }
     }

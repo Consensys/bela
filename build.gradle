@@ -45,11 +45,16 @@ dependencies {
     implementation 'com.googlecode.lanterna:lanterna:3.1.1'
     implementation 'io.vertx:vertx-core:4.2.7'
 
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36'
+    implementation 'kr.pe.kwonnam.slf4j-lambda:slf4j-lambda-core:0.1'
+    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.11'
+
 
 }
 
 configurations.all {
     exclude group: 'net.consensys.services', module: ':quorum-mainnet-launcher'
+    exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
 }
 
 application {

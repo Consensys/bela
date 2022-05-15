@@ -12,9 +12,12 @@ import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
 import com.googlecode.lanterna.gui2.menu.Menu;
 import com.googlecode.lanterna.gui2.menu.MenuBar;
 import com.googlecode.lanterna.gui2.menu.MenuItem;
+import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
+
+import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 
 public class MainWindow implements LanternaWindow {
-
+private static final LambdaLogger log = getLogger(MainWindow.class);
 
     private List<LanternaWindow> windows = new ArrayList<>();
     private WindowBasedTextGUI gui;
@@ -64,7 +67,7 @@ public class MainWindow implements LanternaWindow {
         try {
             gui.addWindowAndWait(window.createWindow());
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("There was an error when launching window {}",window.label(),e);
             MessageDialog.showMessageDialog(gui, "error", CharMatcher.javaIsoControl().removeFrom(e.getMessage()));
 
         }

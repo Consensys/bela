@@ -12,6 +12,7 @@ import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialogBuilder;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
+import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.utils.BlockChainBrowser;
 import org.hyperledger.bela.utils.BlockChainContext;
@@ -19,6 +20,7 @@ import org.hyperledger.bela.utils.BlockChainContextFactory;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.datatypes.Hash;
 
+import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.KEY_BACK;
 import static org.hyperledger.bela.windows.Constants.KEY_BEGINNING;
 import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
@@ -30,6 +32,8 @@ import static org.hyperledger.bela.windows.Constants.KEY_OPEN_TRANSACTION;
 import static org.hyperledger.bela.windows.Constants.KEY_ROLL_HEAD;
 
 public class BlockChainBrowserWindow implements LanternaWindow {
+private static final LambdaLogger log = getLogger(BlockChainBrowserWindow.class);
+
 
     private BlockChainBrowser browser;
     private BasicWindow window;
@@ -117,7 +121,7 @@ public class BlockChainBrowserWindow implements LanternaWindow {
         try {
             browser.moveByNumber(Long.parseLong(s));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("There was an error when moving browser",e);
             MessageDialog.showMessageDialog(gui, "error", e.getMessage());
         }
     }
@@ -130,7 +134,7 @@ public class BlockChainBrowserWindow implements LanternaWindow {
         try {
             browser.moveByHash(Hash.fromHexString(s));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("There was an error when moving browser",e);
             MessageDialog.showMessageDialog(gui, "error", e.getMessage());
         }
     }

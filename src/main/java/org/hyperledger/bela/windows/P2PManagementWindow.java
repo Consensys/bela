@@ -130,7 +130,7 @@ public class P2PManagementWindow implements LanternaWindow, MessageCallback, Con
 
 
             for (Capability capability : supportedCapabilities) {
-                network.subscribe(capability,this);
+                network.subscribe(capability, this);
             }
 
             network.subscribeConnect(this);

@@ -2,11 +2,13 @@ package org.hyperledger.bela;
 
 import java.io.IOException;
 import java.util.prefs.Preferences;
+import com.googlecode.lanterna.bundle.LanternaThemes;
 import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
+import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.bela.windows.BlockChainBrowserWindow;
 import org.hyperledger.bela.windows.BonsaiTreeVerifierWindow;
@@ -17,9 +19,14 @@ import org.hyperledger.bela.windows.MainWindow;
 import org.hyperledger.bela.windows.P2PManagementWindow;
 import org.hyperledger.bela.windows.SettingsWindow;
 
+import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.DATA_PATH;
+import static org.hyperledger.bela.windows.Constants.DEFAULT_THEME;
+import static org.hyperledger.bela.windows.Constants.THEME_KEY;
 
 public class Bela {
+    private static final LambdaLogger log = getLogger(Bela.class);
+
     public static void main(String[] args) throws Exception {
         final Preferences preferences = Preferences.userNodeForPackage(Bela.class);
         processArgs(preferences, args);
@@ -28,8 +35,9 @@ public class Bela {
         try (Screen screen = terminalFactory.createScreen();
              StorageProviderFactory storageProviderFactory = new StorageProviderFactory(preferences)) {
             screen.startScreen();
-            final WindowBasedTextGUI gui = new MultiWindowTextGUI(screen);
 
+            final WindowBasedTextGUI gui = new MultiWindowTextGUI(screen);
+            gui.setTheme(LanternaThemes.getRegisteredTheme(preferences.get(THEME_KEY, DEFAULT_THEME)));
             MainWindow mainWindow = new MainWindow(gui);
             final SettingsWindow config = new SettingsWindow(gui, preferences);
             mainWindow.registerWindow(config);

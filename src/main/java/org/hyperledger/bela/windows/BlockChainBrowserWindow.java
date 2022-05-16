@@ -32,7 +32,7 @@ import static org.hyperledger.bela.windows.Constants.KEY_OPEN_TRANSACTION;
 import static org.hyperledger.bela.windows.Constants.KEY_ROLL_HEAD;
 
 public class BlockChainBrowserWindow implements LanternaWindow {
-private static final LambdaLogger log = getLogger(BlockChainBrowserWindow.class);
+    private static final LambdaLogger log = getLogger(BlockChainBrowserWindow.class);
 
 
     private BlockChainBrowser browser;
@@ -121,7 +121,7 @@ private static final LambdaLogger log = getLogger(BlockChainBrowserWindow.class)
         try {
             browser.moveByNumber(Long.parseLong(s));
         } catch (Exception e) {
-            log.error("There was an error when moving browser",e);
+            log.error("There was an error when moving browser", e);
             MessageDialog.showMessageDialog(gui, "error", e.getMessage());
         }
     }
@@ -134,7 +134,7 @@ private static final LambdaLogger log = getLogger(BlockChainBrowserWindow.class)
         try {
             browser.moveByHash(Hash.fromHexString(s));
         } catch (Exception e) {
-            log.error("There was an error when moving browser",e);
+            log.error("There was an error when moving browser", e);
             MessageDialog.showMessageDialog(gui, "error", e.getMessage());
         }
     }

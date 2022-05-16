@@ -17,7 +17,7 @@ import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 
 public class MainWindow implements LanternaWindow {
-private static final LambdaLogger log = getLogger(MainWindow.class);
+    private static final LambdaLogger log = getLogger(MainWindow.class);
 
     private List<LanternaWindow> windows = new ArrayList<>();
     private WindowBasedTextGUI gui;
@@ -67,7 +67,7 @@ private static final LambdaLogger log = getLogger(MainWindow.class);
         try {
             gui.addWindowAndWait(window.createWindow());
         } catch (Exception e) {
-            log.error("There was an error when launching window {}",window.label(),e);
+            log.error("There was an error when launching window {}", window.label(), e);
             MessageDialog.showMessageDialog(gui, "error", CharMatcher.javaIsoControl().removeFrom(e.getMessage()));
 
         }

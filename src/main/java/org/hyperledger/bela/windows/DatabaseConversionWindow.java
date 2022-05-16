@@ -112,7 +112,7 @@ public class DatabaseConversionWindow implements LanternaWindow, BonsaiListener 
             new DatabaseMetadata(2, Optional.empty())
                     .writeToDirectory(storageProviderFactory.getDataPath());
         } catch (IOException e) {
-            log.error("There was an error when setting the metadata version to version {}",version,e);
+            log.error("There was an error when setting the metadata version to version {}", version, e);
             throw new IllegalStateException("Failed to write db metadata version");
         }
     }

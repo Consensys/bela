@@ -77,7 +77,7 @@ public class BlockChainBrowserWindow implements LanternaWindow {
                 .addControl(" <--", KEY_BACK, () -> browser = browser.moveBackward())
                 .addControl("Start", KEY_BEGINNING, () -> browser = browser.moveToStart())
                 .addControl("End", KEY_END, () -> browser = browser.moveToHead())
-                .addControl(" ->", KEY_FORWARD, () -> browser = browser.moveForward())
+                .addControl(" -->", KEY_FORWARD, () -> browser = browser.moveForward())
                 .addControl("Transactions", KEY_OPEN_TRANSACTION, this::viewTransactions)
                 .addControl("Close", KEY_CLOSE, window::close)
                 .addControl("Roll Head", KEY_ROLL_HEAD, this::rollHead)

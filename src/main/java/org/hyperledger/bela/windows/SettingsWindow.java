@@ -71,8 +71,7 @@ public class SettingsWindow implements LanternaWindow {
         CheckBoxList<String> checkBoxList = new CheckBoxList<>();
         checkBoxList.addItem("Assume Storage path", preferences.getBoolean(OVERRIDE_STORAGE_PATH, true));
         panel.addComponent(new EmptySpace());
-        panel.addComponent(checkBoxList);
-        panel.addComponent(new EmptySpace());
+        panel.addComponent(checkBoxList.setLayoutData(GridLayout.createLayoutData(GridLayout.Alignment.BEGINNING, GridLayout.Alignment.BEGINNING, true, false, 2, 1)));
 
 
         panel.addComponent(new Label("Storage Path"));
@@ -100,7 +99,9 @@ public class SettingsWindow implements LanternaWindow {
         }));
 
 
-        panel.addComponent(themePickerMenu.createComponent());
+        panel.addComponent(new Label("Theme"));
+        panel.addComponent(themePickerMenu.createComponent()
+                .setLayoutData(GridLayout.createLayoutData(GridLayout.Alignment.BEGINNING, GridLayout.Alignment.BEGINNING, true, false, 2, 1)));
 
         panel.addComponent(new Button("Cancel", () -> {
             themePickerMenu.resetToSavedTheme();
@@ -126,6 +127,7 @@ public class SettingsWindow implements LanternaWindow {
         preferences.put(GENESIS_PATH, genesisPath.getText());
         preferences.putBoolean(OVERRIDE_STORAGE_PATH, checkBoxList.isChecked(0));
         preferences.put(THEME_KEY, themePickerMenu.getCurrentTheme());
+        themePickerMenu.applyCurrent();
     }
 
     private void updateStoragePath(final TextBox storagePath, final boolean readOnly) {

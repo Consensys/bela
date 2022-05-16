@@ -1,19 +1,16 @@
 package org.hyperledger.bela.components;
 
 import java.util.ArrayList;
+import java.util.List;
 import com.googlecode.lanterna.bundle.LanternaThemes;
 import com.googlecode.lanterna.graphics.Theme;
 import com.googlecode.lanterna.gui2.ComboBox;
-import com.googlecode.lanterna.gui2.Direction;
-import com.googlecode.lanterna.gui2.Label;
-import com.googlecode.lanterna.gui2.LinearLayout;
-import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 
-public class ThemePicker implements LanternaComponent<Panel>, ComboBox.Listener {
+public class ThemePicker implements LanternaComponent<ComboBox<String>>, ComboBox.Listener {
 
-    public static final ArrayList<String> REGISTERED_THEMES = new ArrayList<>(LanternaThemes.getRegisteredThemes());
-    private final String savedTheme;
+    public static final List<String> REGISTERED_THEMES = new ArrayList<>(LanternaThemes.getRegisteredThemes());
+    private String savedTheme;
     private String currentTheme;
     private WindowBasedTextGUI gui;
 
@@ -23,9 +20,7 @@ public class ThemePicker implements LanternaComponent<Panel>, ComboBox.Listener 
     }
 
     @Override
-    public Panel createComponent() {
-        Panel panel = new Panel(new LinearLayout(Direction.HORIZONTAL));
-        panel.addComponent(new Label("Theme: "));
+    public ComboBox<String> createComponent() {
 
 
         final ComboBox<String> combo = new ComboBox<>(REGISTERED_THEMES);
@@ -37,9 +32,8 @@ public class ThemePicker implements LanternaComponent<Panel>, ComboBox.Listener 
             }
         }
         combo.addListener(this);
-        panel.addComponent(combo);
 
-        return panel;
+        return combo;
     }
 
     @Override
@@ -54,5 +48,9 @@ public class ThemePicker implements LanternaComponent<Panel>, ComboBox.Listener 
 
     public void resetToSavedTheme() {
         gui.setTheme(LanternaThemes.getRegisteredTheme(savedTheme));
+    }
+
+    public void applyCurrent() {
+        this.savedTheme = currentTheme;
     }
 }

@@ -27,7 +27,7 @@ import static org.hyperledger.bela.windows.Constants.KEY_LOOKUP_BY_HASH;
 import static org.hyperledger.bela.windows.Constants.KEY_TRACE_TRANSACTION;
 
 public class TransactionBrowserWindow implements LanternaWindow {
-private static final LambdaLogger log = getLogger(TransactionBrowserWindow.class);
+    private static final LambdaLogger log = getLogger(TransactionBrowserWindow.class);
 
 
     private TransactionBrowser browser;
@@ -90,7 +90,7 @@ private static final LambdaLogger log = getLogger(TransactionBrowserWindow.class
         try {
             browser.moveByHash(Hash.fromHexStringLenient(s));
         } catch (Exception e) {
-            log.error("There was an error when moving browser",e);
+            log.error("There was an error when moving browser", e);
             MessageDialog.showMessageDialog(gui, "error", e.getMessage());
         }
     }

@@ -15,24 +15,30 @@ import com.googlecode.lanterna.gui2.TextBox;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.gui2.dialogs.DirectoryDialogBuilder;
+import org.hyperledger.bela.components.ThemePicker;
 import org.hyperledger.bela.config.BelaConfigurationImpl;
 
 import static org.hyperledger.bela.windows.Constants.DATA_PATH;
 import static org.hyperledger.bela.windows.Constants.DATA_PATH_DEFAULT;
+import static org.hyperledger.bela.windows.Constants.DEFAULT_THEME;
 import static org.hyperledger.bela.windows.Constants.GENESIS_PATH;
 import static org.hyperledger.bela.windows.Constants.GENESIS_PATH_DEFAULT;
 import static org.hyperledger.bela.windows.Constants.OVERRIDE_STORAGE_PATH;
 import static org.hyperledger.bela.windows.Constants.STORAGE_PATH;
 import static org.hyperledger.bela.windows.Constants.STORAGE_PATH_DEFAULT;
+import static org.hyperledger.bela.windows.Constants.THEME_KEY;
 
 public class SettingsWindow implements LanternaWindow {
 
     private WindowBasedTextGUI gui;
     Preferences preferences;
+    private ThemePicker themePickerMenu;
 
     public SettingsWindow(final WindowBasedTextGUI gui, final Preferences preferences) {
         this.gui = gui;
         this.preferences = preferences;
+        themePickerMenu = new ThemePicker(gui, preferences.get(THEME_KEY, DEFAULT_THEME));
+
     }
 
 
@@ -93,25 +99,33 @@ public class SettingsWindow implements LanternaWindow {
             path.ifPresent(genesisPath::setText);
         }));
 
-        panel.addComponent(new Button("Cancel", window::close));
+
+        panel.addComponent(themePickerMenu.createComponent());
+
+        panel.addComponent(new Button("Cancel", () -> {
+            themePickerMenu.resetToSavedTheme();
+            window.close();
+        }));
         panel.addComponent(new Button("Apply", () -> {
-            preferences.put(DATA_PATH, dataPath.getText());
-            preferences.put(STORAGE_PATH, storagePath.getText());
-            preferences.put(GENESIS_PATH, genesisPath.getText());
-            preferences.putBoolean(OVERRIDE_STORAGE_PATH, checkBoxList.isChecked(0));
+            apply(dataPath, checkBoxList, storagePath, genesisPath);
         }));
 
         panel.addComponent(new Button("Ok", () -> {
-            preferences.put(DATA_PATH, dataPath.getText());
-            preferences.put(STORAGE_PATH, storagePath.getText());
-            preferences.put(GENESIS_PATH, genesisPath.getText());
-            preferences.putBoolean(OVERRIDE_STORAGE_PATH, checkBoxList.isChecked(0));
+            apply(dataPath, checkBoxList, storagePath, genesisPath);
             window.close();
         }));
 
 
         window.setComponent(panel);
         return window;
+    }
+
+    private void apply(final TextBox dataPath, final CheckBoxList<String> checkBoxList, final TextBox storagePath, final TextBox genesisPath) {
+        preferences.put(DATA_PATH, dataPath.getText());
+        preferences.put(STORAGE_PATH, storagePath.getText());
+        preferences.put(GENESIS_PATH, genesisPath.getText());
+        preferences.putBoolean(OVERRIDE_STORAGE_PATH, checkBoxList.isChecked(0));
+        preferences.put(THEME_KEY, themePickerMenu.getCurrentTheme());
     }
 
     private void updateStoragePath(final TextBox storagePath, final boolean readOnly) {

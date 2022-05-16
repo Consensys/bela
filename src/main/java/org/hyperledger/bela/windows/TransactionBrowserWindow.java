@@ -67,8 +67,8 @@ public class TransactionBrowserWindow implements LanternaWindow {
         Panel panel = new Panel(new LinearLayout());
 
         KeyControls controls = new KeyControls()
-                .addControl("<-", KEY_BACK, () -> browser = browser.moveBackward())
-                .addControl("->", KEY_FORWARD, () -> browser = browser.moveForward())
+                .addControl("<--", KEY_BACK, () -> browser = browser.moveBackward())
+                .addControl("-->", KEY_FORWARD, () -> browser = browser.moveForward())
                 .addControl("Close", KEY_CLOSE, window::close)
                 .addControl("Hash?", KEY_LOOKUP_BY_HASH, this::findByHash)
                 .addControl("Trace", KEY_TRACE_TRANSACTION, this::traceTransaction);

@@ -2,6 +2,9 @@ package org.hyperledger.bela.utils;
 
 import java.nio.file.Path;
 import java.util.Arrays;
+
+import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.MutableBytes;
 import org.hyperledger.bela.config.BelaConfigurationImpl;
 import org.hyperledger.bela.converter.RocksDBKeyValueStorageConverterFactory;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
@@ -32,4 +35,15 @@ public class DataUtils {
                 .build();
     }
 
+    public static Bytes bytesToPath(final Bytes bytes) {
+        final MutableBytes path = MutableBytes.create(bytes.size() * 2 + 1);
+        int j = 0;
+        for (int i = 0; i < bytes.size(); i += 1, j += 2) {
+            final byte b = bytes.get(i);
+            path.set(j, (byte) ((b >>> 4) & 0x0f));
+            path.set(j + 1, (byte) (b & 0x0f));
+        }
+        path.set(j, (byte) 0x10);
+        return path;
+    }
 }

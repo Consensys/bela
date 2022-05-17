@@ -15,14 +15,18 @@
  *
  */
 
-package org.hyperledger.bela.utils.bonsai;
+package org.hyperledger.bela.trie;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Optional;
+
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.config.BelaConfigurationImpl;
+import org.hyperledger.bela.trie.database.BonsaiWorldStateReader;
+import org.hyperledger.bela.utils.DataUtils;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
@@ -33,32 +37,28 @@ import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBMetricsFactor
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBCLIOptions;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBFactoryConfiguration;
 
-public class BonsaiTreeVerifier implements BonsaiListener {
+public class BonsaiTreeVerifier implements TrieTraversalListener {
 
     private int visited;
 
     public static void main(final String[] args) {
         final Path dataDir = Paths.get(args[0]);
-        System.out.println("We are verifying : " + dataDir);
+        Optional<Bytes> maybePath = Optional.empty();
+        if(args.length>1) {
+            maybePath = Optional.of(DataUtils.bytesToPath(Bytes.fromHexString(args[1])));
+        }
+        System.out.println("Check in progress : " + dataDir);
         final StorageProvider provider =
                 createKeyValueStorageProvider(dataDir, dataDir.resolve("database"));
         final BonsaiTreeVerifier listener = new BonsaiTreeVerifier();
-        BonsaiTraversal tr = new BonsaiTraversal(provider, listener);
-        System.out.println();
-        System.out.println("ޏ₍ ὸ.ό₎ރ");
-        System.out.println(
-                "\uD83E\uDD1E\uD83E\uDD1E\uD83E\uDD1E\uD83E\uDD1E\uD83E\uDD1E\uD83E\uDD1E\uD83E\uDD1E");
-
+        TrieTraversal tr = new TrieTraversal(maybePath, provider, new BonsaiWorldStateReader(provider), listener);
         try {
             tr.traverse();
-            System.out.println("ޏ₍ ὸ.ό₎ރ World state was verified... ޏ₍ ὸ.ό₎ރ");
-            System.out.println("Verified root " + tr.getRoot() + " with " + listener.getVisited() + " nodes");
+            System.out.println("Verified " + listener.getVisited() + " nodes");
         } catch (Exception e) {
-            System.out.println("There was a problem (╯°□°)╯︵ ┻━┻: " + e.getMessage());
+            System.out.println("There was a problem : " + e.getMessage());
             e.printStackTrace();
         }
-
-        System.out.println("AAAAAAAAAA!!!!!!!");
     }
 
     private int getVisited() {
@@ -109,7 +109,7 @@ public class BonsaiTreeVerifier implements BonsaiListener {
     }
 
     @Override
-    public void visited(final BonsaiTraversalTrieType type) {
+    public void visited(final TraversalTrieType type) {
         visited++;
         if (visited % 10000 == 0) {
             System.out.print(type.getText());

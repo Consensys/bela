@@ -1,11 +1,11 @@
-package org.hyperledger.bela.utils.bonsai;
+package org.hyperledger.bela.trie;
 
-public enum BonsaiTraversalTrieType {
+public enum TraversalTrieType {
     Storage("#"), Account("@");
 
     private String text;
 
-    BonsaiTraversalTrieType(final String text) {
+    TraversalTrieType(final String text) {
 
         this.text = text;
     }

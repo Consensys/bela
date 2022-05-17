@@ -19,9 +19,9 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.converter.DatabaseConverter;
+import org.hyperledger.bela.trie.TrieTraversalListener;
 import org.hyperledger.bela.utils.StorageProviderFactory;
-import org.hyperledger.bela.utils.bonsai.BonsaiListener;
-import org.hyperledger.bela.utils.bonsai.BonsaiTraversalTrieType;
+import org.hyperledger.bela.trie.TraversalTrieType;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.DatabaseMetadata;
 
@@ -30,7 +30,7 @@ import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 import static org.hyperledger.bela.windows.Constants.KEY_CONVERT_TO_BONSAI;
 import static org.hyperledger.bela.windows.Constants.KEY_CONVERT_TO_FOREST;
 
-public class DatabaseConversionWindow implements LanternaWindow, BonsaiListener {
+public class DatabaseConversionWindow implements LanternaWindow, TrieTraversalListener {
     private static final LambdaLogger log = getLogger(DatabaseConversionWindow.class);
 
     private BasicWindow window;
@@ -88,7 +88,7 @@ public class DatabaseConversionWindow implements LanternaWindow, BonsaiListener 
             visited.set(0);
             execution = executorService.submit(() -> {
                 new DatabaseConverter(storageProviderFactory.createProvider(), this).convertToBonsai();
-                runningLabel.setText("Converting Worldstate to Bonsai");
+                runningLabel.setText("Converted Worldstate to Bonsai");
 
             });
             runningLabel.setText("Running...");
@@ -100,7 +100,7 @@ public class DatabaseConversionWindow implements LanternaWindow, BonsaiListener 
             visited.set(0);
             execution = executorService.submit(() -> {
                 new DatabaseConverter(storageProviderFactory.createProvider(), this).convertToForest();
-                runningLabel.setText("Converting Worldstate to Forest");
+                runningLabel.setText("Converted Worldstate to Forest");
 
             });
             runningLabel.setText("Running...");
@@ -140,7 +140,7 @@ public class DatabaseConversionWindow implements LanternaWindow, BonsaiListener 
     }
 
     @Override
-    public void visited(final BonsaiTraversalTrieType type) {
+    public void visited(final TraversalTrieType type) {
         counterLabel.setText(String.valueOf(visited.incrementAndGet()));
     }
 

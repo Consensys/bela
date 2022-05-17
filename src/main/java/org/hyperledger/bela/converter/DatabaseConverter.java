@@ -1,27 +1,28 @@
 package org.hyperledger.bela.converter;
 
-import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.hyperledger.bela.trie.TrieTraversalListener;
 import org.hyperledger.bela.trie.NodeFoundListener;
-import org.hyperledger.bela.trie.NodeRetriever;
 import org.hyperledger.bela.trie.TrieTraversal;
-import org.hyperledger.bela.utils.bonsai.BonsaiListener;
+import org.hyperledger.bela.trie.database.BonsaiWorldStateReader;
+import org.hyperledger.bela.trie.database.ForestWorldStateReader;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
-import org.hyperledger.besu.ethereum.trie.MerklePatriciaTrie;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorageTransaction;
+
+import java.util.Optional;
 
 public class DatabaseConverter {
 
     private final StorageProvider provider;
-    private final BonsaiListener listener;
+    private final TrieTraversalListener trieTraversalListener;
 
-    public DatabaseConverter(final StorageProvider storageProvider, BonsaiListener listener) {
+    public DatabaseConverter(final StorageProvider storageProvider, final TrieTraversalListener trieTraversalListener) {
         this.provider = storageProvider;
-        this.listener = listener;
+        this.trieTraversalListener = trieTraversalListener;
     }
 
 
@@ -29,31 +30,7 @@ public class DatabaseConverter {
         KeyValueStorage forestBranchStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.WORLD_STATE);
         KeyValueStorage trieBranchStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_BRANCH_STORAGE);
         KeyValueStorage codeStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.CODE_STORAGE);
-        TrieTraversal tr = new TrieTraversal(provider, new NodeRetriever() {
-            @Override
-            public Optional<Bytes> getAccountNode(Bytes location, Bytes32 hash) {
-                if (hash.equals(MerklePatriciaTrie.EMPTY_TRIE_NODE_HASH)) {
-                    return Optional.of(MerklePatriciaTrie.EMPTY_TRIE_NODE);
-                } else {
-                    return forestBranchStorage.get(hash.toArrayUnsafe()).map(Bytes::wrap);
-                }
-
-            }
-
-            @Override
-            public Optional<Bytes> getStorageNode(Bytes32 accountHash, Bytes location, Bytes32 hash) {
-                if (hash.equals(MerklePatriciaTrie.EMPTY_TRIE_NODE_HASH)) {
-                    return Optional.of(MerklePatriciaTrie.EMPTY_TRIE_NODE);
-                } else {
-                    return forestBranchStorage.get(hash.toArrayUnsafe()).map(Bytes::wrap);
-                }
-            }
-
-            @Override
-            public Optional<Bytes> getCode(Bytes32 accountHash, Bytes32 hash) {
-                return forestBranchStorage.get(hash.toArrayUnsafe()).map(Bytes::wrap);
-            }
-        }, new NodeFoundListener() {
+        TrieTraversal tr = new TrieTraversal(Optional.empty(), provider, new ForestWorldStateReader(provider), new NodeFoundListener() {
             @Override
             public void onAccountNode(Bytes location, Bytes value) {
                 KeyValueStorageTransaction keyValueStorageTransaction = trieBranchStorage.startTransaction();
@@ -75,39 +52,20 @@ public class DatabaseConverter {
                 keyValueStorageTransaction.put(accountHash.toArrayUnsafe(), value.toArrayUnsafe());
                 keyValueStorageTransaction.commit();
             }
-        }, listener);
-        tr.start();
+        }, trieTraversalListener);
+        tr.traverse();
+        if(!tr.isInvalidWorldstate()) {
+            forestBranchStorage.clear();
+        }
+
     }
 
     public void convertToForest() {
         KeyValueStorage forestBranchStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.WORLD_STATE);
         KeyValueStorage trieBranchStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_BRANCH_STORAGE);
-        TrieTraversal tr = new TrieTraversal(provider, new NodeRetriever() {
-            @Override
-            public Optional<Bytes> getAccountNode(Bytes location, Bytes32 hash) {
-                if (hash.equals(MerklePatriciaTrie.EMPTY_TRIE_NODE_HASH)) {
-                    return Optional.of(MerklePatriciaTrie.EMPTY_TRIE_NODE);
-                } else {
-                    return trieBranchStorage.get(location.toArrayUnsafe()).map(Bytes::wrap);
-                }
-            }
+        KeyValueStorage codeStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.CODE_STORAGE);
 
-            @Override
-            public Optional<Bytes> getStorageNode(Bytes32 accountHash, Bytes location, Bytes32 hash) {
-                if (hash.equals(MerklePatriciaTrie.EMPTY_TRIE_NODE_HASH)) {
-                    return Optional.of(MerklePatriciaTrie.EMPTY_TRIE_NODE);
-                } else {
-                    return trieBranchStorage
-                            .get(Bytes.concatenate(accountHash, location).toArrayUnsafe())
-                            .map(Bytes::wrap);
-                }
-            }
-
-            @Override
-            public Optional<Bytes> getCode(Bytes32 accountHash, Bytes32 hash) {
-                return trieBranchStorage.get(accountHash.toArrayUnsafe()).map(Bytes::wrap);
-            }
-        }, new NodeFoundListener() {
+        TrieTraversal tr = new TrieTraversal(Optional.empty(), provider, new BonsaiWorldStateReader(provider), new NodeFoundListener() {
             @Override
             public void onAccountNode(Bytes location, Bytes value) {
                 KeyValueStorageTransaction keyValueStorageTransaction = forestBranchStorage.startTransaction();
@@ -128,20 +86,13 @@ public class DatabaseConverter {
                 keyValueStorageTransaction.put(Hash.hash(value).toArrayUnsafe(), value.toArrayUnsafe());
                 keyValueStorageTransaction.commit();
             }
-        }, listener);
-        tr.start();
+        }, trieTraversalListener);
+        tr.traverse();
+        if(!tr.isInvalidWorldstate()) {
+            trieBranchStorage.clear();
+            codeStorage.clear();
+        }
+
     }
-
-//    public static void main(final String[] args) {
-//        final Path dataDir = Paths.get(args[0]);
-//        DatabaseConverter d = new DatabaseConverter(dataDir);
-//        final String convertTo = args[1];
-//        if (convertTo.equals("Bonsai")) {
-//            d.convertToBonsai();
-//        } else {
-//            d.convertToForest();
-//        }
-//    }
-
 
 }

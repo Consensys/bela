@@ -1,6 +1,7 @@
 package org.hyperledger.bela.windows;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -15,16 +16,18 @@ import com.googlecode.lanterna.gui2.Window;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.components.KeyControls;
+import org.hyperledger.bela.trie.TrieTraversal;
+import org.hyperledger.bela.trie.TrieTraversalListener;
+import org.hyperledger.bela.trie.database.BonsaiWorldStateReader;
 import org.hyperledger.bela.utils.StorageProviderFactory;
-import org.hyperledger.bela.utils.bonsai.BonsaiListener;
-import org.hyperledger.bela.utils.bonsai.BonsaiTraversal;
-import org.hyperledger.bela.utils.bonsai.BonsaiTraversalTrieType;
+import org.hyperledger.bela.trie.TraversalTrieType;
 import org.hyperledger.besu.datatypes.Hash;
+import org.hyperledger.besu.ethereum.storage.StorageProvider;
 
 import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 import static org.hyperledger.bela.windows.Constants.KEY_START;
 
-public class BonsaiTreeVerifierWindow implements LanternaWindow, BonsaiListener {
+public class BonsaiTreeVerifierWindow implements LanternaWindow, TrieTraversalListener {
     private BasicWindow window;
     private final StorageProviderFactory storageProviderFactory;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -89,7 +92,8 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, BonsaiListener 
             logTextBox.setText("");
             visited.set(0);
             execution = executorService.submit(() -> {
-                new BonsaiTraversal(storageProviderFactory.createProvider(), this).traverse();
+                StorageProvider provider = storageProviderFactory.createProvider();
+                new TrieTraversal(Optional.empty(), provider, new BonsaiWorldStateReader(provider), this).traverse();
                 stopVerifier();
             });
             runningLabel.setText("Running...");
@@ -119,7 +123,7 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, BonsaiListener 
     }
 
     @Override
-    public void visited(final BonsaiTraversalTrieType type) {
+    public void visited(final TraversalTrieType type) {
         counterLabel.setText(String.valueOf(visited.incrementAndGet()));
         Thread.yield();
     }

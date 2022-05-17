@@ -1,10 +1,10 @@
-package org.hyperledger.bela.utils.bonsai;
+package org.hyperledger.bela.trie;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.besu.datatypes.Hash;
 
-public interface BonsaiListener {
+public interface TrieTraversalListener {
     void root(Bytes32 hash);
 
     void missingCodeHash(Hash codeHash, Hash accountHash);
@@ -13,7 +13,7 @@ public interface BonsaiListener {
 
     void missingValueForNode(Bytes32 hash);
 
-    void visited(final BonsaiTraversalTrieType type);
+    void visited(final TraversalTrieType type);
 
     void missingAccountTrieForHash(Bytes32 hash, Bytes location);
 

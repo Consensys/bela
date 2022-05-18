@@ -8,10 +8,10 @@ import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
 import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.components.KeyControls;
+import org.hyperledger.bela.dialogs.BelaExceptionDialog;
 import org.hyperledger.bela.model.TransactionResult;
 import org.hyperledger.bela.utils.BlockChainContext;
 import org.hyperledger.bela.utils.TraceUtils;
@@ -91,7 +91,7 @@ public class TransactionBrowserWindow implements LanternaWindow {
             browser.moveByHash(Hash.fromHexStringLenient(s));
         } catch (Exception e) {
             log.error("There was an error when moving browser", e);
-            MessageDialog.showMessageDialog(gui, "error", e.getMessage());
+            BelaExceptionDialog.showException(e, gui);
         }
     }
 

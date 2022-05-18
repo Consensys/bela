@@ -5,19 +5,18 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
 import io.vertx.core.Vertx;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.components.Counter;
 import org.hyperledger.bela.components.KeyControls;
+import org.hyperledger.bela.dialogs.BelaExceptionDialog;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.crypto.KeyPair;
 import org.hyperledger.besu.crypto.KeyPairSecurityModule;
@@ -139,7 +138,7 @@ public class P2PManagementWindow implements LanternaWindow, MessageCallback, Con
             network.start();
         } catch (IOException e) {
             log.error("There was an error when starting network", e);
-            MessageDialog.showMessageDialog(gui, "error", CharMatcher.javaIsoControl().removeFrom(e.getMessage()));
+            BelaExceptionDialog.showException(e, gui);
 
         }
 
@@ -152,7 +151,7 @@ public class P2PManagementWindow implements LanternaWindow, MessageCallback, Con
             }
         } catch (IOException e) {
             log.error("There was an error when stopping the network", e);
-            MessageDialog.showMessageDialog(gui, "error", CharMatcher.javaIsoControl().removeFrom(e.getMessage()));
+            BelaExceptionDialog.showException(e, gui);
         }
     }
 

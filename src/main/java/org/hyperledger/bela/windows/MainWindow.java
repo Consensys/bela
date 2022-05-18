@@ -4,15 +4,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.google.common.base.CharMatcher;
 import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
 import com.googlecode.lanterna.gui2.menu.Menu;
 import com.googlecode.lanterna.gui2.menu.MenuBar;
 import com.googlecode.lanterna.gui2.menu.MenuItem;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
+import org.hyperledger.bela.dialogs.BelaExceptionDialog;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 
@@ -68,7 +67,7 @@ public class MainWindow implements LanternaWindow {
             gui.addWindowAndWait(window.createWindow());
         } catch (Exception e) {
             log.error("There was an error when launching window {}", window.label(), e);
-            MessageDialog.showMessageDialog(gui, "error", CharMatcher.javaIsoControl().removeFrom(e.getMessage()));
+            BelaExceptionDialog.showException(e, gui);
 
         }
     }

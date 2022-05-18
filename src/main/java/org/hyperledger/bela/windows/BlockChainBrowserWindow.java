@@ -14,6 +14,7 @@ import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.components.KeyControls;
+import org.hyperledger.bela.dialogs.BelaExceptionDialog;
 import org.hyperledger.bela.utils.BlockChainBrowser;
 import org.hyperledger.bela.utils.BlockChainContext;
 import org.hyperledger.bela.utils.BlockChainContextFactory;
@@ -122,7 +123,7 @@ public class BlockChainBrowserWindow implements LanternaWindow {
             browser.moveByNumber(Long.parseLong(s));
         } catch (Exception e) {
             log.error("There was an error when moving browser", e);
-            MessageDialog.showMessageDialog(gui, "error", e.getMessage());
+            BelaExceptionDialog.showException(e, gui);
         }
     }
 
@@ -135,7 +136,7 @@ public class BlockChainBrowserWindow implements LanternaWindow {
             browser.moveByHash(Hash.fromHexString(s));
         } catch (Exception e) {
             log.error("There was an error when moving browser", e);
-            MessageDialog.showMessageDialog(gui, "error", e.getMessage());
+            BelaExceptionDialog.showException(e, gui);
         }
     }
 

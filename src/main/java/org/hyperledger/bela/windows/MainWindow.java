@@ -67,7 +67,7 @@ public class MainWindow implements LanternaWindow {
             gui.addWindowAndWait(window.createWindow());
         } catch (Exception e) {
             log.error("There was an error when launching window {}", window.label(), e);
-            BelaExceptionDialog.showException(e, gui);
+            BelaExceptionDialog.showException(gui, e);
 
         }
     }

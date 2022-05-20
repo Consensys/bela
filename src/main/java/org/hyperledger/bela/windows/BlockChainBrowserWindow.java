@@ -123,7 +123,7 @@ public class BlockChainBrowserWindow implements LanternaWindow {
             browser.moveByNumber(Long.parseLong(s));
         } catch (Exception e) {
             log.error("There was an error when moving browser", e);
-            BelaExceptionDialog.showException(e, gui);
+            BelaExceptionDialog.showException(gui, e);
         }
     }
 
@@ -136,7 +136,7 @@ public class BlockChainBrowserWindow implements LanternaWindow {
             browser.moveByHash(Hash.fromHexString(s));
         } catch (Exception e) {
             log.error("There was an error when moving browser", e);
-            BelaExceptionDialog.showException(e, gui);
+            BelaExceptionDialog.showException(gui, e);
         }
     }
 

@@ -91,7 +91,7 @@ public class TransactionBrowserWindow implements LanternaWindow {
             browser.moveByHash(Hash.fromHexStringLenient(s));
         } catch (Exception e) {
             log.error("There was an error when moving browser", e);
-            BelaExceptionDialog.showException(e, gui);
+            BelaExceptionDialog.showException(gui, e);
         }
     }
 

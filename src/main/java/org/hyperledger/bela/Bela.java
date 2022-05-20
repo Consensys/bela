@@ -17,6 +17,7 @@ import org.hyperledger.bela.windows.DatabaseConversionWindow;
 import org.hyperledger.bela.windows.LogoWindow;
 import org.hyperledger.bela.windows.MainWindow;
 import org.hyperledger.bela.windows.P2PManagementWindow;
+import org.hyperledger.bela.windows.RocksDBViewer;
 import org.hyperledger.bela.windows.SettingsWindow;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
@@ -46,6 +47,7 @@ public class Bela {
             mainWindow.registerWindow(new DatabaseConversionWindow(storageProviderFactory));
             mainWindow.registerWindow(new LogoWindow());
             mainWindow.registerWindow(new P2PManagementWindow(gui, storageProviderFactory));
+            mainWindow.registerWindow(new RocksDBViewer(gui, storageProviderFactory));
             final Window window = mainWindow.createWindow();
             gui.addWindowAndWait(window);
         } catch (IOException e) {

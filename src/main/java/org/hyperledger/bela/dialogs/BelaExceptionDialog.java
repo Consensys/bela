@@ -108,7 +108,7 @@ public class BelaExceptionDialog implements BelaDialog {
         abstract public Mode other();
     }
 
-    public static void showException(Exception e, final WindowBasedTextGUI gui) {
+    public static void showException(final WindowBasedTextGUI gui, Exception e) {
         new BelaExceptionDialog(e).showAndWait(gui);
     }
 }

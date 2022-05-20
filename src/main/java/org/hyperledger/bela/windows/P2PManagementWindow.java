@@ -138,7 +138,7 @@ public class P2PManagementWindow implements LanternaWindow, MessageCallback, Con
             network.start();
         } catch (IOException e) {
             log.error("There was an error when starting network", e);
-            BelaExceptionDialog.showException(e, gui);
+            BelaExceptionDialog.showException(gui, e);
 
         }
 
@@ -151,7 +151,7 @@ public class P2PManagementWindow implements LanternaWindow, MessageCallback, Con
             }
         } catch (IOException e) {
             log.error("There was an error when stopping the network", e);
-            BelaExceptionDialog.showException(e, gui);
+            BelaExceptionDialog.showException(gui, e);
         }
     }
 

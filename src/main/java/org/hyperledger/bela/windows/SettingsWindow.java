@@ -33,6 +33,11 @@ public class SettingsWindow implements LanternaWindow {
     private WindowBasedTextGUI gui;
     Preferences preferences;
     private ThemePicker themePickerMenu;
+    private TextBox dataPath;
+    private CheckBoxList<String> checkBoxList;
+    private TextBox storagePath;
+    private TextBox genesisPath;
+    private Button storagePathButton;
 
     public SettingsWindow(final WindowBasedTextGUI gui, final Preferences preferences) {
         this.gui = gui;
@@ -61,37 +66,33 @@ public class SettingsWindow implements LanternaWindow {
 
 
         panel.addComponent(new Label("Data Path"));
-        final TextBox dataPath = new TextBox(preferences.get(DATA_PATH, DATA_PATH_DEFAULT));
+        dataPath = new TextBox(preferences.get(DATA_PATH, DATA_PATH_DEFAULT));
+        dataPath.setTextChangeListener((newText, changedByUserInteraction) -> assumeStoragePath());
         panel.addComponent(dataPath);
         panel.addComponent(new Button("...", () -> {
             final Optional<String> path = askForPath("Data Path Directory");
             path.ifPresent(dataPath::setText);
         }));
 
-        CheckBoxList<String> checkBoxList = new CheckBoxList<>();
+        checkBoxList = new CheckBoxList<>();
         checkBoxList.addItem("Assume Storage path", preferences.getBoolean(OVERRIDE_STORAGE_PATH, true));
         panel.addComponent(new EmptySpace());
         panel.addComponent(checkBoxList.setLayoutData(GridLayout.createLayoutData(GridLayout.Alignment.BEGINNING, GridLayout.Alignment.BEGINNING, true, false, 2, 1)));
-
+        checkBoxList.addListener((itemIndex, checked) -> assumeStoragePath());
 
         panel.addComponent(new Label("Storage Path"));
-        final TextBox storagePath = new TextBox(preferences.get(STORAGE_PATH, STORAGE_PATH_DEFAULT));
+        storagePath = new TextBox(preferences.get(STORAGE_PATH, STORAGE_PATH_DEFAULT));
         panel.addComponent(storagePath);
-        panel.addComponent(new Button("...", () -> {
+        storagePathButton = new Button("...", () -> {
             final Optional<String> path = askForPath("Storage Path Directory");
             path.ifPresent(storagePath::setText);
-        }));
-
-        checkBoxList.addListener((itemIndex, checked) -> {
-            if (itemIndex == 0) {
-                updateStoragePath(storagePath, checked);
-            }
         });
-        updateStoragePath(storagePath, checkBoxList.isChecked(0));
+        panel.addComponent(storagePathButton);
+        assumeStoragePath();
 
 
         panel.addComponent(new Label("Genesis Path"));
-        final TextBox genesisPath = new TextBox(preferences.get(GENESIS_PATH, GENESIS_PATH_DEFAULT));
+        genesisPath = new TextBox(preferences.get(GENESIS_PATH, GENESIS_PATH_DEFAULT));
         panel.addComponent(genesisPath);
         panel.addComponent(new Button("...", () -> {
             final Optional<String> path = askForPath("Genesis Path Directory");
@@ -107,12 +108,10 @@ public class SettingsWindow implements LanternaWindow {
             themePickerMenu.resetToSavedTheme();
             window.close();
         }));
-        panel.addComponent(new Button("Apply", () -> {
-            apply(dataPath, checkBoxList, storagePath, genesisPath);
-        }));
+        panel.addComponent(new Button("Apply", this::apply));
 
         panel.addComponent(new Button("Ok", () -> {
-            apply(dataPath, checkBoxList, storagePath, genesisPath);
+            apply();
             window.close();
         }));
 
@@ -121,7 +120,18 @@ public class SettingsWindow implements LanternaWindow {
         return window;
     }
 
-    private void apply(final TextBox dataPath, final CheckBoxList<String> checkBoxList, final TextBox storagePath, final TextBox genesisPath) {
+    private void assumeStoragePath() {
+        if (Boolean.TRUE.equals(checkBoxList.isChecked(0))) {
+            storagePath.setEnabled(false);
+            storagePathButton.setEnabled(false);
+            storagePath.setText(dataPath.getText()+"/"+STORAGE_PATH_DEFAULT);
+        } else {
+            storagePath.setEnabled(true);
+            storagePathButton.setEnabled(true);
+        }
+    }
+
+    private void apply() {
         preferences.put(DATA_PATH, dataPath.getText());
         preferences.put(STORAGE_PATH, storagePath.getText());
         preferences.put(GENESIS_PATH, genesisPath.getText());

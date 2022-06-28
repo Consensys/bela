@@ -17,6 +17,7 @@ public class ThemePicker implements LanternaComponent<ComboBox<String>>, ComboBo
     public ThemePicker(final WindowBasedTextGUI gui, final String savedTheme) {
         this.gui = gui;
         this.savedTheme = savedTheme;
+        this.currentTheme=savedTheme;
     }
 
     @Override

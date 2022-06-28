@@ -3,6 +3,7 @@ package org.hyperledger.bela.utils;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 import java.util.prefs.Preferences;
 import org.hyperledger.bela.config.BelaConfigurationImpl;
 import org.hyperledger.bela.converter.RocksDBKeyValueStorageConverterFactory;
@@ -10,6 +11,7 @@ import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueStorageProviderBuilder;
 import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
+import org.hyperledger.besu.plugin.services.storage.SegmentIdentifier;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBMetricsFactory;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBCLIOptions;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBFactoryConfiguration;
@@ -32,10 +34,9 @@ public class StorageProviderFactory implements AutoCloseable {
     public StorageProvider createProvider() {
         Path data = Path.of(preferences.get(DATA_PATH, DATA_PATH_DEFAULT));
         Path storage = Path.of(preferences.get(STORAGE_PATH, STORAGE_PATH_DEFAULT));
-        if (data.equals(dataPath) && storage.equals(storagePath)) {
+        if (data.equals(dataPath) && storage.equals(storagePath) && provider != null) {
             return provider;
         }
-
         if (provider != null) {
             try {
                 provider.close();
@@ -45,12 +46,15 @@ public class StorageProviderFactory implements AutoCloseable {
         }
         dataPath = data;
         storagePath = storage;
-        provider = createKeyValueStorageProvider(dataPath, storagePath);
+        provider = createKeyValueStorageProvider(dataPath, storagePath, Arrays.asList(KeyValueSegmentIdentifier.values()));
+        if (provider == null) {
+            throw new RuntimeException("Could not create provider....");
+        }
         return provider;
     }
 
     private static StorageProvider createKeyValueStorageProvider(
-            final Path dataDir, final Path dbDir) {
+            final Path dataDir, final Path dbDir, final List<SegmentIdentifier> segments) {
         return new KeyValueStorageProviderBuilder()
                 .withStorageFactory(
                         new RocksDBKeyValueStorageConverterFactory(
@@ -60,7 +64,7 @@ public class StorageProviderFactory implements AutoCloseable {
                                                 RocksDBCLIOptions.DEFAULT_MAX_BACKGROUND_COMPACTIONS,
                                                 RocksDBCLIOptions.DEFAULT_BACKGROUND_THREAD_COUNT,
                                                 RocksDBCLIOptions.DEFAULT_CACHE_CAPACITY),
-                                Arrays.asList(KeyValueSegmentIdentifier.values()),
+                                segments,
                                 RocksDBMetricsFactory.PUBLIC_ROCKS_DB_METRICS))
                 .withCommonConfiguration(new BelaConfigurationImpl(dataDir, dbDir))
                 .withMetricsSystem(new NoOpMetricsSystem())
@@ -72,9 +76,28 @@ public class StorageProviderFactory implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() throws IOException {
         if (provider != null) {
             provider.close();
         }
+    }
+
+    public StorageProvider createProvider(final List<SegmentIdentifier> listOfSegments) {
+        if (provider != null) {
+            try {
+                provider.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        dataPath = Path.of(preferences.get(DATA_PATH, DATA_PATH_DEFAULT));
+        storagePath = Path.of(preferences.get(STORAGE_PATH, STORAGE_PATH_DEFAULT));
+
+        provider = createKeyValueStorageProvider(dataPath, storagePath, listOfSegments);
+        if (provider == null) {
+            throw new RuntimeException("Could not create provider....");
+        }
+        return provider;
     }
 }

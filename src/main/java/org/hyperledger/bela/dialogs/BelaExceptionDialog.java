@@ -16,8 +16,14 @@ import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.TextBox;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
+import org.slf4j.Logger;
+
+import static org.slf4j.LoggerFactory.getLogger;
 
 public class BelaExceptionDialog implements BelaDialog {
+    private static final Logger LOG = getLogger(BelaExceptionDialog.class);
+
+
 
     Exception exception;
 
@@ -43,6 +49,7 @@ public class BelaExceptionDialog implements BelaDialog {
         List<Button> buttons = new ArrayList<>();
         buttons.add(new Button("Close", window::close));
         buttons.add(new Button("Details", () -> updateModePanel(mode.other(), exception)));
+        buttons.add(new Button("To Logs", () -> LOG.error("There was an exception", exception)));
 
 
         Panel buttonPanel = new Panel();

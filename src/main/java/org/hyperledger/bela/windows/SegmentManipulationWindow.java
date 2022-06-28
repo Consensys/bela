@@ -1,5 +1,6 @@
 package org.hyperledger.bela.windows;
 
+import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,7 +16,6 @@ import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
-import com.googlecode.lanterna.gui2.dialogs.DialogWindow;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialogBuilder;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.components.KeyControls;
@@ -27,6 +27,7 @@ import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 import org.hyperledger.besu.plugin.services.storage.SegmentIdentifier;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDbSegmentIdentifier;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.segmented.RocksDBColumnarKeyValueStorage;
+import org.jetbrains.annotations.NotNull;
 import org.rocksdb.ColumnFamilyHandle;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.TransactionDB;
@@ -87,7 +88,6 @@ public class SegmentManipulationWindow implements LanternaWindow {
         columnCheckBoxes.forEach(panel::addComponent);
 
 
-
         return window;
     }
 
@@ -103,7 +103,7 @@ public class SegmentManipulationWindow implements LanternaWindow {
                 remove(storageBySegmentIdentifier);
             }
             detect();
-        } catch (Exception e){
+        } catch (Exception e) {
             BelaExceptionDialog.showException(gui, e);
         }
     }
@@ -113,7 +113,7 @@ public class SegmentManipulationWindow implements LanternaWindow {
             final Field segmentHandleField = storageBySegmentIdentifier.getClass().getDeclaredField("segmentHandle");
             segmentHandleField.setAccessible(true);
             final RocksDbSegmentIdentifier identifier = (RocksDbSegmentIdentifier) segmentHandleField.get(storageBySegmentIdentifier);
-            if (identifier == null){
+            if (identifier == null) {
                 return;
             }
 
@@ -135,43 +135,53 @@ public class SegmentManipulationWindow implements LanternaWindow {
                     .filter(e -> e.equals(identifier))
                     .findAny();
 
-            if (any.isPresent()){
+            if (any.isPresent()) {
                 final TransactionDB db = (TransactionDB) dbField.get(any.get());
-                final AtomicReference<ColumnFamilyHandle>  ref = (AtomicReference<ColumnFamilyHandle>) referenceField.get(any.get());
+                final AtomicReference<ColumnFamilyHandle> ref = (AtomicReference<ColumnFamilyHandle>) referenceField.get(any.get());
                 db.dropColumnFamily(ref.get());
             }
 
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     private void detect() {
         try {
-            columnCheckBoxes.forEach(checkBox -> checkBox.setChecked(false));
-            selected.clear();
-            storageProviderFactory.createProvider(new ArrayList<>(selected));
+            storageProviderFactory.createProvider(new ArrayList<>());
         } catch (Exception e) {
-            final Throwable cause = e.getCause();
-            if (!(cause instanceof RocksDBException)) {
-                BelaExceptionDialog.showException(gui, e);
-            } else if (cause.getMessage() == null || !cause.getMessage().startsWith("Column families not opened: ")){
-                BelaExceptionDialog.showException(gui, e);
-            } else {
-                byte[] bytes = cause.getMessage().getBytes();
-                List<Byte> columns = new ArrayList<>();
-                for (int i = 28 /*Column families not opened: */; i<bytes.length;i+=3 /* ,*/){
-                    columns.add(bytes[i]);
-                }
-                log.info("Columns: {}", columns);
-
-                columns.forEach(column ->{
-                    CheckBox box = columnCheckBoxes.get(column-1);
+            final List<Byte> columns;
+            try {
+                columns = parseColumns(e);
+                columnCheckBoxes.forEach(checkBox -> checkBox.setChecked(false));
+                selected.clear();
+                columns.forEach(column -> {
+                    CheckBox box = columnCheckBoxes.get(column - 1);
                     box.setChecked(true);
-                    selected.add(KeyValueSegmentIdentifier.values()[column-1]);
+                    selected.add(KeyValueSegmentIdentifier.values()[column - 1]);
                 });
+            } catch (Exception ex) {
+                BelaExceptionDialog.showException(gui,e);
             }
         }
+    }
+
+    @NotNull
+    private List<Byte> parseColumns(@Nonnull final Exception e) throws Exception {
+        Throwable cause = e;
+        while (cause != null && !(cause instanceof RocksDBException)) {
+            cause = cause.getCause();
+        }
+        if (cause == null || cause.getMessage() == null || !cause.getMessage().startsWith("Column families not opened: ")) {
+            throw e;
+        }
+        byte[] bytes = cause.getMessage().getBytes();
+        List<Byte> columns = new ArrayList<>();
+        for (int i = 28 /*Column families not opened: */; i < bytes.length; i += 3 /* ,*/) {
+            columns.add(bytes[i]);
+        }
+        log.info("Columns: {}", columns);
+        return columns;
     }
 
     private void open() {

@@ -13,6 +13,7 @@ public class Constants {
     public static final String NODE_PATH_DEFAULT = "./key";
     public static final String THEME_KEY = "THEME_KEY";
     public static final String DEFAULT_THEME = "default";
+    public static final String DETECT_COLUMNS = "detect_columns";
 
 
     public static final Character KEY_BACK = 'h';

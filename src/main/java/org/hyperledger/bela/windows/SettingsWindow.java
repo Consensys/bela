@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.prefs.Preferences;
 import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.Button;
+import com.googlecode.lanterna.gui2.CheckBox;
 import com.googlecode.lanterna.gui2.CheckBoxList;
 import com.googlecode.lanterna.gui2.EmptySpace;
 import com.googlecode.lanterna.gui2.GridLayout;
@@ -21,6 +22,7 @@ import org.hyperledger.bela.config.BelaConfigurationImpl;
 import static org.hyperledger.bela.windows.Constants.DATA_PATH;
 import static org.hyperledger.bela.windows.Constants.DATA_PATH_DEFAULT;
 import static org.hyperledger.bela.windows.Constants.DEFAULT_THEME;
+import static org.hyperledger.bela.windows.Constants.DETECT_COLUMNS;
 import static org.hyperledger.bela.windows.Constants.GENESIS_PATH;
 import static org.hyperledger.bela.windows.Constants.GENESIS_PATH_DEFAULT;
 import static org.hyperledger.bela.windows.Constants.OVERRIDE_STORAGE_PATH;
@@ -38,11 +40,13 @@ public class SettingsWindow implements LanternaWindow {
     private TextBox storagePath;
     private TextBox genesisPath;
     private Button storagePathButton;
+    private CheckBox detectColumns = new CheckBox("Auto detect columns in rocksdb");
 
     public SettingsWindow(final WindowBasedTextGUI gui, final Preferences preferences) {
         this.gui = gui;
         this.preferences = preferences;
         themePickerMenu = new ThemePicker(gui, preferences.get(THEME_KEY, DEFAULT_THEME));
+        detectColumns.setChecked(preferences.getBoolean(DETECT_COLUMNS, true));
 
     }
 
@@ -99,6 +103,11 @@ public class SettingsWindow implements LanternaWindow {
             path.ifPresent(genesisPath::setText);
         }));
 
+        panel.addComponent(new EmptySpace());
+
+        panel.addComponent(detectColumns);
+
+        panel.addComponent(new EmptySpace());
 
         panel.addComponent(new Label("Theme"));
         panel.addComponent(themePickerMenu.createComponent()
@@ -124,7 +133,7 @@ public class SettingsWindow implements LanternaWindow {
         if (Boolean.TRUE.equals(checkBoxList.isChecked(0))) {
             storagePath.setEnabled(false);
             storagePathButton.setEnabled(false);
-            storagePath.setText(dataPath.getText()+"/"+STORAGE_PATH_DEFAULT);
+            storagePath.setText(dataPath.getText() + "/" + STORAGE_PATH_DEFAULT);
         } else {
             storagePath.setEnabled(true);
             storagePathButton.setEnabled(true);
@@ -137,6 +146,7 @@ public class SettingsWindow implements LanternaWindow {
         preferences.put(GENESIS_PATH, genesisPath.getText());
         preferences.putBoolean(OVERRIDE_STORAGE_PATH, checkBoxList.isChecked(0));
         preferences.put(THEME_KEY, themePickerMenu.getCurrentTheme());
+        preferences.putBoolean(DETECT_COLUMNS, detectColumns.isChecked());
         themePickerMenu.applyCurrent();
     }
 

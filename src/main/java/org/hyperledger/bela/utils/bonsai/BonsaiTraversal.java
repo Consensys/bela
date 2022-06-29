@@ -4,6 +4,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.besu.datatypes.Hash;
@@ -17,7 +18,11 @@ import org.hyperledger.besu.ethereum.trie.TrieNodeDecoder;
 import org.hyperledger.besu.ethereum.worldstate.StateTrieAccountValue;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 
+import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
+
 public class BonsaiTraversal {
+    private static final LambdaLogger log = getLogger(BonsaiTraversal.class);
+
 
     int visited = 0;
 
@@ -48,7 +53,7 @@ public class BonsaiTraversal {
     }
 
     public void traverse() {
-
+        log.info("Starting bonsai traverse....");
         final Hash x =
                 trieBranchStorage
                         .get(Bytes.EMPTY.toArrayUnsafe())
@@ -57,6 +62,7 @@ public class BonsaiTraversal {
                         .orElseThrow();
         root = getAccountNodeValue(x, Bytes.EMPTY);
         //        breakTree(x);
+        log.info("Starting from root {}", root.getHash());
         listener.root(root.getHash());
         traverseAccountTrie(root);
     }
@@ -90,7 +96,6 @@ public class BonsaiTraversal {
         if (parentNode == null) {
             return;
         }
-        listener.visited(BonsaiTraversalTrieType.Account);
 
         final List<Node<Bytes>> nodes =
                 TrieNodeDecoder.decodeNodes(parentNode.getLocation().orElseThrow(), parentNode.getRlp());
@@ -130,6 +135,8 @@ public class BonsaiTraversal {
                                         accountHash,
                                         getStorageNodeValue(accountValue.getStorageRoot(), accountHash, Bytes.EMPTY));
                             }
+                        } else if (node.getHash().equals(parentNode.getHash())) {
+                            listener.visited(BonsaiTraversalTrieType.Account);
                         } else {
                             listener.missingValueForNode(node.getHash());
                         }

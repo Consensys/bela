@@ -12,6 +12,7 @@ import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.TextBox;
 import com.googlecode.lanterna.gui2.Window;
+import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.components.KeyControls;
@@ -20,11 +21,15 @@ import org.hyperledger.bela.utils.bonsai.BonsaiListener;
 import org.hyperledger.bela.utils.bonsai.BonsaiTraversal;
 import org.hyperledger.bela.utils.bonsai.BonsaiTraversalTrieType;
 import org.hyperledger.besu.datatypes.Hash;
+import org.hyperledger.besu.ethereum.storage.StorageProvider;
 
+import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 import static org.hyperledger.bela.windows.Constants.KEY_START;
 
 public class BonsaiTreeVerifierWindow implements LanternaWindow, BonsaiListener {
+    private static final LambdaLogger log = getLogger(BonsaiTreeVerifierWindow.class);
+
     private BasicWindow window;
     private final StorageProviderFactory storageProviderFactory;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -89,10 +94,18 @@ public class BonsaiTreeVerifierWindow implements LanternaWindow, BonsaiListener 
             logTextBox.setText("");
             visited.set(0);
             execution = executorService.submit(() -> {
-                new BonsaiTraversal(storageProviderFactory.createProvider(), this).traverse();
-                stopVerifier();
+                try {
+                    runningLabel.setText("Opening db...");
+                    final StorageProvider provider = storageProviderFactory.createProvider();
+                    final BonsaiTraversal bonsaiTraversal = new BonsaiTraversal(provider, this);
+                    runningLabel.setText("Running...");
+                    bonsaiTraversal.traverse();
+                } catch (Exception e){
+                    log.error("There was an error",e);
+                } finally {
+                    stopVerifier();
+                }
             });
-            runningLabel.setText("Running...");
         }
     }
 

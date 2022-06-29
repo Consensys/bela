@@ -20,24 +20,25 @@ sourceCompatibility = 15
 targetCompatibility = 15
 
 dependencies {
-    implementation 'org.hyperledger.besu.internal:api:22.4.0'
-    implementation 'org.hyperledger.besu.internal:besu:22.4.0'
-    implementation 'org.hyperledger.besu.internal:clique:22.4.0'
-    implementation 'org.hyperledger.besu.internal:config:22.4.0'
-    implementation 'org.hyperledger.besu.internal:core:22.4.0'
-    implementation 'org.hyperledger.besu.internal:crypto:22.4.0'
-    implementation 'org.hyperledger.besu.internal:plugins-rocksdb:22.4.0'
-    implementation 'org.hyperledger.besu.internal:metrics-core:22.4.0'
-    implementation 'org.hyperledger.besu.internal:trie:22.4.0'
-    implementation 'org.hyperledger.besu.internal:p2p:22.4.0'
-    implementation 'org.hyperledger.besu.internal:eth:22.4.0'
-    implementation 'org.hyperledger.besu:besu-datatypes:22.4.0'
-    implementation 'org.hyperledger.besu.internal:rlp:22.4.0'
-    implementation 'org.hyperledger.besu.internal:common:22.4.0'
-    implementation 'org.hyperledger.besu.internal:kvstore:22.4.0'
-    implementation 'org.hyperledger.besu.internal:qbft:22.4.0'
-    implementation 'org.hyperledger.besu.internal:ibft:22.4.0'
-    implementation 'org.hyperledger.besu:evm:22.4.0'
+    def besuVersion = '+'
+    implementation group:'org.hyperledger.besu.internal', name: 'api',  version:   besuVersion
+    implementation group:'org.hyperledger.besu.internal', name: 'besu',  version:   besuVersion
+    implementation group:'org.hyperledger.besu.internal', name: 'config',  version:   besuVersion
+    implementation group:'org.hyperledger.besu.internal', name: 'clique',  version:   besuVersion
+    implementation group:'org.hyperledger.besu.internal', name: 'core',  version:   besuVersion
+    implementation group:'org.hyperledger.besu.internal', name: 'crypto',  version:   besuVersion
+    implementation group:'org.hyperledger.besu.internal', name: 'plugins-rocksdb',  version:   besuVersion
+    implementation group:'org.hyperledger.besu.internal', name: 'metrics-core',  version:   besuVersion
+    implementation group:'org.hyperledger.besu.internal', name: 'trie',  version:   besuVersion
+    implementation group:'org.hyperledger.besu.internal', name: 'p2p',  version:   besuVersion
+    implementation group:'org.hyperledger.besu.internal', name: 'eth',  version:   besuVersion
+    implementation group:'org.hyperledger.besu', name: 'besu-datatypes',  version:   besuVersion
+    implementation group:'org.hyperledger.besu.internal', name: 'rlp',  version:   besuVersion
+    implementation group:'org.hyperledger.besu.internal', name: 'common',  version:   besuVersion
+    implementation group:'org.hyperledger.besu.internal', name: 'kvstore',  version:   besuVersion
+    implementation group:'org.hyperledger.besu.internal', name: 'qbft',  version:   besuVersion
+    implementation group:'org.hyperledger.besu.internal', name: 'ibft',  version:   besuVersion
+    implementation group:'org.hyperledger.besu', name: 'evm',  version: besuVersion
 
 
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.2.2'

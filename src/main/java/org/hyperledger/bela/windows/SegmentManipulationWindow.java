@@ -79,7 +79,7 @@ public class SegmentManipulationWindow implements LanternaWindow {
 
         KeyControls controls = new KeyControls()
                 .addControl("Detect", KEY_DETECT_COLUMNS, this::detect)
-                .addControl("Test", KEY_TEST_OPEN_DATABASE, this::open)
+                .addControl("Test", KEY_TEST_OPEN_DATABASE, this::test)
                 .addControl("Prune", KEY_PRUNE_COLUMNS, this::prune)
                 .addControl("Close", KEY_CLOSE, window::close);
         window.addWindowListener(controls);
@@ -184,7 +184,7 @@ public class SegmentManipulationWindow implements LanternaWindow {
         return columns;
     }
 
-    private void open() {
+    private void test() {
         try {
             final StorageProvider provider = storageProviderFactory.createProvider(new ArrayList<>(selected));
             provider.close();
@@ -196,6 +196,8 @@ public class SegmentManipulationWindow implements LanternaWindow {
 
         } catch (Exception e) {
             BelaExceptionDialog.showException(gui, e);
+        } catch (Throwable t){
+            log.error("There was an error",t);
         }
 
     }

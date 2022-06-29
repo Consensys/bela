@@ -157,8 +157,9 @@ public class BonsaiTraversal {
                     } else {
                         if (node.getValue().isPresent()) {
                             // check the storage in the flat database
-                            final Optional<Bytes> storageInFlatDB = storageStorage.get(Bytes.concatenate(accountHash, node.getHash()).toArrayUnsafe()).map(Bytes::wrap);
-                            if(storageInFlatDB.isPresent() && !storageInFlatDB.get().equals(node.getValue().orElseThrow())){
+                            final Optional<Bytes> storageInFlatDB = storageStorage.get(Bytes.concatenate(accountHash, getSlotHash(node.getLocation().orElseThrow(), node.getPath())).toArrayUnsafe()).map(Bytes::wrap);
+                            final Bytes value = Bytes32.leftPad(org.apache.tuweni.rlp.RLP.decodeValue(node.getValue().orElseThrow()));
+                            if(storageInFlatDB.isPresent() && !storageInFlatDB.get().equals(value)){
                                 listener.differentDataInFlatDatabaseForStorage(accountHash, node.getHash());
                             }
                         } else if (node.getHash().equals(parentNode.getHash())) {
@@ -208,6 +209,10 @@ public class BonsaiTraversal {
         return !Objects.equals(node.getHash(), parentNode.getHash()) && node.isReferencedByHash();
     }
 
+
+    private Hash getSlotHash(final Bytes location, final Bytes path) {
+        return Hash.wrap(Bytes32.wrap(CompactEncoding.pathToBytes(Bytes.concatenate(location, path))));
+    }
 
     public String getRoot() {
         return root.getHash().toHexString();

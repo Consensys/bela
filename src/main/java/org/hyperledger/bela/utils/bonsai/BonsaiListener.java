@@ -25,5 +25,5 @@ public interface BonsaiListener {
 
     void differentDataInFlatDatabaseForAccount(Hash accountHash);
 
-    void differentDataInFlatDatabaseForStorage(Bytes32 accountHash, Bytes32 slotHash);
+    void differentDataInFlatDatabaseForStorage(Bytes32 accountHash, Bytes32 hash);
 }

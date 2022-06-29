@@ -144,5 +144,16 @@ public class BonsaiTreeVerifier implements BonsaiListener {
                 "invalid storage trie node for hash %s and location %s (found %s)",
                 hash, location, foundHashNode);
     }
+
+    @Override
+    public void differentDataInFlatDatabaseForAccount(final Hash accountHash) {
+        System.err.format("inconsistent data in flat database for account %s", accountHash);
+    }
+
+    @Override
+    public void differentDataInFlatDatabaseForStorage(final Bytes32 accountHash, final Bytes32 slotHash) {
+        System.err.format("inconsistent data in flat database for account %s on slot %s", accountHash, slotHash);
+
+    }
 }
 

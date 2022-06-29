@@ -22,4 +22,8 @@ public interface BonsaiListener {
     void missingStorageTrieForHash(Bytes32 hash, Bytes location);
 
     void invalidStorageTrieForHash(Bytes32 hash, Bytes location, Hash foundHashNode);
+
+    void differentDataInFlatDatabaseForAccount(Hash accountHash);
+
+    void differentDataInFlatDatabaseForStorage(Bytes32 accountHash, Bytes32 slotHash);
 }

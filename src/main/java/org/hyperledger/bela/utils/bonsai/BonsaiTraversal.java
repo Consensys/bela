@@ -22,32 +22,23 @@ import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 
 public class BonsaiTraversal {
     private static final LambdaLogger log = getLogger(BonsaiTraversal.class);
-
+    private final KeyValueStorage accountStorage;
+    private final KeyValueStorage  storageStorage;
 
     int visited = 0;
 
-    //    private final KeyValueStorage accountStorage;
-    //    private final KeyValueStorage storageStorage;
     private final KeyValueStorage trieBranchStorage;
-    private BonsaiListener listener;
+    private final BonsaiListener listener;
     private final KeyValueStorage codeStorage;
+
     private Node<Bytes> root;
-    //    private final KeyValueStorage trieLogStorage;
-    //    private final Pair<KeyValueStorage, KeyValueStorage> snapTrieBranchBucketsStorage;
 
     public BonsaiTraversal(final StorageProvider provider, BonsaiListener listener) {
-        //        accountStorage =
-        //
-        // provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_INFO_STATE);
+        accountStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_INFO_STATE);
         codeStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.CODE_STORAGE);
-        //        storageStorage =
-        //
-        // provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_STORAGE_STORAGE);
+        storageStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_STORAGE_STORAGE);
         trieBranchStorage =
                 provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_BRANCH_STORAGE);
-        //        trieLogStorage =
-        //
-        // provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_LOG_STORAGE);
 
         this.listener = listener;
     }
@@ -115,6 +106,11 @@ public class BonsaiTraversal {
                                                             Bytes.concatenate(
                                                                     parentNode.getLocation()
                                                                             .orElseThrow(), node.getPath()))));
+                            // check the account in the flat database
+                            final Optional<Bytes> accountInFlatDB = accountStorage.get(accountHash.toArrayUnsafe()).map(Bytes::wrap);
+                            if(accountInFlatDB.isPresent() && !accountInFlatDB.get().equals(node.getValue().orElseThrow())){
+                                listener.differentDataInFlatDatabaseForAccount(accountHash);
+                            }
                             // Add code, if appropriate
                             if (!accountValue.getCodeHash().equals(Hash.EMPTY)) {
                                 // traverse code
@@ -158,6 +154,18 @@ public class BonsaiTraversal {
                         traverseStorageTrie(
                                 accountHash,
                                 getStorageNodeValue(node.getHash(), accountHash, node.getLocation().orElseThrow()));
+                    } else {
+                        if (node.getValue().isPresent()) {
+                            // check the storage in the flat database
+                            final Optional<Bytes> storageInFlatDB = storageStorage.get(Bytes.concatenate(accountHash, node.getHash()).toArrayUnsafe()).map(Bytes::wrap);
+                            if(storageInFlatDB.isPresent() && !storageInFlatDB.get().equals(node.getValue().orElseThrow())){
+                                listener.differentDataInFlatDatabaseForStorage(accountHash, node.getHash());
+                            }
+                        } else if (node.getHash().equals(parentNode.getHash())) {
+                            listener.visited(BonsaiTraversalTrieType.Account);
+                        } else {
+                            listener.missingValueForNode(node.getHash());
+                        }
                     }
                 });
     }

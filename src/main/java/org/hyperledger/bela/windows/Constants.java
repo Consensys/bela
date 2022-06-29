@@ -34,4 +34,5 @@ public class Constants {
     public static final Character KEY_TEST_OPEN_DATABASE = 't';
     public static final Character KEY_PRUNE_COLUMNS = 'p';
     public static final Character KEY_DETECT_COLUMNS = 'd';
+    public static final Character KEY_ROOT = 'r';
 }

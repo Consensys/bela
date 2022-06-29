@@ -11,6 +11,7 @@ import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.bela.windows.BlockChainBrowserWindow;
+import org.hyperledger.bela.windows.BonsaiStorageBrowserWindow;
 import org.hyperledger.bela.windows.BonsaiTreeVerifierWindow;
 import org.hyperledger.bela.windows.Constants;
 import org.hyperledger.bela.windows.DatabaseConversionWindow;
@@ -50,6 +51,7 @@ public class Bela {
             mainWindow.registerWindow(new P2PManagementWindow(gui, storageProviderFactory));
             mainWindow.registerWindow(new RocksDBViewer(gui, storageProviderFactory));
             mainWindow.registerWindow(new SegmentManipulationWindow(gui, storageProviderFactory));
+            mainWindow.registerWindow(new BonsaiStorageBrowserWindow(gui,storageProviderFactory));
             final Window window = mainWindow.createWindow();
             gui.addWindowAndWait(window);
         } catch (IOException e) {

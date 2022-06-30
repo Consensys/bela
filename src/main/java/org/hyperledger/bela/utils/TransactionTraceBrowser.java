@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.googlecode.lanterna.gui2.Panel;
-import org.hyperledger.bela.components.LanternaComponent;
+import org.hyperledger.bela.components.BelaComponent;
 import org.hyperledger.bela.components.TraceTransactionPanel;
 import org.hyperledger.besu.ethereum.api.jsonrpc.internal.results.tracing.flat.FlatTrace;
 
@@ -23,7 +23,7 @@ public class TransactionTraceBrowser {
         }
     }
 
-    public LanternaComponent<Panel> transactionTracePanel() {
+    public BelaComponent<Panel> transactionTracePanel() {
         return transactionTracePanel;
     }
 

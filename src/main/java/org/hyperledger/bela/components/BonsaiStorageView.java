@@ -18,7 +18,7 @@ import org.hyperledger.besu.ethereum.trie.Node;
 import org.hyperledger.besu.ethereum.trie.TrieNodeDecoder;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 
-public class BonsaiStorageView implements LanternaComponent<Panel> {
+public class BonsaiStorageView implements BelaComponent<Panel> {
     private KeyValueStorage accountStorage;
     private KeyValueStorage storageStorage;
     private KeyValueStorage trieBranchStorage;

@@ -32,7 +32,7 @@ import static org.hyperledger.bela.windows.Constants.KEY_LOOKUP_BY_NUMBER;
 import static org.hyperledger.bela.windows.Constants.KEY_OPEN_TRANSACTION;
 import static org.hyperledger.bela.windows.Constants.KEY_ROLL_HEAD;
 
-public class BlockChainBrowserWindow implements LanternaWindow {
+public class BlockChainBrowserWindow implements BelaWindow {
     private static final LambdaLogger log = getLogger(BlockChainBrowserWindow.class);
 
 

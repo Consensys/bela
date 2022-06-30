@@ -15,7 +15,7 @@ import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 import static org.hyperledger.bela.windows.Constants.KEY_FOCUS;
 import static org.hyperledger.bela.windows.Constants.KEY_ROOT;
 
-public class BonsaiStorageBrowserWindow implements LanternaWindow {
+public class BonsaiStorageBrowserWindow implements BelaWindow {
 
     private final WindowBasedTextGUI gui;
     private final StorageProviderFactory storageProviderFactory;

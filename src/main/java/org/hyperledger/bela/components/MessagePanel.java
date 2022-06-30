@@ -21,7 +21,7 @@ import com.googlecode.lanterna.gui2.GridLayout;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
 
-public class MessagePanel implements LanternaComponent<Panel> {
+public class MessagePanel implements BelaComponent<Panel> {
     private final String message;
 
     public MessagePanel(final String message) {

@@ -19,7 +19,7 @@ package org.hyperledger.bela.components;
 
 import com.googlecode.lanterna.gui2.Component;
 
-public interface LanternaComponent<T extends Component> {
+public interface BelaComponent<T extends Component> {
 
     T createComponent();
 }

@@ -7,7 +7,7 @@ import com.googlecode.lanterna.graphics.Theme;
 import com.googlecode.lanterna.gui2.ComboBox;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 
-public class ThemePicker implements LanternaComponent<ComboBox<String>>, ComboBox.Listener {
+public class ThemePicker implements BelaComponent<ComboBox<String>>, ComboBox.Listener {
 
     public static final List<String> REGISTERED_THEMES = new ArrayList<>(LanternaThemes.getRegisteredThemes());
     private String savedTheme;

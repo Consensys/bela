@@ -24,7 +24,7 @@ import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 import static org.hyperledger.bela.windows.Constants.KEY_SEARCH;
 
-public class RocksDBViewer implements LanternaWindow {
+public class RocksDBViewer implements BelaWindow {
     private final ComboBox<KeyValueSegmentIdentifier> identifierCombo = new ComboBox<>(KeyValueSegmentIdentifier.values());
     private static final Pattern HEX_ONLY = Pattern.compile("^[0-9A-Fa-f]+$");
     private StorageProviderFactory storageProviderFactory;

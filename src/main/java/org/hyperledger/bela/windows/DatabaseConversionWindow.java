@@ -30,7 +30,7 @@ import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 import static org.hyperledger.bela.windows.Constants.KEY_CONVERT_TO_BONSAI;
 import static org.hyperledger.bela.windows.Constants.KEY_CONVERT_TO_FOREST;
 
-public class DatabaseConversionWindow implements LanternaWindow, BonsaiListener {
+public class DatabaseConversionWindow implements BelaWindow, BonsaiListener {
     private static final LambdaLogger log = getLogger(DatabaseConversionWindow.class);
 
     private BasicWindow window;

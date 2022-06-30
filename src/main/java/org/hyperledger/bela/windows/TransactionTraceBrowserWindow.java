@@ -20,7 +20,7 @@ import org.hyperledger.bela.utils.TransactionTraceBrowser;
 import org.hyperledger.besu.ethereum.api.jsonrpc.internal.results.tracing.flat.FlatTrace;
 import org.jetbrains.annotations.NotNull;
 
-public class TransactionTraceBrowserWindow implements LanternaWindow, WindowListener {
+public class TransactionTraceBrowserWindow implements BelaWindow, WindowListener {
 
     private static final String[] PREV_NEXT_TRACE_COMMANDS = {"prev Frame", "'<-'", "next Frame", "'->'", "Close", "'c'"};
 

@@ -11,11 +11,11 @@ import org.hyperledger.besu.plugin.services.metrics.LabelledMetric;
 import org.hyperledger.besu.plugin.services.metrics.MetricCategory;
 import org.hyperledger.besu.plugin.services.metrics.OperationTimer;
 
-public class LanternaMetricsSystem implements MetricsSystem, LanternaComponent<Panel> {
+public class BelaMetricsSystem implements MetricsSystem, BelaComponent<Panel> {
 
     MetricsSystem delegate;
 
-    public LanternaMetricsSystem(final MetricsSystem delegate) {
+    public BelaMetricsSystem(final MetricsSystem delegate) {
         this.delegate = delegate;
 
     }

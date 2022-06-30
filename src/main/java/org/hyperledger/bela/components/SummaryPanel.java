@@ -5,7 +5,7 @@ import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
 import org.hyperledger.besu.ethereum.core.Block;
 
-public class SummaryPanel implements LanternaComponent<Panel> {
+public class SummaryPanel implements BelaComponent<Panel> {
     private final Label worldStateRoot = new Label("empty");
     private final Label chainHead = new Label("empty");
     private final Label chainHeadHash = new Label("empty");

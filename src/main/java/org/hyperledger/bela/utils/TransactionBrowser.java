@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import com.googlecode.lanterna.gui2.Panel;
-import org.hyperledger.bela.components.LanternaComponent;
+import org.hyperledger.bela.components.BelaComponent;
 import org.hyperledger.bela.components.TransactionPanel;
 import org.hyperledger.bela.model.TransactionResult;
 import org.hyperledger.besu.datatypes.Hash;
@@ -27,7 +27,7 @@ public class TransactionBrowser {
         }
     }
 
-    public LanternaComponent<Panel> transactionPanel() {
+    public BelaComponent<Panel> transactionPanel() {
         return transactionPanel;
     }
 

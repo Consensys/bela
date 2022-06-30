@@ -15,10 +15,10 @@ import org.hyperledger.bela.dialogs.BelaExceptionDialog;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 
-public class MainWindow implements LanternaWindow {
+public class MainWindow implements BelaWindow {
     private static final LambdaLogger log = getLogger(MainWindow.class);
 
-    private List<LanternaWindow> windows = new ArrayList<>();
+    private List<BelaWindow> windows = new ArrayList<>();
     private WindowBasedTextGUI gui;
 
     public MainWindow(final WindowBasedTextGUI gui) {
@@ -26,7 +26,7 @@ public class MainWindow implements LanternaWindow {
         this.gui = gui;
     }
 
-    public void registerWindow(LanternaWindow window) {
+    public void registerWindow(BelaWindow window) {
         this.windows.add(window);
     }
 
@@ -51,9 +51,9 @@ public class MainWindow implements LanternaWindow {
             groups.put(menuGroup, new Menu(menuGroup.name()));
             bar.add(groups.get(menuGroup));
         }
-        for (LanternaWindow lanternaWindow : windows) {
-            groups.get(lanternaWindow.group())
-                    .add(new MenuItem(lanternaWindow.label(), () -> launchWindow(lanternaWindow)));
+        for (BelaWindow belaWindow : windows) {
+            groups.get(belaWindow.group())
+                    .add(new MenuItem(belaWindow.label(), () -> launchWindow(belaWindow)));
         }
 
         groups.get(MenuGroup.FILE).add(new MenuItem("Exit", window::close));
@@ -62,7 +62,7 @@ public class MainWindow implements LanternaWindow {
         return window;
     }
 
-    private void launchWindow(final LanternaWindow window) {
+    private void launchWindow(final BelaWindow window) {
         try {
             gui.addWindowAndWait(window.createWindow());
         } catch (Exception e) {

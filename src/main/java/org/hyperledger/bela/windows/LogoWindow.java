@@ -7,7 +7,7 @@ import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.Window;
 
-public class LogoWindow implements LanternaWindow {
+public class LogoWindow implements BelaWindow {
     @Override
     public String label() {
         return "About";

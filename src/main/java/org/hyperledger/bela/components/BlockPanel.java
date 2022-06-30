@@ -24,7 +24,7 @@ import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
 import org.hyperledger.bela.model.BlockResult;
 
-public class BlockPanel implements LanternaComponent<Panel> {
+public class BlockPanel implements BelaComponent<Panel> {
     private final Label number = new Label("empty");
     private final Label time = new Label("empty");
     private final Label hash = new Label("empty");

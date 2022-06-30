@@ -27,7 +27,7 @@ import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 import static org.hyperledger.bela.windows.Constants.KEY_START;
 
-public class BonsaiTreeVerifierWindow implements LanternaWindow, BonsaiListener {
+public class BonsaiTreeVerifierWindow implements BelaWindow, BonsaiListener {
     private static final LambdaLogger log = getLogger(BonsaiTreeVerifierWindow.class);
 
     private BasicWindow window;

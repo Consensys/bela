@@ -5,7 +5,7 @@ import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
 import org.hyperledger.bela.model.TransactionResult;
 
-public class TransactionPanel implements LanternaComponent<Panel> {
+public class TransactionPanel implements BelaComponent<Panel> {
     private static final int MAX_VALUE_WIDTH = 60;
 
     private final Label hash = new Label("empty").setLabelWidth(MAX_VALUE_WIDTH);

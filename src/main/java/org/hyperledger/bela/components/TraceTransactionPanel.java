@@ -4,7 +4,7 @@ import com.googlecode.lanterna.gui2.GridLayout;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
 
-public class TraceTransactionPanel implements LanternaComponent<Panel> {
+public class TraceTransactionPanel implements BelaComponent<Panel> {
     private static final int MAX_VALUE_WIDTH = 60;
 
     private final Label trace = new Label("empty").setLabelWidth(MAX_VALUE_WIDTH);

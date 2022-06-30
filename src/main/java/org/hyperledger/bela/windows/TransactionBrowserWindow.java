@@ -26,7 +26,7 @@ import static org.hyperledger.bela.windows.Constants.KEY_FORWARD;
 import static org.hyperledger.bela.windows.Constants.KEY_LOOKUP_BY_HASH;
 import static org.hyperledger.bela.windows.Constants.KEY_TRACE_TRANSACTION;
 
-public class TransactionBrowserWindow implements LanternaWindow {
+public class TransactionBrowserWindow implements BelaWindow {
     private static final LambdaLogger log = getLogger(TransactionBrowserWindow.class);
 
 

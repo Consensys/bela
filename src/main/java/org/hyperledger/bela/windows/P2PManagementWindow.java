@@ -39,7 +39,7 @@ import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 
-public class P2PManagementWindow implements LanternaWindow, MessageCallback, ConnectCallback, DisconnectCallback {
+public class P2PManagementWindow implements BelaWindow, MessageCallback, ConnectCallback, DisconnectCallback {
     private static final LambdaLogger log = getLogger(P2PManagementWindow.class);
 
     private final StorageProviderFactory storageProviderFactory;

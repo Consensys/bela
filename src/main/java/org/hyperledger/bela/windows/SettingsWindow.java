@@ -30,7 +30,7 @@ import static org.hyperledger.bela.windows.Constants.STORAGE_PATH;
 import static org.hyperledger.bela.windows.Constants.STORAGE_PATH_DEFAULT;
 import static org.hyperledger.bela.windows.Constants.THEME_KEY;
 
-public class SettingsWindow implements LanternaWindow {
+public class SettingsWindow implements BelaWindow {
 
     private WindowBasedTextGUI gui;
     Preferences preferences;

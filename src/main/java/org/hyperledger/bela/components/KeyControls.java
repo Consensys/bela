@@ -19,7 +19,7 @@ import com.googlecode.lanterna.gui2.WindowListener;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 
-public class KeyControls implements LanternaComponent<Panel>, WindowListener {
+public class KeyControls implements BelaComponent<Panel>, WindowListener {
     List<Panel> controls = new ArrayList<>();
     Map<Character, Runnable> characterRunnableMap = new HashMap<>();
     Map<KeyType, Runnable> keyStrokeRunnableMap = new EnumMap<>(KeyType.class);

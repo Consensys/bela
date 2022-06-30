@@ -21,7 +21,7 @@ import java.util.Optional;
 import com.googlecode.lanterna.gui2.Component;
 import com.googlecode.lanterna.gui2.Panel;
 import org.hyperledger.bela.components.BlockPanel;
-import org.hyperledger.bela.components.LanternaComponent;
+import org.hyperledger.bela.components.BelaComponent;
 import org.hyperledger.bela.components.SummaryPanel;
 import org.hyperledger.bela.model.BlockResult;
 import org.hyperledger.besu.datatypes.Hash;
@@ -58,11 +58,11 @@ public class BlockChainBrowser {
     }
 
 
-    public LanternaComponent<Panel> blockPanel() {
+    public BelaComponent<Panel> blockPanel() {
         return blockPanel;
     }
 
-    public LanternaComponent<? extends Component> showSummaryPanel() {
+    public BelaComponent<? extends Component> showSummaryPanel() {
         return summaryPanel;
     }
 

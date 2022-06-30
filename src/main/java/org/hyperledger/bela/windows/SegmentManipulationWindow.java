@@ -38,7 +38,7 @@ import static org.hyperledger.bela.windows.Constants.KEY_DETECT_COLUMNS;
 import static org.hyperledger.bela.windows.Constants.KEY_PRUNE_COLUMNS;
 import static org.hyperledger.bela.windows.Constants.KEY_TEST_OPEN_DATABASE;
 
-public class SegmentManipulationWindow implements LanternaWindow {
+public class SegmentManipulationWindow implements BelaWindow {
     private static final LambdaLogger log = getLogger(SegmentManipulationWindow.class);
 
     private StorageProviderFactory storageProviderFactory;

@@ -28,7 +28,7 @@ import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.TextBox;
 
-public class SearchForBlockPanel implements LanternaComponent<Panel> {
+public class SearchForBlockPanel implements BelaComponent<Panel> {
     long blockNumber;
     private final List<BlockNumberSearchSubscriber> subscribers = new ArrayList<>();
 

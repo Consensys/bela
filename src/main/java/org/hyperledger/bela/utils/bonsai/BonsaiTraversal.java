@@ -131,7 +131,7 @@ public class BonsaiTraversal {
                                         accountHash,
                                         getStorageNodeValue(accountValue.getStorageRoot(), accountHash, Bytes.EMPTY));
                             }
-                        } else if (node.getHash().equals(parentNode.getHash())) {
+                        } else if (nodes.size()>1 && node.getHash().equals(parentNode.getHash())) {
                             listener.visited(BonsaiTraversalTrieType.Account);
                         } else {
                             listener.missingValueForNode(node.getHash());
@@ -162,7 +162,7 @@ public class BonsaiTraversal {
                             if(storageInFlatDB.isPresent() && !storageInFlatDB.get().equals(value)){
                                 listener.differentDataInFlatDatabaseForStorage(accountHash, node.getHash());
                             }
-                        } else if (node.getHash().equals(parentNode.getHash())) {
+                        } else if (nodes.size()>1 && node.getHash().equals(parentNode.getHash())) {
                             listener.visited(BonsaiTraversalTrieType.Account);
                         } else {
                             listener.missingValueForNode(node.getHash());

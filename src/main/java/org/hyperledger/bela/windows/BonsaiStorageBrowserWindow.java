@@ -12,6 +12,7 @@ import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 
 import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
+import static org.hyperledger.bela.windows.Constants.KEY_FOCUS;
 import static org.hyperledger.bela.windows.Constants.KEY_ROOT;
 
 public class BonsaiStorageBrowserWindow implements LanternaWindow {
@@ -41,13 +42,14 @@ public class BonsaiStorageBrowserWindow implements LanternaWindow {
 
     @Override
     public Window createWindow() {
-        window = new BasicWindow("BonsaiTreeVerifier");
+        window = new BasicWindow("Bonsai Storage Browser");
         window.setHints(List.of(Window.Hint.FULL_SCREEN));
 
         Panel panel = new Panel(new LinearLayout());
 
         KeyControls controls = new KeyControls()
                 .addControl("Root", KEY_ROOT,storageView::findRoot)
+                .addControl("Focus", KEY_FOCUS,storageView::checkFocus)
                 .addControl("Close", KEY_CLOSE, window::close);
         window.addWindowListener(controls);
         panel.addComponent(controls.createComponent());

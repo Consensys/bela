@@ -2,6 +2,7 @@ package org.hyperledger.bela;
 
 import java.io.IOException;
 import java.util.prefs.Preferences;
+import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.bundle.LanternaThemes;
 import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
 import com.googlecode.lanterna.gui2.Window;
@@ -35,6 +36,7 @@ public class Bela {
         processArgs(preferences, args);
 
         DefaultTerminalFactory terminalFactory = new DefaultTerminalFactory();
+        terminalFactory.setInitialTerminalSize(new TerminalSize(120,35));
         try (Screen screen = terminalFactory.createScreen();
              StorageProviderFactory storageProviderFactory = new StorageProviderFactory(preferences)) {
             screen.startScreen();

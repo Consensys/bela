@@ -1,6 +1,7 @@
 package org.hyperledger.bela.windows;
 
 import java.io.File;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.prefs.Preferences;
@@ -74,7 +75,7 @@ public class SettingsWindow implements BelaWindow {
         dataPath.setTextChangeListener((newText, changedByUserInteraction) -> assumeStoragePath());
         panel.addComponent(dataPath);
         panel.addComponent(new Button("...", () -> {
-            final Optional<String> path = askForPath("Data Path Directory");
+            final Optional<String> path = askForPath("Data Path Directory", dataPath.getText());
             path.ifPresent(dataPath::setText);
         }));
 
@@ -88,7 +89,7 @@ public class SettingsWindow implements BelaWindow {
         storagePath = new TextBox(preferences.get(STORAGE_PATH, STORAGE_PATH_DEFAULT));
         panel.addComponent(storagePath);
         storagePathButton = new Button("...", () -> {
-            final Optional<String> path = askForPath("Storage Path Directory");
+            final Optional<String> path = askForPath("Storage Path Directory", storagePath.getText());
             path.ifPresent(storagePath::setText);
         });
         panel.addComponent(storagePathButton);
@@ -99,7 +100,7 @@ public class SettingsWindow implements BelaWindow {
         genesisPath = new TextBox(preferences.get(GENESIS_PATH, GENESIS_PATH_DEFAULT));
         panel.addComponent(genesisPath);
         panel.addComponent(new Button("...", () -> {
-            final Optional<String> path = askForPath("Genesis Path Directory");
+            final Optional<String> path = askForPath("Genesis Path Directory", genesisPath.getText());
             path.ifPresent(genesisPath::setText);
         }));
 
@@ -158,11 +159,19 @@ public class SettingsWindow implements BelaWindow {
         }
     }
 
-    private Optional<String> askForPath(final String title) {
+    private Optional<String> askForPath(final String title, final String previousDirectory) {
+            Path initialPath;
+        try {
+            initialPath = Path.of(previousDirectory);
+        } catch (
+                InvalidPathException e) {
+            initialPath = Path.of(DATA_PATH_DEFAULT);
+        }
         final File file = new DirectoryDialogBuilder()
                 .setTitle(title)
                 .setDescription("Choose a directory")
                 .setActionLabel("Open")
+                .setSelectedDirectory(initialPath.toFile())
                 .build()
                 .showDialog(gui);
         return Optional.ofNullable(file).map(File::toString);

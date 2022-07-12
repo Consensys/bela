@@ -13,7 +13,7 @@ import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.TextBox;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
-import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.dialogs.BelaExceptionDialog;
 import org.hyperledger.bela.utils.StorageProviderFactory;
@@ -90,10 +90,10 @@ public class RocksDBViewer implements BelaWindow {
         try {
             final StorageProvider provider = storageProviderFactory.createProvider();
             final KeyValueStorage storageBySegmentIdentifier = provider.getStorageBySegmentIdentifier(identifierCombo.getSelectedItem());
-            final Optional<byte[]> value = storageBySegmentIdentifier.get(Bytes32.fromHexStringStrict(keyBox.getText())
+            final Optional<byte[]> value = storageBySegmentIdentifier.get(Bytes.fromHexString(keyBox.getText())
                     .toArrayUnsafe());
             if (value.isPresent()) {
-                valueLabel.setText(Bytes32.wrap(value.get()).toHexString());
+                valueLabel.setText(Bytes.wrap(value.get()).toHexString());
             } else {
                 valueLabel.setText("Not found...");
             }

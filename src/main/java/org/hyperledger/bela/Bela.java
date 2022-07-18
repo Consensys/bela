@@ -14,6 +14,7 @@ import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.bela.windows.BlockChainBrowserWindow;
 import org.hyperledger.bela.windows.BonsaiStorageBrowserWindow;
 import org.hyperledger.bela.windows.BonsaiTreeVerifierWindow;
+import org.hyperledger.bela.windows.BonsaiTrieLogLayersViewer;
 import org.hyperledger.bela.windows.Constants;
 import org.hyperledger.bela.windows.DatabaseConversionWindow;
 import org.hyperledger.bela.windows.LogoWindow;
@@ -54,6 +55,7 @@ public class Bela {
             mainWindow.registerWindow(new RocksDBViewer(gui, storageProviderFactory));
             mainWindow.registerWindow(new SegmentManipulationWindow(gui, storageProviderFactory));
             mainWindow.registerWindow(new BonsaiStorageBrowserWindow(gui,storageProviderFactory));
+            mainWindow.registerWindow(new BonsaiTrieLogLayersViewer(gui,storageProviderFactory));
             final Window window = mainWindow.createWindow();
             gui.addWindowAndWait(window);
         } catch (IOException e) {

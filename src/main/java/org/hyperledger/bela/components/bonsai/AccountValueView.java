@@ -17,7 +17,7 @@ class AccountValueView extends AbstractBonsaiNodeView {
     private final Bytes accountValueBytes;
 
     public AccountValueView(final BonsaiStorageView bonsaiStorageView, final Hash accountHash, final Bytes accountValueBytes, final int depth) {
-        super("V:" + accountValueBytes.toHexString(), depth);
+        super("A:" + accountHash.toHexString(), depth);
         this.bonsaiStorageView = bonsaiStorageView;
         this.accountHash = accountHash;
         this.accountValueBytes = accountValueBytes;
@@ -37,6 +37,7 @@ class AccountValueView extends AbstractBonsaiNodeView {
 
         // check the account in the flat database
         final Optional<Bytes> accountInFlatDB = bonsaiStorageView.getAccountFromFlatDatabase(accountHash);
+        children.add(new LabelNodeView("V: "+ accountValueBytes.toHexString(),depth+1));
         if (accountInFlatDB.isPresent()) {
             children.add(new LabelNodeView("F: " + accountInFlatDB.get().toHexString(), depth + 1));
         } else {

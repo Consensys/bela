@@ -41,14 +41,14 @@ public class BonsaiStorageView implements BelaComponent<Panel> {
         return panel;
     }
 
-    private void initStorage() {
-        final StorageProvider provider = storageProviderFactory.createProvider();
-        accountStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_INFO_STATE);
-        codeStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.CODE_STORAGE);
-        storageStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_STORAGE_STORAGE);
-        trieBranchStorage =
-                provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_BRANCH_STORAGE);
-    }
+        private void initStorage() {
+            final StorageProvider provider = storageProviderFactory.createProvider();
+            accountStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_INFO_STATE);
+            codeStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.CODE_STORAGE);
+            storageStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_STORAGE_STORAGE);
+            trieBranchStorage =
+                    provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_BRANCH_STORAGE);
+        }
 
     public void findRoot() {
         final Hash rootHash =

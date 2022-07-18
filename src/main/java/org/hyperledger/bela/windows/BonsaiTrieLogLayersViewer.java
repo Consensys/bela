@@ -90,10 +90,27 @@ public class BonsaiTrieLogLayersViewer implements BelaWindow {
         return window;
     }
 
+
+    private void rollForward() {
+        try {
+            final BonsaiWorldStateUpdater updater = getBonsaiWorldStateUpdater();
+            updater.rollForward(view.getLayer());
+            updater.commit();
+            storageProviderFactory.close();
+        } catch (Exception e) {
+            BelaExceptionDialog.showException(gui, e);
+        }
+    }
+
     private void rollBackward() {
-        final BonsaiWorldStateUpdater updater = getBonsaiWorldStateUpdater();
-        updater.rollBack(view.getLayer());
-        updater.commit();
+        try {
+            final BonsaiWorldStateUpdater updater = getBonsaiWorldStateUpdater();
+            updater.rollBack(view.getLayer());
+            updater.commit();
+            storageProviderFactory.close();
+        } catch (Exception e) {
+            BelaExceptionDialog.showException(gui, e);
+        }
 
     }
 
@@ -115,11 +132,6 @@ public class BonsaiTrieLogLayersViewer implements BelaWindow {
 
     }
 
-    private void rollForward() {
-        final BonsaiWorldStateUpdater updater = getBonsaiWorldStateUpdater();
-        updater.rollForward(view.getLayer());
-        updater.commit();
-    }
 
     private void lookupByChainHead() {
         final BlockChainContext blockChainContext = BlockChainContextFactory.createBlockChainContext(storageProviderFactory.createProvider());

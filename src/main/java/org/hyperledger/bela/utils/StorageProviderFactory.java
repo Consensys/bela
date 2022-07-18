@@ -8,9 +8,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
+import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
+import com.googlecode.lanterna.gui2.dialogs.DialogWindow;
+import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
+import com.googlecode.lanterna.gui2.dialogs.MessageDialogBuilder;
+import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.config.BelaConfigurationImpl;
 import org.hyperledger.bela.converter.RocksDBKeyValueStorageConverterFactory;
+import org.hyperledger.bela.dialogs.NonClosableMessage;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueStorageProviderBuilder;
@@ -34,12 +40,14 @@ public class StorageProviderFactory implements AutoCloseable {
     private static final LambdaLogger log = getLogger(StorageProviderFactory.class);
 
     private final Preferences preferences;
+    private final WindowBasedTextGUI gui;
     private StorageProvider provider;
     private Path dataPath;
     private Path storagePath;
 
-    public StorageProviderFactory(final Preferences preferences) {
-        this.preferences = preferences;
+    public StorageProviderFactory(final WindowBasedTextGUI gui, final Preferences preferences) {
+        this.preferences=preferences;
+        this.gui = gui;
     }
 
     public StorageProvider createProvider() {
@@ -58,12 +66,16 @@ public class StorageProviderFactory implements AutoCloseable {
         }
         dataPath = data;
         storagePath = storage;
+
+        final NonClosableMessage nonClosableMessage = NonClosableMessage.showMessage(gui, "Creating storage provider...");
+
         if (preferences.getBoolean(DETECT_COLUMNS, true)) {
             provider = createKeyValueStorageProvider(dataPath, storagePath, detectSegments());
         } else {
             provider = createKeyValueStorageProvider(dataPath, storagePath, Arrays.asList(KeyValueSegmentIdentifier.values()));
 
         }
+        gui.removeWindow(nonClosableMessage);
         if (provider == null) {
             throw new RuntimeException("Could not create provider....");
         }

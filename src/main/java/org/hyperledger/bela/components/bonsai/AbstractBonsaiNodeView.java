@@ -71,4 +71,10 @@ public abstract class AbstractBonsaiNodeView implements BonsaiView {
     protected void addChild(final LabelNodeView child) {
         children.add(child);
     }
+
+    @Override
+    public void collapse() {
+        this.children.clear();
+        redraw();
+    }
 }

@@ -14,7 +14,6 @@ import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import org.apache.tuweni.bytes.Bytes32;
-import org.checkerframework.checker.units.qual.A;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.components.bonsai.BonsaiTrieLogView;
 import org.hyperledger.bela.utils.StorageProviderFactory;
@@ -55,7 +54,7 @@ public class BonsaiTrieLogLayersViewer implements BelaWindow {
         Panel panel = new Panel(new LinearLayout(Direction.VERTICAL));
 
         KeyControls controls = new KeyControls()
-                .addControl("Focus", KEY_FOCUS,this::checkFocus)
+                .addControl("Focus", KEY_FOCUS, this::checkFocus)
                 .addControl("Close", KEY_CLOSE, window::close);
         window.addWindowListener(controls);
         panel.addComponent(controls.createComponent());
@@ -69,7 +68,7 @@ public class BonsaiTrieLogLayersViewer implements BelaWindow {
     }
 
     private void checkFocus() {
-        for(BonsaiTrieLogView child : children) {
+        for (BonsaiTrieLogView child : children) {
             child.focus();
         }
     }

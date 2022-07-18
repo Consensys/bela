@@ -37,7 +37,7 @@ public class Bela {
         processArgs(preferences, args);
 
         DefaultTerminalFactory terminalFactory = new DefaultTerminalFactory();
-        terminalFactory.setInitialTerminalSize(new TerminalSize(120,35));
+        terminalFactory.setInitialTerminalSize(new TerminalSize(120, 35));
         try (Screen screen = terminalFactory.createScreen();
              StorageProviderFactory storageProviderFactory = new StorageProviderFactory(preferences)) {
             screen.startScreen();
@@ -54,8 +54,8 @@ public class Bela {
             mainWindow.registerWindow(new P2PManagementWindow(gui, storageProviderFactory));
             mainWindow.registerWindow(new RocksDBViewer(gui, storageProviderFactory));
             mainWindow.registerWindow(new SegmentManipulationWindow(gui, storageProviderFactory));
-            mainWindow.registerWindow(new BonsaiStorageBrowserWindow(gui,storageProviderFactory));
-            mainWindow.registerWindow(new BonsaiTrieLogLayersViewer(gui,storageProviderFactory));
+            mainWindow.registerWindow(new BonsaiStorageBrowserWindow(gui, storageProviderFactory));
+            mainWindow.registerWindow(new BonsaiTrieLogLayersViewer(gui, storageProviderFactory));
             final Window window = mainWindow.createWindow();
             gui.addWindowAndWait(window);
         } catch (IOException e) {

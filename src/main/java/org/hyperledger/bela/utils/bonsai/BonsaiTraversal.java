@@ -23,7 +23,7 @@ import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 public class BonsaiTraversal {
     private static final LambdaLogger log = getLogger(BonsaiTraversal.class);
     private final KeyValueStorage accountStorage;
-    private final KeyValueStorage  storageStorage;
+    private final KeyValueStorage storageStorage;
 
     int visited = 0;
 
@@ -107,8 +107,10 @@ public class BonsaiTraversal {
                                                                     parentNode.getLocation()
                                                                             .orElseThrow(), node.getPath()))));
                             // check the account in the flat database
-                            final Optional<Bytes> accountInFlatDB = accountStorage.get(accountHash.toArrayUnsafe()).map(Bytes::wrap);
-                            if(accountInFlatDB.isPresent() && !accountInFlatDB.get().equals(node.getValue().orElseThrow())){
+                            final Optional<Bytes> accountInFlatDB = accountStorage.get(accountHash.toArrayUnsafe())
+                                    .map(Bytes::wrap);
+                            if (accountInFlatDB.isPresent() && !accountInFlatDB.get()
+                                    .equals(node.getValue().orElseThrow())) {
                                 listener.differentDataInFlatDatabaseForAccount(accountHash);
                             }
                             // Add code, if appropriate
@@ -131,7 +133,7 @@ public class BonsaiTraversal {
                                         accountHash,
                                         getStorageNodeValue(accountValue.getStorageRoot(), accountHash, Bytes.EMPTY));
                             }
-                        } else if (nodes.size()>1 && node.getHash().equals(parentNode.getHash())) {
+                        } else if (nodes.size() > 1 && node.getHash().equals(parentNode.getHash())) {
                             listener.visited(BonsaiTraversalTrieType.Account);
                         } else {
                             listener.missingValueForNode(node.getHash());
@@ -157,12 +159,14 @@ public class BonsaiTraversal {
                     } else {
                         if (node.getValue().isPresent()) {
                             // check the storage in the flat database
-                            final Optional<Bytes> storageInFlatDB = storageStorage.get(Bytes.concatenate(accountHash, getSlotHash(node.getLocation().orElseThrow(), node.getPath())).toArrayUnsafe()).map(Bytes::wrap);
-                            final Bytes value = Bytes32.leftPad(org.apache.tuweni.rlp.RLP.decodeValue(node.getValue().orElseThrow()));
-                            if(storageInFlatDB.isPresent() && !storageInFlatDB.get().equals(value)){
+                            final Optional<Bytes> storageInFlatDB = storageStorage.get(Bytes.concatenate(accountHash, getSlotHash(node.getLocation()
+                                    .orElseThrow(), node.getPath())).toArrayUnsafe()).map(Bytes::wrap);
+                            final Bytes value = Bytes32.leftPad(org.apache.tuweni.rlp.RLP.decodeValue(node.getValue()
+                                    .orElseThrow()));
+                            if (storageInFlatDB.isPresent() && !storageInFlatDB.get().equals(value)) {
                                 listener.differentDataInFlatDatabaseForStorage(accountHash, node.getHash());
                             }
-                        } else if (nodes.size()>1 && node.getHash().equals(parentNode.getHash())) {
+                        } else if (nodes.size() > 1 && node.getHash().equals(parentNode.getHash())) {
                             listener.visited(BonsaiTraversalTrieType.Account);
                         } else {
                             listener.missingValueForNode(node.getHash());

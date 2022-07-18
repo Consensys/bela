@@ -161,7 +161,7 @@ public class SegmentManipulationWindow implements BelaWindow {
                     selected.add(KeyValueSegmentIdentifier.values()[column - 1]);
                 });
             } catch (Exception ex) {
-                BelaExceptionDialog.showException(gui,e);
+                BelaExceptionDialog.showException(gui, e);
             }
         }
     }
@@ -172,7 +172,8 @@ public class SegmentManipulationWindow implements BelaWindow {
         while (cause != null && !(cause instanceof RocksDBException)) {
             cause = cause.getCause();
         }
-        if (cause == null || cause.getMessage() == null || !cause.getMessage().startsWith("Column families not opened: ")) {
+        if (cause == null || cause.getMessage() == null || !cause.getMessage()
+                .startsWith("Column families not opened: ")) {
             throw e;
         }
         byte[] bytes = cause.getMessage().getBytes();
@@ -196,8 +197,8 @@ public class SegmentManipulationWindow implements BelaWindow {
 
         } catch (Exception e) {
             BelaExceptionDialog.showException(gui, e);
-        } catch (Throwable t){
-            log.error("There was an error",t);
+        } catch (Throwable t) {
+            log.error("There was an error", t);
         }
 
     }

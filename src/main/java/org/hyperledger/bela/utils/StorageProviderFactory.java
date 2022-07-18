@@ -58,7 +58,7 @@ public class StorageProviderFactory implements AutoCloseable {
         }
         dataPath = data;
         storagePath = storage;
-        if (preferences.getBoolean(DETECT_COLUMNS,true)){
+        if (preferences.getBoolean(DETECT_COLUMNS, true)) {
             provider = createKeyValueStorageProvider(dataPath, storagePath, detectSegments());
         } else {
             provider = createKeyValueStorageProvider(dataPath, storagePath, Arrays.asList(KeyValueSegmentIdentifier.values()));
@@ -121,13 +121,13 @@ public class StorageProviderFactory implements AutoCloseable {
     }
 
     public List<SegmentIdentifier> detectSegments() {
-        try (StorageProvider ignored = createProvider(new ArrayList<>())){
+        try (StorageProvider ignored = createProvider(new ArrayList<>())) {
             close();
             return new ArrayList<>();
         } catch (Exception e) {
             final List<Byte> columns = parseColumns(e);
             final KeyValueSegmentIdentifier[] values = KeyValueSegmentIdentifier.values();
-            return columns.stream().map(aByte -> values[aByte-1]).collect(Collectors.toList());
+            return columns.stream().map(aByte -> values[aByte - 1]).collect(Collectors.toList());
         }
     }
 
@@ -137,7 +137,8 @@ public class StorageProviderFactory implements AutoCloseable {
         while (cause != null && !(cause instanceof RocksDBException)) {
             cause = cause.getCause();
         }
-        if (cause == null || cause.getMessage() == null || !cause.getMessage().startsWith("Column families not opened: ")) {
+        if (cause == null || cause.getMessage() == null || !cause.getMessage()
+                .startsWith("Column families not opened: ")) {
             throw new RuntimeException(e);
         }
         byte[] bytes = cause.getMessage().getBytes();

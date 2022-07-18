@@ -41,14 +41,14 @@ public class BonsaiStorageView implements BelaComponent<Panel> {
         return panel;
     }
 
-        private void initStorage() {
-            final StorageProvider provider = storageProviderFactory.createProvider();
-            accountStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_INFO_STATE);
-            codeStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.CODE_STORAGE);
-            storageStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_STORAGE_STORAGE);
-            trieBranchStorage =
-                    provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_BRANCH_STORAGE);
-        }
+    private void initStorage() {
+        final StorageProvider provider = storageProviderFactory.createProvider();
+        accountStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_INFO_STATE);
+        codeStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.CODE_STORAGE);
+        storageStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_STORAGE_STORAGE);
+        trieBranchStorage =
+                provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_BRANCH_STORAGE);
+    }
 
     public void findRoot() {
         final Hash rootHash =
@@ -70,6 +70,7 @@ public class BonsaiStorageView implements BelaComponent<Panel> {
     public void checkFocus() {
         rootNodeView.focus();
     }
+
     public Node<Bytes> getAccountNodeValue(final Bytes32 hash, final Bytes location) {
         final Optional<Bytes> bytes = trieBranchStorage.get(location.toArrayUnsafe()).map(Bytes::wrap);
         if (bytes.isEmpty()) {
@@ -112,7 +113,8 @@ public class BonsaiStorageView implements BelaComponent<Panel> {
     }
 
     public Optional<Bytes> getStorageInFlatDB(final Bytes32 accountHash, final Bytes location, final Bytes path) {
-        return storageStorage.get(Bytes.concatenate(accountHash, getSlotHash(location, path)).toArrayUnsafe()).map(Bytes::wrap);
+        return storageStorage.get(Bytes.concatenate(accountHash, getSlotHash(location, path)).toArrayUnsafe())
+                .map(Bytes::wrap);
     }
 
     private Hash getSlotHash(final Bytes location, final Bytes path) {

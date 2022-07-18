@@ -5,14 +5,14 @@ import java.util.List;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.TextBox;
 
-public abstract class AbstractBonsaiNodeView implements BonsaiView{
+public abstract class AbstractBonsaiNodeView implements BonsaiView {
     private final TextBox labelBox;
     protected final int depth;
 
     private List<BonsaiView> children = new ArrayList<>();
 
 
-    protected Panel panel= new Panel();
+    protected Panel panel = new Panel();
 
 
     public AbstractBonsaiNodeView(final String label, final int depth) {
@@ -54,7 +54,7 @@ public abstract class AbstractBonsaiNodeView implements BonsaiView{
     private void checkChildren() {
         for (BonsaiView child : children) {
             child.focus();
-            if (child.isFocused()){
+            if (child.isFocused()) {
                 this.children = new ArrayList<>();
                 children.add(child);
                 redraw();

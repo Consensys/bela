@@ -48,8 +48,8 @@ public class BonsaiStorageBrowserWindow implements BelaWindow {
         Panel panel = new Panel(new LinearLayout());
 
         KeyControls controls = new KeyControls()
-                .addControl("Root", KEY_ROOT,storageView::findRoot)
-                .addControl("Focus", KEY_FOCUS,storageView::checkFocus)
+                .addControl("Root", KEY_ROOT, storageView::findRoot)
+                .addControl("Focus", KEY_FOCUS, storageView::checkFocus)
                 .addControl("Close", KEY_CLOSE, window::close);
         window.addWindowListener(controls);
         panel.addComponent(controls.createComponent());

@@ -160,7 +160,7 @@ public class SettingsWindow implements BelaWindow {
     }
 
     private Optional<String> askForPath(final String title, final String previousDirectory) {
-            Path initialPath;
+        Path initialPath;
         try {
             initialPath = Path.of(previousDirectory);
         } catch (

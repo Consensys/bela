@@ -100,8 +100,8 @@ public class BonsaiTreeVerifierWindow implements BelaWindow, BonsaiListener {
                     final BonsaiTraversal bonsaiTraversal = new BonsaiTraversal(provider, this);
                     runningLabel.setText("Running...");
                     bonsaiTraversal.traverse();
-                } catch (Exception e){
-                    log.error("There was an error",e);
+                } catch (Exception e) {
+                    log.error("There was an error", e);
                 } finally {
                     stopVerifier();
                 }

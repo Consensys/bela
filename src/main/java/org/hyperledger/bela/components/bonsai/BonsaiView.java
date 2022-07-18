@@ -11,4 +11,6 @@ public interface BonsaiView extends BelaComponent<Panel> {
     void takeFocus();
 
     void expand();
+
+    void collapse();
 }

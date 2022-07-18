@@ -99,4 +99,7 @@ public class BonsaiTrieLogView extends AbstractBonsaiNodeView {
         //        return layer.streamStorageChanges();
     }
 
+    public TrieLogLayer getLayer() {
+        return layer;
+    }
 }

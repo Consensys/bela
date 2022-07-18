@@ -39,10 +39,13 @@ public class Bela {
         DefaultTerminalFactory terminalFactory = new DefaultTerminalFactory();
         terminalFactory.setInitialTerminalSize(new TerminalSize(120, 35));
         try (Screen screen = terminalFactory.createScreen();
-             StorageProviderFactory storageProviderFactory = new StorageProviderFactory(preferences)) {
+             ) {
             screen.startScreen();
 
             final WindowBasedTextGUI gui = new MultiWindowTextGUI(screen);
+
+            StorageProviderFactory storageProviderFactory = new StorageProviderFactory(gui,preferences);
+
             gui.setTheme(LanternaThemes.getRegisteredTheme(preferences.get(THEME_KEY, DEFAULT_THEME)));
             MainWindow mainWindow = new MainWindow(gui);
             final SettingsWindow config = new SettingsWindow(gui, preferences);

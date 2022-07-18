@@ -6,11 +6,9 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.components.BonsaiStorageView;
 import org.hyperledger.besu.datatypes.Hash;
-import org.hyperledger.besu.ethereum.rlp.RLP;
 import org.hyperledger.besu.ethereum.trie.CompactEncoding;
 import org.hyperledger.besu.ethereum.trie.Node;
 import org.hyperledger.besu.ethereum.trie.TrieNodeDecoder;
-import org.hyperledger.besu.ethereum.worldstate.StateTrieAccountValue;
 import org.jetbrains.annotations.NotNull;
 
 public class AccountTreeNodeView extends AbstractBonsaiNodeView {
@@ -51,21 +49,20 @@ public class AccountTreeNodeView extends AbstractBonsaiNodeView {
                         return new AccountValueView(bonsaiStorageView, accountHash, node.getValue().get(), depth + 1);
 
                     } else {
-                        return new LabelNodeView("Missing value for "+ label(node), depth + 1);
+                        return new LabelNodeView("Missing value for " + label(node), depth + 1);
                     }
 
 
                 }).collect(Collectors.toList());
-        if (children.size()>1){
-            setChildren(children.stream().filter(child->!(child instanceof LabelNodeView)).collect(Collectors.toList()));
+        if (children.size() > 1) {
+            setChildren(children.stream().filter(child -> !(child instanceof LabelNodeView))
+                    .collect(Collectors.toList()));
         } else {
             setChildren(children);
         }
         redraw();
         takeFocus();
     }
-
-
 
 
 }

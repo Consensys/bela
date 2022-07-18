@@ -10,7 +10,7 @@ import org.hyperledger.bela.components.BonsaiStorageView;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.trie.Node;
 
-public class StorageValueView extends AbstractBonsaiNodeView{
+public class StorageValueView extends AbstractBonsaiNodeView {
 
     private BonsaiStorageView bonsaiStorageView;
     private final Hash accountHash;
@@ -37,7 +37,7 @@ public class StorageValueView extends AbstractBonsaiNodeView{
         final Optional<Bytes> storageInFlatDB = bonsaiStorageView.getStorageInFlatDB(accountHash, node.getLocation()
                 .orElseThrow(), node.getPath());
 
-        if (storageInFlatDB.isPresent() ) {
+        if (storageInFlatDB.isPresent()) {
             children.add(new LabelNodeView("F: " + storageInFlatDB.get().toHexString(), depth + 1));
         } else {
             children.add(new LabelNodeView("No data in Flat db", depth + 1));

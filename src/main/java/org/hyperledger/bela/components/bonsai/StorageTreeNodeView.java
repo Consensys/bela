@@ -36,11 +36,11 @@ public class StorageTreeNodeView extends AbstractBonsaiNodeView {
                         return new StorageTreeNodeView(bonsaiStorageView, accountHash, bonsaiStorageView.getStorageNodeValue(node.getHash(), accountHash, node.getLocation()
                                 .orElseThrow()), depth + 1);
                     } else if (node.getValue().isPresent()) {
-                        return new StorageValueView(bonsaiStorageView,accountHash,bonsaiStorageView.getStorageNodeValue(node.getHash(), accountHash, node.getLocation()
+                        return new StorageValueView(bonsaiStorageView, accountHash, bonsaiStorageView.getStorageNodeValue(node.getHash(), accountHash, node.getLocation()
                                 .orElseThrow()), depth + 1);
 
-                    }  else {
-                        return new LabelNodeView("Missing value in storage for account "+ accountHash.toHexString() + " on "+ label(node), depth + 1);
+                    } else {
+                        return new LabelNodeView("Missing value in storage for account " + accountHash.toHexString() + " on " + label(node), depth + 1);
                     }
 
                 }).collect(Collectors.toList());

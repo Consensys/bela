@@ -17,7 +17,7 @@ public class ThemePicker implements BelaComponent<ComboBox<String>>, ComboBox.Li
     public ThemePicker(final WindowBasedTextGUI gui, final String savedTheme) {
         this.gui = gui;
         this.savedTheme = savedTheme;
-        this.currentTheme=savedTheme;
+        this.currentTheme = savedTheme;
     }
 
     @Override

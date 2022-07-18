@@ -24,7 +24,6 @@ public class BelaExceptionDialog implements BelaDialog {
     private static final Logger LOG = getLogger(BelaExceptionDialog.class);
 
 
-
     Exception exception;
 
     Mode mode = Mode.Message;

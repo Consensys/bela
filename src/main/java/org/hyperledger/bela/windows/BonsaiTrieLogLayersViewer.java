@@ -20,17 +20,15 @@ import org.hyperledger.bela.utils.BlockChainContext;
 import org.hyperledger.bela.utils.BlockChainContextFactory;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.datatypes.Hash;
-import org.hyperledger.besu.ethereum.bonsai.BonsaiPersistedWorldState;
 import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateArchive;
 import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateKeyValueStorage;
 import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateUpdater;
 import org.hyperledger.besu.ethereum.bonsai.TrieLogLayer;
+import org.hyperledger.besu.ethereum.bonsai.TrieLogManager;
 import org.hyperledger.besu.ethereum.chain.ChainHead;
-import org.hyperledger.besu.ethereum.chain.DefaultBlockchain;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
-import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueStoragePrefixedKeyBlockchainStorage;
-import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
+import org.hyperledger.besu.ethereum.worldstate.DataStorageConfiguration;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
@@ -118,17 +116,18 @@ public class BonsaiTrieLogLayersViewer implements BelaWindow {
         final StorageProvider provider = storageProviderFactory.createProvider();
         final BlockChainContext blockChainContext = BlockChainContextFactory.createBlockChainContext(provider);
 
-        final BonsaiWorldStateArchive archive = new BonsaiWorldStateArchive(provider, blockChainContext.getBlockchain());
-        final BonsaiPersistedWorldState bonsaiState =
-                new BonsaiPersistedWorldState(
-                        archive,
+        final BonsaiWorldStateArchive archive = new BonsaiWorldStateArchive(
+                new TrieLogManager(blockChainContext.getBlockchain(),
                         new BonsaiWorldStateKeyValueStorage(
                                 provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_INFO_STATE),
                                 provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.CODE_STORAGE),
                                 provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_STORAGE_STORAGE),
                                 provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_BRANCH_STORAGE),
-                                provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_LOG_STORAGE)));
-        return (BonsaiWorldStateUpdater) bonsaiState.updater();
+                                provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_LOG_STORAGE)),
+                        DataStorageConfiguration.DEFAULT_CONFIG.getBonsaiMaxLayersToLoad()),
+                provider, blockChainContext.getBlockchain());
+
+        return (BonsaiWorldStateUpdater) archive.getMutable().updater();
 
     }
 

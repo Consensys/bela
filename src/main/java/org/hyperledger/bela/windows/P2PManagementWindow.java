@@ -69,19 +69,19 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
 
     private final StorageProviderFactory storageProviderFactory;
     private Preferences preferences;
-    private P2PNetwork network;
     private WindowBasedTextGUI gui;
 
     Map<Capability, Counter> counters = new HashMap<>();
     Counter connect = new Counter("connect");
     Counter disconnect = new Counter("disconnect");
 
-    BelaContext belaContext = new MainNetContext();
+    BelaContext belaContext;
 
     public P2PManagementWindow(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory, final Preferences preferences) {
         this.gui = gui;
         this.storageProviderFactory = storageProviderFactory;
         this.preferences = preferences;
+        belaContext = new MainNetContext(storageProviderFactory);
     }
 
 
@@ -152,80 +152,18 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
     }
 
     private void startP2P() {
-        try {
 
-            String dnsDiscoveryUrl;
-            String genesisConfig;
-            BigInteger networkId;
-            List<EnodeURL> bootNodes;
-            final String p2pListenInterface = "0.0.0.0";
-            final int p2pListenPort = 30302;
-            final int maxPeers = 10;
-
-            final List<SubProtocol> subProtocols = getSubProtocols();
-
-            final Optional<String> identityString=Optional.of("bela");
-            final boolean limitRemoteWireConnectionsEnabled = false;
-            final float fractionRemoteConnectionsAllowed=.5f;
-
-
-
-//        BesuControllerBuilder builder = new MainnetBesuControllerBuilder();
-//        final BesuController controller = BesuControllerBuilde();
-
-            NetworkingConfiguration networkingConfiguration = NetworkingConfiguration.create();
-            final RlpxConfiguration rlpxConfiguration = RlpxConfiguration.create()
-                    .setBindHost(p2pListenInterface)
-                    .setBindPort(p2pListenPort)
-                    .setMaxPeers(maxPeers)
-                    .setSupportedProtocols(subProtocols)
-                    .setClientId(BesuInfo.nodeName(identityString))
-                    .setLimitRemoteWireConnectionsEnabled(limitRemoteWireConnectionsEnabled)
-                    .setFractionRemoteWireConnectionsAllowed(fractionRemoteConnectionsAllowed);
-
-            networkingConfiguration.setRlpx(rlpxConfiguration);
-//
-
-//
-//        final MetricsSystem metricsSystem  = new LanternaMetricsSystem(new PrometheusMetricsSystem());
-            if (network != null) {
-                network.close();
-            }
-            final List<Capability> supportedCapabilities = calculateCapabilities(false);
-            network = DefaultP2PNetwork.builder()
-                    .vertx(Vertx.vertx())
-                    .nodeKey(NodeKeyUtils.generate())
-                    .config(networkingConfiguration)
-                    .supportedCapabilities(supportedCapabilities)
-                    .metricsSystem(belaContext.getMetricsSystem())
-                    .storageProvider(storageProviderFactory.createProvider())
-//                .natService(natService)
-//                .randomPeerPriority(randomPeerPriority)
-                    .forkIdSupplier(Collections::emptyList)
-//                .p2pTLSConfiguration(p2pTLSConfiguration)
-                    .build();
-
-//
-//        final RlpxAgent build = RlpxAgent.builder().build();
-
-
-            for (Capability capability : supportedCapabilities) {
-                network.subscribe(capability, this);
-            }
-
-            network.subscribeConnect(this);
-            network.subscribeDisconnect(this);
-
-
-
-            network.start();
-            new MessageDialogBuilder().setText("P2P started").setTitle("P2P started").build().showDialog(gui);
-
-        } catch (IOException e) {
-            log.error("There was an error when starting network", e);
-            BelaDialog.showException(gui, e);
-
+        final P2PNetwork p2PNetwork = belaContext.getP2PNetwork();
+        for (Capability capability : belaContext.getSupportedCapabilities()) {
+            p2PNetwork.subscribe(capability, this);
         }
+
+        p2PNetwork.subscribeConnect(this);
+        p2PNetwork.subscribeDisconnect(this);
+
+
+        p2PNetwork.start();
+        new MessageDialogBuilder().setText("P2P started").setTitle("P2P started").build().showDialog(gui);
 
     }
 
@@ -235,8 +173,8 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
 
     private void stopP2P() {
         try {
-            if (network != null) {
-                network.close();
+            if (belaContext.getP2PNetwork() != null) {
+                belaContext.getP2PNetwork().close();
             }
         } catch (IOException e) {
             log.error("There was an error when stopping the network", e);
@@ -274,21 +212,4 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
     }
 }
 
-class NodeKeyUtils {
 
-    public static NodeKey createFrom(final KeyPair keyPair) {
-        return new NodeKey(new KeyPairSecurityModule(keyPair));
-    }
-
-    public static NodeKey createFrom(final Bytes32 privateKey) {
-        final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithmFactory.getInstance();
-        final KeyPair keyPair =
-                signatureAlgorithm.createKeyPair(signatureAlgorithm.createPrivateKey(privateKey));
-        return new NodeKey(new KeyPairSecurityModule(keyPair));
-    }
-
-    public static NodeKey generate() {
-        return new NodeKey(
-                new KeyPairSecurityModule(SignatureAlgorithmFactory.getInstance().generateKeyPair()));
-    }
-}

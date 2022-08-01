@@ -41,13 +41,14 @@ public class SettingsWindow implements BelaWindow {
     private TextBox storagePath;
     private TextBox genesisPath;
     private Button storagePathButton;
-    private CheckBox detectColumns = new CheckBox("Auto detect columns in rocksdb");
+    private final CheckBox detectColumns = new CheckBox("Auto detect columns in rocksdb");
 
     public SettingsWindow(final WindowBasedTextGUI gui, final Preferences preferences) {
         this.gui = gui;
         this.preferences = preferences;
         themePickerMenu = new ThemePicker(gui, preferences.get(THEME_KEY, DEFAULT_THEME));
         detectColumns.setChecked(preferences.getBoolean(DETECT_COLUMNS, true));
+
 
     }
 

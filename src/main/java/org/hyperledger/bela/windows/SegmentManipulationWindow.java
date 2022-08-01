@@ -19,6 +19,7 @@ import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialogBuilder;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.components.KeyControls;
+import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.dialogs.BelaExceptionDialog;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
@@ -104,7 +105,7 @@ public class SegmentManipulationWindow implements BelaWindow {
             }
             detect();
         } catch (Exception e) {
-            BelaExceptionDialog.showException(gui, e);
+            BelaDialog.showException(gui, e);
         }
     }
 
@@ -161,7 +162,7 @@ public class SegmentManipulationWindow implements BelaWindow {
                     selected.add(KeyValueSegmentIdentifier.values()[column - 1]);
                 });
             } catch (Exception ex) {
-                BelaExceptionDialog.showException(gui, e);
+                BelaDialog.showException(gui, e);
             }
         }
     }
@@ -196,7 +197,7 @@ public class SegmentManipulationWindow implements BelaWindow {
                     .showDialog(gui);
 
         } catch (Exception e) {
-            BelaExceptionDialog.showException(gui, e);
+            BelaDialog.showException(gui, e);
         } catch (Throwable t) {
             log.error("There was an error", t);
         }

@@ -54,7 +54,7 @@ public class Bela {
             mainWindow.registerWindow(new BonsaiTreeVerifierWindow(storageProviderFactory));
             mainWindow.registerWindow(new DatabaseConversionWindow(storageProviderFactory));
             mainWindow.registerWindow(new LogoWindow());
-            mainWindow.registerWindow(new P2PManagementWindow(gui, storageProviderFactory));
+            mainWindow.registerWindow(new P2PManagementWindow(gui, storageProviderFactory, preferences));
             mainWindow.registerWindow(new RocksDBViewer(gui, storageProviderFactory));
             mainWindow.registerWindow(new SegmentManipulationWindow(gui, storageProviderFactory));
             mainWindow.registerWindow(new BonsaiStorageBrowserWindow(gui, storageProviderFactory));

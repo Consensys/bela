@@ -15,6 +15,7 @@ import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.components.bonsai.BonsaiTrieLogView;
+import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.dialogs.BelaExceptionDialog;
 import org.hyperledger.bela.utils.BlockChainContext;
 import org.hyperledger.bela.utils.BlockChainContextFactory;
@@ -96,7 +97,7 @@ public class BonsaiTrieLogLayersViewer implements BelaWindow {
             updater.commit();
             storageProviderFactory.close();
         } catch (Exception e) {
-            BelaExceptionDialog.showException(gui, e);
+            BelaDialog.showException(gui, e);
         }
     }
 
@@ -107,7 +108,7 @@ public class BonsaiTrieLogLayersViewer implements BelaWindow {
             updater.commit();
             storageProviderFactory.close();
         } catch (Exception e) {
-            BelaExceptionDialog.showException(gui, e);
+            BelaDialog.showException(gui, e);
         }
 
     }
@@ -151,7 +152,7 @@ public class BonsaiTrieLogLayersViewer implements BelaWindow {
             updateTrieFromHash(hash);
         } catch (Exception e) {
             log.error("There was an error when moving browser", e);
-            BelaExceptionDialog.showException(gui, e);
+            BelaDialog.showException(gui, e);
         }
     }
 

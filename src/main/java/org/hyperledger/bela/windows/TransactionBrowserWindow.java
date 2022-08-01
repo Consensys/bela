@@ -11,6 +11,7 @@ import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.components.KeyControls;
+import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.dialogs.BelaExceptionDialog;
 import org.hyperledger.bela.model.TransactionResult;
 import org.hyperledger.bela.utils.BlockChainContext;
@@ -91,7 +92,7 @@ public class TransactionBrowserWindow implements BelaWindow {
             browser.moveByHash(Hash.fromHexStringLenient(s));
         } catch (Exception e) {
             log.error("There was an error when moving browser", e);
-            BelaExceptionDialog.showException(gui, e);
+            BelaDialog.showException(gui, e);
         }
     }
 

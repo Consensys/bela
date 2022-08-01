@@ -11,6 +11,7 @@ import com.googlecode.lanterna.gui2.menu.Menu;
 import com.googlecode.lanterna.gui2.menu.MenuBar;
 import com.googlecode.lanterna.gui2.menu.MenuItem;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
+import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.dialogs.BelaExceptionDialog;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
@@ -67,7 +68,7 @@ public class MainWindow implements BelaWindow {
             gui.addWindowAndWait(window.createWindow());
         } catch (Exception e) {
             log.error("There was an error when launching window {}", window.label(), e);
-            BelaExceptionDialog.showException(gui, e);
+            BelaDialog.showException(gui, e);
 
         }
     }

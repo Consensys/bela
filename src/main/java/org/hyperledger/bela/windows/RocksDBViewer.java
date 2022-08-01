@@ -15,6 +15,7 @@ import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.bela.components.KeyControls;
+import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.dialogs.BelaExceptionDialog;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
@@ -98,7 +99,7 @@ public class RocksDBViewer implements BelaWindow {
                 valueLabel.setText("Not found...");
             }
         } catch (Exception e) {
-            BelaExceptionDialog.showException(gui, e);
+            BelaDialog.showException(gui, e);
         }
     }
 }

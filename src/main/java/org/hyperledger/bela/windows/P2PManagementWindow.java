@@ -1,13 +1,10 @@
 package org.hyperledger.bela.windows;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -20,35 +17,22 @@ import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialogBuilder;
-import io.vertx.core.Vertx;
+import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
-import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.components.Counter;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.context.BelaContext;
 import org.hyperledger.bela.context.MainNetContext;
 import org.hyperledger.bela.dialogs.BelaDialog;
-import org.hyperledger.bela.dialogs.BelaExceptionDialog;
 import org.hyperledger.bela.utils.StorageProviderFactory;
-import org.hyperledger.besu.BesuInfo;
-import org.hyperledger.besu.crypto.KeyPair;
-import org.hyperledger.besu.crypto.KeyPairSecurityModule;
-import org.hyperledger.besu.crypto.NodeKey;
-import org.hyperledger.besu.crypto.SignatureAlgorithm;
-import org.hyperledger.besu.crypto.SignatureAlgorithmFactory;
 import org.hyperledger.besu.datatypes.Hash;
-import org.hyperledger.besu.ethereum.ProtocolContext;
 import org.hyperledger.besu.ethereum.core.BlockHeader;
 import org.hyperledger.besu.ethereum.eth.EthProtocol;
-import org.hyperledger.besu.ethereum.eth.manager.EthContext;
-import org.hyperledger.besu.ethereum.eth.manager.task.GetBodiesFromPeerTask;
 import org.hyperledger.besu.ethereum.eth.manager.task.RetryingGetHeadersEndingAtFromPeerByHashTask;
-import org.hyperledger.besu.ethereum.eth.messages.GetBlockHeadersMessage;
-import org.hyperledger.besu.ethereum.mainnet.ProtocolSchedule;
-import org.hyperledger.besu.ethereum.p2p.config.NetworkingConfiguration;
-import org.hyperledger.besu.ethereum.p2p.config.RlpxConfiguration;
-import org.hyperledger.besu.ethereum.p2p.network.DefaultP2PNetwork;
 import org.hyperledger.besu.ethereum.p2p.network.P2PNetwork;
+import org.hyperledger.besu.ethereum.p2p.peers.DefaultPeer;
+import org.hyperledger.besu.ethereum.p2p.peers.EnodeURLImpl;
+import org.hyperledger.besu.ethereum.p2p.peers.Peer;
 import org.hyperledger.besu.ethereum.p2p.rlpx.ConnectCallback;
 import org.hyperledger.besu.ethereum.p2p.rlpx.DisconnectCallback;
 import org.hyperledger.besu.ethereum.p2p.rlpx.MessageCallback;
@@ -57,9 +41,7 @@ import org.hyperledger.besu.ethereum.p2p.rlpx.wire.Capability;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.Message;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.SubProtocol;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.messages.DisconnectMessage;
-import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
 import org.hyperledger.besu.plugin.data.EnodeURL;
-import org.hyperledger.besu.plugin.services.MetricsSystem;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
@@ -68,14 +50,12 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
     private static final LambdaLogger log = getLogger(P2PManagementWindow.class);
 
     private final StorageProviderFactory storageProviderFactory;
-    private Preferences preferences;
-    private WindowBasedTextGUI gui;
-
     Map<Capability, Counter> counters = new HashMap<>();
     Counter connect = new Counter("connect");
     Counter disconnect = new Counter("disconnect");
-
     BelaContext belaContext;
+    private Preferences preferences;
+    private WindowBasedTextGUI gui;
 
     public P2PManagementWindow(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory, final Preferences preferences) {
         this.gui = gui;
@@ -104,6 +84,7 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
         KeyControls controls = new KeyControls()
                 .addControl("Start P2P", 's', this::startP2P)
                 .addControl("Stop P2P", 'x', this::stopP2P)
+                .addControl("Add Peer", 'p', this::addPeer)
                 .addControl("Ask For Body", 'b', this::askForBody)
                 .addControl("Close", KEY_CLOSE, window::close);
         window.addWindowListener(controls);
@@ -126,6 +107,17 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
         return window;
     }
 
+    private void addPeer() {
+        final String enodeUri = TextInputDialog.showDialog(gui, "Enter enode uri", "Enode", "");
+
+        try {
+            Peer maintainedPeer = DefaultPeer.fromURI(enodeUri);
+            belaContext.getP2PNetwork().addMaintainedConnectionPeer(maintainedPeer);
+        } catch (Exception e) {
+            BelaDialog.showException(gui,e);
+        }
+    }
+
     private void askForBody() {
 
 
@@ -144,10 +136,10 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
         try {
             final List<BlockHeader> blockHeaders = run.get(5, TimeUnit.SECONDS);
 
-            BelaDialog.showMessage(gui,"header", "header for " + hash.toHexString() + " was retrieved");
+            BelaDialog.showMessage(gui, "header", "header for " + hash.toHexString() + " was retrieved");
 
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            BelaDialog.showException(gui,e);
+            BelaDialog.showException(gui, e);
         }
     }
 

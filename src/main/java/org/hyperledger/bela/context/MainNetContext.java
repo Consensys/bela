@@ -13,33 +13,65 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import io.vertx.core.Vertx;
+import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.BesuInfo;
 import org.hyperledger.besu.config.GenesisConfigFile;
 import org.hyperledger.besu.config.GenesisConfigOptions;
 import org.hyperledger.besu.config.JsonGenesisConfigOptions;
+import org.hyperledger.besu.datatypes.Address;
+import org.hyperledger.besu.datatypes.Wei;
+import org.hyperledger.besu.ethereum.ProtocolContext;
+import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateArchive;
+import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateKeyValueStorage;
+import org.hyperledger.besu.ethereum.bonsai.TrieLogManager;
+import org.hyperledger.besu.ethereum.chain.BlockchainStorage;
+import org.hyperledger.besu.ethereum.chain.DefaultBlockchain;
+import org.hyperledger.besu.ethereum.chain.MutableBlockchain;
+import org.hyperledger.besu.ethereum.core.MiningParameters;
 import org.hyperledger.besu.ethereum.core.PrivacyParameters;
 import org.hyperledger.besu.ethereum.eth.EthProtocol;
+import org.hyperledger.besu.ethereum.eth.EthProtocolConfiguration;
 import org.hyperledger.besu.ethereum.eth.manager.EthContext;
 import org.hyperledger.besu.ethereum.eth.manager.EthMessages;
 import org.hyperledger.besu.ethereum.eth.manager.EthPeers;
+import org.hyperledger.besu.ethereum.eth.manager.EthProtocolManager;
 import org.hyperledger.besu.ethereum.eth.manager.EthScheduler;
+import org.hyperledger.besu.ethereum.eth.manager.ForkIdManager;
+import org.hyperledger.besu.ethereum.eth.manager.MergePeerFilter;
 import org.hyperledger.besu.ethereum.eth.peervalidation.PeerValidator;
+import org.hyperledger.besu.ethereum.eth.transactions.ImmutableTransactionPoolConfiguration;
+import org.hyperledger.besu.ethereum.eth.transactions.TransactionPool;
+import org.hyperledger.besu.ethereum.eth.transactions.TransactionPoolConfiguration;
+import org.hyperledger.besu.ethereum.eth.transactions.TransactionPoolFactory;
+import org.hyperledger.besu.ethereum.mainnet.MainnetBlockHeaderFunctions;
 import org.hyperledger.besu.ethereum.mainnet.MainnetProtocolSchedule;
 import org.hyperledger.besu.ethereum.mainnet.ProtocolSchedule;
 import org.hyperledger.besu.ethereum.p2p.config.NetworkingConfiguration;
 import org.hyperledger.besu.ethereum.p2p.config.RlpxConfiguration;
 import org.hyperledger.besu.ethereum.p2p.network.DefaultP2PNetwork;
 import org.hyperledger.besu.ethereum.p2p.network.P2PNetwork;
+import org.hyperledger.besu.ethereum.p2p.network.ProtocolManager;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.Capability;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.SubProtocol;
+import org.hyperledger.besu.ethereum.p2p.rlpx.wire.messages.DisconnectMessage;
+import org.hyperledger.besu.ethereum.storage.StorageProvider;
+import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueStoragePrefixedKeyBlockchainStorage;
+import org.hyperledger.besu.ethereum.worldstate.DataStorageConfiguration;
+import org.hyperledger.besu.ethereum.worldstate.WorldStateArchive;
 import org.hyperledger.besu.evm.internal.EvmConfiguration;
 import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
 import org.hyperledger.besu.plugin.data.EnodeURL;
 import org.hyperledger.besu.plugin.services.MetricsSystem;
+import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 import org.jetbrains.annotations.NotNull;
 
 import static org.hyperledger.besu.config.JsonUtil.normalizeKeys;
+import static org.hyperledger.besu.ethereum.core.MiningParameters.DEFAULT_MAX_OMMERS_DEPTH;
+import static org.hyperledger.besu.ethereum.core.MiningParameters.DEFAULT_POW_JOB_TTL;
+import static org.hyperledger.besu.ethereum.core.MiningParameters.DEFAULT_REMOTE_SEALERS_LIMIT;
+import static org.hyperledger.besu.ethereum.core.MiningParameters.DEFAULT_REMOTE_SEALERS_TTL;
+import static org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier.BLOCKCHAIN;
 
 public class MainNetContext implements BelaContext {
     private static final BigInteger CHAIN_ID = BigInteger.ONE;
@@ -47,6 +79,7 @@ public class MainNetContext implements BelaContext {
     final StorageProviderFactory storageProviderFactory;
     private EthContext ethContext;
     private NoOpMetricsSystem metricsSystem;
+    private EthProtocolManager protocolManager;
 
     public MainNetContext(final StorageProviderFactory storageProviderFactory) {
         this.storageProviderFactory = storageProviderFactory;
@@ -81,7 +114,7 @@ public class MainNetContext implements BelaContext {
         if (ethContext!= null){
             return ethContext;
         }
-        final Clock clock = Clock.systemUTC();
+        final Clock clock = getClock();
         final EthPeers ethPeers =
                 new EthPeers(
                         "eth",
@@ -93,6 +126,10 @@ public class MainNetContext implements BelaContext {
         final EthScheduler scheduler = getEthScheduler();
         ethContext = new EthContext(ethPeers, new EthMessages(), new EthMessages(), scheduler);
         return ethContext;
+    }
+
+    private Clock getClock() {
+        return Clock.systemUTC();
     }
 
     @NotNull
@@ -177,6 +214,8 @@ public class MainNetContext implements BelaContext {
         return network;
     }
 
+
+
     private List<PeerValidator> getPeerValidators() {
         return new ArrayList<>();
     }
@@ -187,7 +226,7 @@ public class MainNetContext implements BelaContext {
     }
 
 
-    private List<SubProtocol> getSubProtocols() {
+    public List<SubProtocol> getSubProtocols() {
         final ArrayList<SubProtocol> subProtocols = new ArrayList<>();
         subProtocols.add(EthProtocol.get());
         return subProtocols;
@@ -204,5 +243,111 @@ public class MainNetContext implements BelaContext {
         capabilities.add(EthProtocol.ETH66);
 
         return capabilities.build();
+    }
+
+    public ProtocolManager getProtocolManager() {
+        if (protocolManager != null){
+            return protocolManager;
+        }
+        protocolManager = new EthProtocolManager(
+                getBlockChain(),
+                CHAIN_ID,
+                getWorldStateArchive(),
+                getTransactionPool(),
+                getEthProtocolConfiguration(),
+                getEthContext().getEthPeers(),
+                getEthContext().getEthMessages(),
+                ethContext,
+                getPeerValidators(),
+                getMergePeerFilter(),
+                false,
+                getEthScheduler(),
+                getForkIdManager());
+        return protocolManager;
+    }
+
+    private ForkIdManager getForkIdManager() {
+        return new ForkIdManager(
+                getBlockChain(),
+                Collections.emptyList(),
+                getEthProtocolConfiguration().isLegacyEth64ForkIdEnabled());
+    }
+
+    private Optional<MergePeerFilter> getMergePeerFilter() {
+        return Optional.empty();
+    }
+
+    private EthProtocolConfiguration getEthProtocolConfiguration() {
+        return EthProtocolConfiguration.builder().build();
+    }
+
+    private TransactionPool getTransactionPool() {
+        return TransactionPoolFactory.createTransactionPool(
+                getProtocolSchedule(),
+                getProtocolContext(),
+                getEthContext(),
+                getClock(),
+                getMetricsSystem(),
+                () -> false,
+                getMiningParameters(),
+                getTransactionPoolConfiguration()
+        );
+    }
+
+    private TransactionPoolConfiguration getTransactionPoolConfiguration() {
+        return ImmutableTransactionPoolConfiguration.DEFAULT;
+    }
+
+    private MiningParameters getMiningParameters() {
+        final Wei minTransactionGasPrice = Wei.ZERO;
+        // Extradata and coinbase can be configured on a per-block level via the json file
+        final Address coinbase = Address.ZERO;
+        final Bytes extraData = Bytes.EMPTY;
+        return new MiningParameters.Builder()
+                .coinbase(coinbase)
+                .minTransactionGasPrice(minTransactionGasPrice)
+                .extraData(extraData)
+                .miningEnabled(false)
+                .stratumMiningEnabled(false)
+                .stratumNetworkInterface("0.0.0.0")
+                .stratumPort(8008)
+                .stratumExtranonce("080c")
+                .maybeNonceGenerator(new IncrementingNonceGenerator(0))
+                .minBlockOccupancyRatio(0.0)
+                .remoteSealersLimit(DEFAULT_REMOTE_SEALERS_LIMIT)
+                .remoteSealersTimeToLive(DEFAULT_REMOTE_SEALERS_TTL)
+                .powJobTimeToLive(DEFAULT_POW_JOB_TTL)
+                .maxOmmerDepth(DEFAULT_MAX_OMMERS_DEPTH)
+                .build();
+    }
+
+    private ProtocolContext getProtocolContext() {
+        return ProtocolContext.init(getBlockChain(), getWorldStateArchive(), getProtocolSchedule(),
+                (blockchain, worldStateArchive, protocolSchedule) -> null);
+    }
+
+    private WorldStateArchive getWorldStateArchive() {
+        return new BonsaiWorldStateArchive(new TrieLogManager(
+                getBlockChain(),
+                getWorldStateStorage(),
+                DataStorageConfiguration.DEFAULT_CONFIG.getBonsaiMaxLayersToLoad()),getProvider(), getBlockChain());
+    }
+
+    private BonsaiWorldStateKeyValueStorage getWorldStateStorage() {
+        return new BonsaiWorldStateKeyValueStorage(getProvider());
+    }
+
+    private MutableBlockchain getBlockChain() {
+        return   (MutableBlockchain) DefaultBlockchain
+                .create(getBlockChainStorage(), new NoOpMetricsSystem(), 0L);
+    }
+
+    private BlockchainStorage getBlockChainStorage() {
+        final KeyValueStorage keyValueStorage = getProvider().getStorageBySegmentIdentifier(BLOCKCHAIN);
+        return new KeyValueStoragePrefixedKeyBlockchainStorage(keyValueStorage, new MainnetBlockHeaderFunctions());
+    }
+
+    private StorageProvider getProvider() {
+        return storageProviderFactory.createProvider();
     }
 }

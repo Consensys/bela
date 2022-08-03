@@ -24,6 +24,7 @@ import org.hyperledger.besu.ethereum.eth.manager.EthContext;
 import org.hyperledger.besu.ethereum.eth.manager.EthMessages;
 import org.hyperledger.besu.ethereum.eth.manager.EthPeers;
 import org.hyperledger.besu.ethereum.eth.manager.EthScheduler;
+import org.hyperledger.besu.ethereum.eth.peervalidation.PeerValidator;
 import org.hyperledger.besu.ethereum.mainnet.MainnetProtocolSchedule;
 import org.hyperledger.besu.ethereum.mainnet.ProtocolSchedule;
 import org.hyperledger.besu.ethereum.p2p.config.NetworkingConfiguration;
@@ -36,6 +37,7 @@ import org.hyperledger.besu.evm.internal.EvmConfiguration;
 import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
 import org.hyperledger.besu.plugin.data.EnodeURL;
 import org.hyperledger.besu.plugin.services.MetricsSystem;
+import org.jetbrains.annotations.NotNull;
 
 import static org.hyperledger.besu.config.JsonUtil.normalizeKeys;
 
@@ -43,6 +45,8 @@ public class MainNetContext implements BelaContext {
     private static final BigInteger CHAIN_ID = BigInteger.ONE;
     private P2PNetwork network;
     final StorageProviderFactory storageProviderFactory;
+    private EthContext ethContext;
+    private NoOpMetricsSystem metricsSystem;
 
     public MainNetContext(final StorageProviderFactory storageProviderFactory) {
         this.storageProviderFactory = storageProviderFactory;
@@ -74,6 +78,9 @@ public class MainNetContext implements BelaContext {
 
     @Override
     public EthContext getEthContext() {
+        if (ethContext!= null){
+            return ethContext;
+        }
         final Clock clock = Clock.systemUTC();
         final EthPeers ethPeers =
                 new EthPeers(
@@ -83,13 +90,23 @@ public class MainNetContext implements BelaContext {
                         10,
                         1000,
                         Collections.emptyList());
-        final EthScheduler scheduler = new EthScheduler(1, 1, 1, getMetricsSystem());
-        return new EthContext(ethPeers, new EthMessages(), new EthMessages(), scheduler);
+        final EthScheduler scheduler = getEthScheduler();
+        ethContext = new EthContext(ethPeers, new EthMessages(), new EthMessages(), scheduler);
+        return ethContext;
+    }
+
+    @NotNull
+    private EthScheduler getEthScheduler() {
+        return new EthScheduler(1, 1, 1, getMetricsSystem());
     }
 
     @Override
     public MetricsSystem getMetricsSystem() {
-        return new NoOpMetricsSystem();
+        if (metricsSystem != null){
+            return metricsSystem;
+        }
+        metricsSystem = new NoOpMetricsSystem();
+        return metricsSystem;
     }
 
     @Override
@@ -145,7 +162,23 @@ public class MainNetContext implements BelaContext {
 
         network = new BelaP2PNetworkFacade(network);
 
+        network.subscribeConnect(connection -> {
+            if (Collections.disjoint(
+                    connection.getAgreedCapabilities(), getSupportedCapabilities())) {
+                return;
+            }
+            getEthContext().getEthPeers().registerConnection(connection, getPeerValidators());
+
+        });
+        network.subscribeDisconnect((connection, reason, initiatedByPeer) -> {
+                getEthContext().getEthPeers().registerDisconnect(connection);
+        });
+
         return network;
+    }
+
+    private List<PeerValidator> getPeerValidators() {
+        return new ArrayList<>();
     }
 
     @Override
@@ -155,7 +188,9 @@ public class MainNetContext implements BelaContext {
 
 
     private List<SubProtocol> getSubProtocols() {
-        return new ArrayList<>();
+        final ArrayList<SubProtocol> subProtocols = new ArrayList<>();
+        subProtocols.add(EthProtocol.get());
+        return subProtocols;
     }
 
     public List<Capability> getSupportedCapabilities(final boolean fastSyncEnabled) {

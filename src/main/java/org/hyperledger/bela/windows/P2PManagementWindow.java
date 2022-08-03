@@ -3,10 +3,10 @@ package org.hyperledger.bela.windows;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -32,6 +32,7 @@ import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.core.BlockHeader;
 import org.hyperledger.besu.ethereum.eth.manager.task.RetryingGetHeadersEndingAtFromPeerByHashTask;
 import org.hyperledger.besu.ethereum.p2p.network.P2PNetwork;
+import org.hyperledger.besu.ethereum.p2p.network.ProtocolManager;
 import org.hyperledger.besu.ethereum.p2p.peers.DefaultPeer;
 import org.hyperledger.besu.ethereum.p2p.peers.Peer;
 import org.hyperledger.besu.ethereum.p2p.rlpx.ConnectCallback;
@@ -53,7 +54,7 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
     Map<Capability, Counter> counters = new HashMap<>();
     Counter connect = new Counter("connect");
     Counter disconnect = new Counter("disconnect");
-    Map<DisconnectMessage.DisconnectReason, Counter> disconects = new LinkedHashMap<>();
+    Map<DisconnectMessage.DisconnectReason, Counter> disconects = new ConcurrentHashMap<>();
     Panel rightCounters = new Panel();
     BelaContext belaContext;
     private Preferences preferences;
@@ -142,7 +143,7 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
     }
 
     private void addPeer() {
-        final String enodeUri = TextInputDialog.showDialog(gui, "Enter enode uri", "Enode", "");
+        String enodeUri = TextInputDialog.showDialog(gui, "Enter enode uri", "Enode", "enode://aaa619241464023c97b6ce2bfb7a5f3b61468014215619044965acc76f054405ff71719b09ab53e67da8769d0143bea270c25720b4b2db14d1a0ac18162ea748@118.189.184.62:30303");
 
         try {
             Peer maintainedPeer = DefaultPeer.fromURI(enodeUri);
@@ -154,8 +155,8 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
 
     private void askForHeader() {
 
-
-        final Hash hash = Hash.fromHexString("0x689e36772f649c947c8a8d94e502586dcf3351ec2577090a848ee241de766cbc");
+        String hashString = TextInputDialog.showDialog(gui, "Enter enode uri", "Enode", "0x689e36772f649c947c8a8d94e502586dcf3351ec2577090a848ee241de766cbc");
+        final Hash hash = Hash.fromHexString(hashString);
         final RetryingGetHeadersEndingAtFromPeerByHashTask
                 retryingGetHeadersEndingAtFromPeerByHashTask =
                 RetryingGetHeadersEndingAtFromPeerByHashTask.endingAtHash(
@@ -188,9 +189,33 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
         p2PNetwork.subscribeDisconnect(this);
 
 
+        final ProtocolManager protocolManager = belaContext.getProtocolManager();
+        for (Capability supportedCapability : protocolManager.getSupportedCapabilities()) {
+            final SubProtocol protocol = findSubProtocol(supportedCapability.getName());
+
+            belaContext.getP2PNetwork().subscribe(supportedCapability,
+                    (capability, message) -> {
+                        final int code = message.getData().getCode();
+                        if (!protocol.isValidMessageCode(capability.getVersion(), code)) {
+                            message.getConnection().disconnect(DisconnectMessage.DisconnectReason.BREACH_OF_PROTOCOL);
+                            return;
+                        }
+                        protocolManager.processMessage(capability, message);
+                    });
+        }
+
         p2PNetwork.start();
         new MessageDialogBuilder().setText("P2P started").setTitle("P2P started").build().showDialog(gui);
 
+    }
+
+    private SubProtocol findSubProtocol(final String name) {
+        for (SubProtocol subProtocol : belaContext.getSubProtocols()) {
+            if (subProtocol.getName().equals(name)) {
+                return subProtocol;
+            }
+        }
+        throw new IllegalArgumentException("No subprotocol found for " + name);
     }
 
     private List<SubProtocol> getSubProtocols() {

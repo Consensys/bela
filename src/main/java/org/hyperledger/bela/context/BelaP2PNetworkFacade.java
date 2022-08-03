@@ -1,10 +1,14 @@
 package org.hyperledger.bela.context;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
+import com.google.common.io.Files;
+import org.hyperledger.bela.components.Counter;
 import org.hyperledger.besu.ethereum.p2p.discovery.DiscoveryPeer;
 import org.hyperledger.besu.ethereum.p2p.network.P2PNetwork;
 import org.hyperledger.besu.ethereum.p2p.peers.Peer;
@@ -18,6 +22,7 @@ import org.hyperledger.besu.plugin.data.EnodeURL;
 public class BelaP2PNetworkFacade implements P2PNetwork {
 
     private final P2PNetwork delegate;
+    private List<Peer> maintainedPeers = new ArrayList<>();
 
     public BelaP2PNetworkFacade(P2PNetwork delegate) {
         this.delegate = delegate;
@@ -60,11 +65,13 @@ public class BelaP2PNetworkFacade implements P2PNetwork {
 
     @Override
     public boolean addMaintainedConnectionPeer(final Peer peer) {
+        this.maintainedPeers.add(peer);
         return delegate.addMaintainedConnectionPeer(peer);
     }
 
     @Override
     public boolean removeMaintainedConnectionPeer(final Peer peer) {
+        maintainedPeers.remove(peer);
         return delegate.removeMaintainedConnectionPeer(peer);
     }
 
@@ -106,5 +113,9 @@ public class BelaP2PNetworkFacade implements P2PNetwork {
     @Override
     public void close() throws IOException {
         delegate.close();
+    }
+
+    public Stream<Peer> streamMaintainedPeers() {
+        return maintainedPeers.stream();
     }
 }

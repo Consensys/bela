@@ -22,6 +22,7 @@ import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.components.Counter;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.context.BelaContext;
+import org.hyperledger.bela.context.BelaP2PNetworkFacade;
 import org.hyperledger.bela.context.MainNetContext;
 import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.utils.StorageProviderFactory;
@@ -31,7 +32,6 @@ import org.hyperledger.besu.ethereum.eth.EthProtocol;
 import org.hyperledger.besu.ethereum.eth.manager.task.RetryingGetHeadersEndingAtFromPeerByHashTask;
 import org.hyperledger.besu.ethereum.p2p.network.P2PNetwork;
 import org.hyperledger.besu.ethereum.p2p.peers.DefaultPeer;
-import org.hyperledger.besu.ethereum.p2p.peers.EnodeURLImpl;
 import org.hyperledger.besu.ethereum.p2p.peers.Peer;
 import org.hyperledger.besu.ethereum.p2p.rlpx.ConnectCallback;
 import org.hyperledger.besu.ethereum.p2p.rlpx.DisconnectCallback;
@@ -41,7 +41,6 @@ import org.hyperledger.besu.ethereum.p2p.rlpx.wire.Capability;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.Message;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.SubProtocol;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.messages.DisconnectMessage;
-import org.hyperledger.besu.plugin.data.EnodeURL;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
@@ -84,9 +83,13 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
         KeyControls controls = new KeyControls()
                 .addControl("Start P2P", 's', this::startP2P)
                 .addControl("Stop P2P", 'x', this::stopP2P)
-                .addControl("Add Peer", 'p', this::addPeer)
                 .addControl("Ask For Body", 'b', this::askForBody)
-                .addControl("Close", KEY_CLOSE, window::close);
+                .addControl("Close", KEY_CLOSE, window::close)
+                .addSection("Peers")
+                .addControl("Add Peer", 'a', this::addPeer)
+                .addControl("Connected Peers", 'c', this::connectedPeers)
+                .addControl("Discovered Peers", 'd', this::showDisoveredPeers)
+                .addControl("Maintained Peers", 'm', this::showMaintainedPeers);
         window.addWindowListener(controls);
         panel.addComponent(controls.createComponent());
 
@@ -107,6 +110,26 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
         return window;
     }
 
+    private void showMaintainedPeers() {
+
+        final BelaP2PNetworkFacade p2PNetwork = (BelaP2PNetworkFacade) belaContext.getP2PNetwork();
+        final ImmutableList<String> list = p2PNetwork.streamMaintainedPeers()
+                .map(p -> p.getEnodeURL().toString()).collect(ImmutableList.toImmutableList());
+        BelaDialog.showListDialog(gui, "Peers ("+list.size()+")", list);
+    }
+
+    private void showDisoveredPeers() {
+        final ImmutableList<String> list = belaContext.getP2PNetwork().streamDiscoveredPeers()
+                .map(p -> p.getEnodeURL().toString()).collect(ImmutableList.toImmutableList());
+        BelaDialog.showListDialog(gui, "Peers ("+list.size()+")", list);
+    }
+
+    private void connectedPeers() {
+        final ImmutableList<String> list = belaContext.getP2PNetwork().getPeers().stream()
+                .map(p -> p.getPeer().getEnodeURL().toString()).collect(ImmutableList.toImmutableList());
+        BelaDialog.showListDialog(gui, "Peers ("+list.size()+")", list);
+    }
+
     private void addPeer() {
         final String enodeUri = TextInputDialog.showDialog(gui, "Enter enode uri", "Enode", "");
 
@@ -114,7 +137,7 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
             Peer maintainedPeer = DefaultPeer.fromURI(enodeUri);
             belaContext.getP2PNetwork().addMaintainedConnectionPeer(maintainedPeer);
         } catch (Exception e) {
-            BelaDialog.showException(gui,e);
+            BelaDialog.showException(gui, e);
         }
     }
 

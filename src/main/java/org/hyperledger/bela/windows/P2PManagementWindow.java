@@ -3,6 +3,7 @@ package org.hyperledger.bela.windows;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -12,6 +13,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.prefs.Preferences;
 import com.google.common.collect.ImmutableList;
 import com.googlecode.lanterna.gui2.BasicWindow;
+import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.Window;
@@ -28,7 +30,6 @@ import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.core.BlockHeader;
-import org.hyperledger.besu.ethereum.eth.EthProtocol;
 import org.hyperledger.besu.ethereum.eth.manager.task.RetryingGetHeadersEndingAtFromPeerByHashTask;
 import org.hyperledger.besu.ethereum.p2p.network.P2PNetwork;
 import org.hyperledger.besu.ethereum.p2p.peers.DefaultPeer;
@@ -52,6 +53,8 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
     Map<Capability, Counter> counters = new HashMap<>();
     Counter connect = new Counter("connect");
     Counter disconnect = new Counter("disconnect");
+    Map<DisconnectMessage.DisconnectReason, Counter> disconects = new LinkedHashMap<>();
+    Panel rightCounters = new Panel();
     BelaContext belaContext;
     private Preferences preferences;
     private WindowBasedTextGUI gui;
@@ -83,26 +86,34 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
         KeyControls controls = new KeyControls()
                 .addControl("Start P2P", 's', this::startP2P)
                 .addControl("Stop P2P", 'x', this::stopP2P)
-                .addControl("Ask For Body", 'b', this::askForBody)
                 .addControl("Close", KEY_CLOSE, window::close)
                 .addSection("Peers")
                 .addControl("Add Peer", 'a', this::addPeer)
-                .addControl("Connected Peers", 'c', this::connectedPeers)
+                .addControl("Connections", 'c', this::connections)
                 .addControl("Discovered Peers", 'd', this::showDisoveredPeers)
-                .addControl("Maintained Peers", 'm', this::showMaintainedPeers);
+                .addControl("Maintained Peers", 'm', this::showMaintainedPeers)
+                .addSection("Operations")
+                .addControl("Ask For Header", 'h', this::askForHeader);
         window.addWindowListener(controls);
         panel.addComponent(controls.createComponent());
 
-        final List<Capability> supportedCapabilities = calculateCapabilities(false);
+        final List<Capability> supportedCapabilities = belaContext.getSupportedCapabilities();
 
-        panel.addComponent(connect.createComponent());
-        panel.addComponent(disconnect.createComponent());
+        final Panel counters = new Panel(new LinearLayout(Direction.HORIZONTAL));
+        panel.addComponent(counters);
+
+        final Panel firstColumn = new Panel();
+        counters.addComponent(firstColumn);
+        counters.addComponent(rightCounters);
+
+        rightCounters.addComponent(connect.createComponent());
+        rightCounters.addComponent(disconnect.createComponent());
 
 
         supportedCapabilities.forEach(c -> {
             final Counter counter = new Counter(c.getName() + "" + c.getVersion());
-            counters.put(c, counter);
-            panel.addComponent(counter.createComponent());
+            this.counters.put(c, counter);
+            firstColumn.addComponent(counter.createComponent());
         });
 
 
@@ -115,19 +126,19 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
         final BelaP2PNetworkFacade p2PNetwork = (BelaP2PNetworkFacade) belaContext.getP2PNetwork();
         final ImmutableList<String> list = p2PNetwork.streamMaintainedPeers()
                 .map(p -> p.getEnodeURL().toString()).collect(ImmutableList.toImmutableList());
-        BelaDialog.showListDialog(gui, "Peers ("+list.size()+")", list);
+        BelaDialog.showListDialog(gui, "Peers (" + list.size() + ")", list);
     }
 
     private void showDisoveredPeers() {
         final ImmutableList<String> list = belaContext.getP2PNetwork().streamDiscoveredPeers()
                 .map(p -> p.getEnodeURL().toString()).collect(ImmutableList.toImmutableList());
-        BelaDialog.showListDialog(gui, "Peers ("+list.size()+")", list);
+        BelaDialog.showListDialog(gui, "Peers (" + list.size() + ")", list);
     }
 
-    private void connectedPeers() {
+    private void connections() {
         final ImmutableList<String> list = belaContext.getP2PNetwork().getPeers().stream()
                 .map(p -> p.getPeer().getEnodeURL().toString()).collect(ImmutableList.toImmutableList());
-        BelaDialog.showListDialog(gui, "Peers ("+list.size()+")", list);
+        BelaDialog.showListDialog(gui, "Peers (" + list.size() + ")", list);
     }
 
     private void addPeer() {
@@ -141,7 +152,7 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
         }
     }
 
-    private void askForBody() {
+    private void askForHeader() {
 
 
         final Hash hash = Hash.fromHexString("0x689e36772f649c947c8a8d94e502586dcf3351ec2577090a848ee241de766cbc");
@@ -198,19 +209,6 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
     }
 
 
-    private List<Capability> calculateCapabilities(final boolean fastSyncEnabled) {
-        final ImmutableList.Builder<Capability> capabilities = ImmutableList.builder();
-        if (!fastSyncEnabled) {
-            capabilities.add(EthProtocol.ETH62);
-        }
-        capabilities.add(EthProtocol.ETH63);
-        capabilities.add(EthProtocol.ETH64);
-        capabilities.add(EthProtocol.ETH65);
-        capabilities.add(EthProtocol.ETH66);
-
-        return capabilities.build();
-    }
-
     @Override
     public void onMessage(final Capability capability, final Message message) {
         counters.get(capability).add(1);
@@ -223,6 +221,12 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
 
     @Override
     public void onDisconnect(final PeerConnection connection, final DisconnectMessage.DisconnectReason reason, final boolean initiatedByPeer) {
+        Counter counter = disconects.computeIfAbsent(reason, disconnectReason -> {
+            final Counter c = new Counter(reason.name());
+            rightCounters.addComponent(c.createComponent());
+            return c;
+        });
+        counter.add(1);
         disconnect.add(1);
     }
 }

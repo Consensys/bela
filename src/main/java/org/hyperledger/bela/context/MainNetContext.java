@@ -143,6 +143,8 @@ public class MainNetContext implements BelaContext {
 //                .p2pTLSConfiguration(p2pTLSConfiguration)
                 .build();
 
+        network = new BelaP2PNetworkFacade(network);
+
         return network;
     }
 

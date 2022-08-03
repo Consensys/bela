@@ -10,6 +10,7 @@ import com.googlecode.lanterna.TerminalPosition;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.Borders;
 import com.googlecode.lanterna.gui2.Button;
+import com.googlecode.lanterna.gui2.Component;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.LinearLayout;
@@ -20,14 +21,24 @@ import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 
 public class KeyControls implements BelaComponent<Panel>, WindowListener {
-    List<Panel> controls = new ArrayList<>();
+
+    List<Section> sections = new ArrayList<>();
+
+    public KeyControls() {
+        this.sections.add(new Section());
+    }
+
     Map<Character, Runnable> characterRunnableMap = new HashMap<>();
     Map<KeyType, Runnable> keyStrokeRunnableMap = new EnumMap<>(KeyType.class);
 
     public KeyControls addControl(String label, Character c, Runnable action) {
         characterRunnableMap.put(c, action);
-        controls.add(newControlPanel(label, "'" + c + "'", action));
+        getLastSection().addControl(newControlPanel(label, "'" + c + "'", action));
         return this;
+    }
+
+    private Section getLastSection() {
+        return this.sections.get(this.sections.size() - 1);
     }
 
     public KeyControls addControl(String label, KeyType keyType, Runnable action) {
@@ -35,7 +46,7 @@ public class KeyControls implements BelaComponent<Panel>, WindowListener {
             throw new IllegalArgumentException("Use the other add control to add characters...");
         }
         keyStrokeRunnableMap.put(keyType, action);
-        controls.add(newControlPanel(label, key(keyType), action));
+        getLastSection().addControl(newControlPanel(label, key(keyType), action));
         return this;
     }
 
@@ -58,11 +69,12 @@ public class KeyControls implements BelaComponent<Panel>, WindowListener {
 
     @Override
     public Panel createComponent() {
-        Panel commands = new Panel(new LinearLayout(Direction.HORIZONTAL));
-        for (Panel control : controls) {
-            commands.addComponent(control.withBorder(Borders.singleLine()));
+        Panel panel = new Panel(new LinearLayout());
+        for (Section section : sections) {
+            panel.addComponent(section.createComponent());
         }
-        return commands;
+
+        return panel;
     }
 
     @Override
@@ -91,5 +103,34 @@ public class KeyControls implements BelaComponent<Panel>, WindowListener {
     @Override
     public void onUnhandledInput(final Window basePane, final KeyStroke keyStroke, final AtomicBoolean hasBeenHandled) {
 
+    }
+
+    public KeyControls addSection(final String title) {
+        this.sections.add(new Section(title));
+        return this;
+    }
+
+    public class Section {
+        private final String title;
+        List<Panel> controls = new ArrayList<>();
+
+        public Section() {
+            this.title = "";
+        }
+        public Section(final String title) {
+            this.title = title;
+        }
+
+        public void addControl(final Panel control) {
+            this.controls.add(control);
+        }
+
+        public Component createComponent() {
+            Panel commands = new Panel(new LinearLayout(Direction.HORIZONTAL));
+            for (Panel control : controls) {
+                commands.addComponent(control.withBorder(Borders.singleLine()));
+            }
+            return commands;
+        }
     }
 }

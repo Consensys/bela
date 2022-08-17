@@ -175,7 +175,7 @@ public class MainNetContext implements BelaContext {
         final RlpxConfiguration rlpxConfiguration = RlpxConfiguration.create()
                 .setBindHost(p2pListenInterface)
                 .setBindPort(p2pListenPort)
-                .setMaxPeers(maxPeers)
+                .setPeerUpperBound(maxPeers)
                 .setSupportedProtocols(subProtocols)
                 .setClientId(BesuInfo.nodeName(identityString))
                 .setLimitRemoteWireConnectionsEnabled(limitRemoteWireConnectionsEnabled)

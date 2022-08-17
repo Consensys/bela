@@ -27,6 +27,8 @@ import org.hyperledger.bela.context.BelaContext;
 import org.hyperledger.bela.context.BelaP2PNetworkFacade;
 import org.hyperledger.bela.context.MainNetContext;
 import org.hyperledger.bela.dialogs.BelaDialog;
+import org.hyperledger.bela.utils.ConnectionMessageMonitor;
+import org.hyperledger.bela.utils.SentMessageMonitor;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.core.BlockHeader;
@@ -59,6 +61,8 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
     BelaContext belaContext;
     private Preferences preferences;
     private WindowBasedTextGUI gui;
+
+    ConnectionMessageMonitor monitor = new ConnectionMessageMonitor();
 
     public P2PManagementWindow(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory, final Preferences preferences) {
         this.gui = gui;
@@ -132,7 +136,8 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
 
     private void showDisoveredPeers() {
         final ImmutableList<String> list = belaContext.getP2PNetwork().streamDiscoveredPeers()
-                .map(p -> p.getEnodeURL().toString()).collect(ImmutableList.toImmutableList());
+//                .map(p -> p.getEnodeURL().toString()+" ("+messages.getOrDefault(p,new ArrayList<>()).size()+")").collect(ImmutableList.toImmutableList());
+                .map(p -> p.getEnodeURL().toString()+" ("+monitor.countAllMessages(p)+")").collect(ImmutableList.toImmutableList());
         BelaDialog.showListDialog(gui, "Peers (" + list.size() + ")", list);
     }
 
@@ -206,6 +211,7 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
 
         p2PNetwork.start();
         new MessageDialogBuilder().setText("P2P started").setTitle("P2P started").build().showDialog(gui);
+        SentMessageMonitor.getInstance().subscribe((peer, capability, messageData) -> monitor.sentMessage(peer, messageData));
 
     }
 
@@ -237,6 +243,8 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
     @Override
     public void onMessage(final Capability capability, final Message message) {
         counters.get(capability).add(1);
+
+        monitor.addReceivedMessage(message);
     }
 
     @Override
@@ -253,6 +261,7 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
         });
         counter.add(1);
         disconnect.add(1);
+        monitor.disconnected(connection.getPeer());
     }
 }
 

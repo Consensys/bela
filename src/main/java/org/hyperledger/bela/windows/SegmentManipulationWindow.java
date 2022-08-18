@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.CheckBox;
 import com.googlecode.lanterna.gui2.LinearLayout;
@@ -28,6 +29,7 @@ import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 import org.hyperledger.besu.plugin.services.storage.SegmentIdentifier;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDbSegmentIdentifier;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.segmented.RocksDBColumnarKeyValueStorage;
+import org.hyperledger.besu.services.kvstore.SegmentedKeyValueStorageAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.rocksdb.ColumnFamilyHandle;
 import org.rocksdb.RocksDBException;
@@ -72,7 +74,7 @@ public class SegmentManipulationWindow implements BelaWindow {
 
     @Override
     public Window createWindow() {
-        final BasicWindow window = new BasicWindow("Bela DB Browser");
+        final BasicWindow window = new BasicWindow(label());
         window.setHints(List.of(Window.Hint.FULL_SCREEN));
 
         Panel panel = new Panel(new LinearLayout());
@@ -188,13 +190,33 @@ public class SegmentManipulationWindow implements BelaWindow {
 
     private void test() {
         try {
-            final StorageProvider provider = storageProviderFactory.createProvider(new ArrayList<>(selected));
+            final ArrayList<SegmentIdentifier> listOfSegments = new ArrayList<>(selected);
+            final StorageProvider provider = storageProviderFactory.createProvider(listOfSegments);
             provider.close();
-            new MessageDialogBuilder()
-                    .setTitle("DB opened")
-                    .setText("The DB was successfully opened")
-                    .build()
-                    .showDialog(gui);
+
+
+            final List<String> segmentInfos = listOfSegments.stream().map(segment -> {
+                final SegmentedKeyValueStorageAdapter<RocksDbSegmentIdentifier> storageBySegmentIdentifier = (SegmentedKeyValueStorageAdapter)provider.getStorageBySegmentIdentifier(segment);
+                try {
+                    final Field segmentHandleField = storageBySegmentIdentifier.getClass().getDeclaredField("segmentHandle");
+                    segmentHandleField.setAccessible(true);
+                    final RocksDbSegmentIdentifier identifier = (RocksDbSegmentIdentifier) segmentHandleField.get(storageBySegmentIdentifier);
+                    final Field storageField = storageBySegmentIdentifier.getClass().getDeclaredField("storage");
+                    storageField.setAccessible(true);
+                    final RocksDBColumnarKeyValueStorage s = (RocksDBColumnarKeyValueStorage) storageField.get(storageBySegmentIdentifier);
+                    final Field dbField   = s.getClass().getDeclaredField("db");
+                    dbField.setAccessible(true);
+                    final TransactionDB db = (TransactionDB) dbField.get(s);
+                    final long longProperty = db.getLongProperty(identifier.get(), "rocksdb.total-sst-files-size");
+                    return segment.getName() + ": " + longProperty;
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }).collect(Collectors.toList());
+
+
+            BelaDialog.showListDialog(gui,"Segments information", segmentInfos);
+
 
         } catch (Exception e) {
             BelaDialog.showException(gui, e);

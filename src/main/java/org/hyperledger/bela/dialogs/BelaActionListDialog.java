@@ -3,7 +3,9 @@ package org.hyperledger.bela.dialogs;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import com.googlecode.lanterna.TerminalSize;
+import com.googlecode.lanterna.gui2.ActionListBox;
 import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.Button;
 import com.googlecode.lanterna.gui2.EmptySpace;
@@ -13,14 +15,17 @@ import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import org.hyperledger.bela.components.StringListBox;
 
-public class ListDialog implements BelaDialog {
+public class BelaActionListDialog<T> implements BelaDialog{
+    private final List<T> items;
+    private final Function<T, String> nameGenerator;
+    private final DialogSubscriber<T> subscriber;
+    private final String title;
 
-    List<String> items;
-    String title;
-
-    public ListDialog(String title, List<String> items) {
+    public BelaActionListDialog(final String title, List<T> list, Function<T,String> nameGenerator, DialogSubscriber<T> subscriber) {
         this.title = title;
-        this.items = items;
+        this.items = list;
+        this.nameGenerator = nameGenerator;
+        this.subscriber = subscriber;
     }
 
     @Override
@@ -43,12 +48,12 @@ public class ListDialog implements BelaDialog {
                         .setLeftMarginSize(1)
                         .setRightMarginSize(1));
 
-        final StringListBox component = new StringListBox(new TerminalSize(calculateWidth(), 10));
-        for (String element : items) {
-            component.addItem(element);
+        final ActionListBox actionListBox = new ActionListBox(new TerminalSize(calculateWidth(), 10));
+        for (T element : items) {
+            actionListBox.addItem(nameGenerator.apply(element), () ->subscriber.onItemSelected(element));
         }
 
-        mainPanel.addComponent(component);
+        mainPanel.addComponent(actionListBox);
 
         mainPanel.addComponent(new EmptySpace(TerminalSize.ONE));
         buttonPanel.setLayoutData(
@@ -65,7 +70,11 @@ public class ListDialog implements BelaDialog {
     }
 
     private int calculateWidth() {
-        final Optional<Integer> max = this.items.stream().map(String::length).max(Integer::compareTo);
+        final Optional<Integer> max = this.items.stream().map(t -> nameGenerator.apply(t).length()).max(Integer::compareTo);
         return Math.min(max.orElse(20) + 2, 60);
+    }
+
+    public interface DialogSubscriber<T>{
+        void onItemSelected(T item);
     }
 }

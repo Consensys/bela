@@ -12,7 +12,7 @@ import org.hyperledger.bela.windows.P2PManagementWindow;
 public interface BelaDialog {
 
 
-    static void showListDialog(WindowBasedTextGUI gui, String title, ImmutableList<String> list) {
+    static void showListDialog(WindowBasedTextGUI gui, String title, List<String> list) {
         new ListDialog(title, list).showAndWait(gui);
     }
 

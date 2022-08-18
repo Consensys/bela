@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
-import com.google.common.collect.ImmutableList;
 import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.LinearLayout;
@@ -46,6 +45,7 @@ import org.hyperledger.besu.ethereum.p2p.rlpx.wire.Capability;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.Message;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.SubProtocol;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.messages.DisconnectMessage;
+import org.jetbrains.annotations.NotNull;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
@@ -54,24 +54,23 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
     private static final LambdaLogger log = getLogger(P2PManagementWindow.class);
 
     private final StorageProviderFactory storageProviderFactory;
+    private final Preferences preferences;
+    private final WindowBasedTextGUI gui;
+    private final ConnectionMessageMonitor monitor = new ConnectionMessageMonitor();
+    private final PeerDetailWindow peerDetailWindow;
     Map<Capability, Counter> counters = new HashMap<>();
     Counter connect = new Counter("connect");
     Counter disconnect = new Counter("disconnect");
     Map<DisconnectMessage.DisconnectReason, Counter> disconects = new ConcurrentHashMap<>();
     Panel rightCounters = new Panel();
     BelaContext belaContext;
-    private final Preferences preferences;
-    private final WindowBasedTextGUI gui;
-
-    private final ConnectionMessageMonitor monitor = new ConnectionMessageMonitor();
-    private final PeerDetailWindow peerDetailWindow;
 
     public P2PManagementWindow(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory, final Preferences preferences) {
         this.gui = gui;
         this.storageProviderFactory = storageProviderFactory;
         this.preferences = preferences;
         belaContext = new MainNetContext(storageProviderFactory);
-        peerDetailWindow = new PeerDetailWindow();
+        peerDetailWindow = new PeerDetailWindow(gui);
     }
 
 
@@ -98,7 +97,7 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
                 .addSection("Peers")
                 .addControl("Add Peer", 'a', this::addPeer)
                 .addControl("Connections", 'c', this::connections)
-                .addControl("Discovered Peers", 'd', this::showDisoveredPeers)
+                .addControl("Discovered Peers", 'd', this::showDiscoveredPeers)
                 .addControl("Maintained Peers", 'm', this::showMaintainedPeers)
                 .addSection("Operations")
                 .addControl("Ask For Header", 'h', this::askForHeader);
@@ -135,19 +134,27 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
     }
 
     private void showPeers(final List<Peer> peers) {
-        BelaDialog.showDelegateListDialog(gui,peers, Peer::getEnodeURLString, peer -> {
-            peerDetailWindow.setActivePeer(peer);
-            final Window window = peerDetailWindow.createWindow();
-            gui.addWindowAndWait(window);
-        });
+        BelaDialog.showDelegateListDialog(gui, "Select a peer", peers,
+                this::constructPeerString,
+                peer -> {
+                    peerDetailWindow.setActivePeer(peer, monitor.getConversations(peer));
+                    final Window window = peerDetailWindow.createWindow();
+                    gui.addWindowAndWait(window);
+                });
     }
 
-    private void showDisoveredPeers() {
+    @NotNull
+    private String constructPeerString(final Peer peer) {
+        return monitor.countAllMessages(peer) + ":" +peer.getEnodeURLString() ;
+    }
+
+    private void showDiscoveredPeers() {
         showPeers(belaContext.getP2PNetwork().streamDiscoveredPeers().collect(Collectors.toList()));
     }
 
     private void connections() {
-        showPeers(belaContext.getP2PNetwork().getPeers().stream().map(PeerConnection::getPeer).collect(Collectors.toList()));
+        showPeers(belaContext.getP2PNetwork().getPeers().stream().map(PeerConnection::getPeer)
+                .collect(Collectors.toList()));
 
     }
 
@@ -215,7 +222,8 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
 
         p2PNetwork.start();
         new MessageDialogBuilder().setText("P2P started").setTitle("P2P started").build().showDialog(gui);
-        SentMessageMonitor.getInstance().subscribe((peer, capability, messageData) -> monitor.sentMessage(peer, messageData));
+        SentMessageMonitor.getInstance()
+                .subscribe((peer, capability, messageData) -> monitor.addSentMessage(peer, messageData));
 
     }
 

@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.prefs.Preferences;
+import java.util.stream.Collectors;
 import com.google.common.collect.ImmutableList;
 import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.Direction;
@@ -59,16 +60,18 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
     Map<DisconnectMessage.DisconnectReason, Counter> disconects = new ConcurrentHashMap<>();
     Panel rightCounters = new Panel();
     BelaContext belaContext;
-    private Preferences preferences;
-    private WindowBasedTextGUI gui;
+    private final Preferences preferences;
+    private final WindowBasedTextGUI gui;
 
-    ConnectionMessageMonitor monitor = new ConnectionMessageMonitor();
+    private final ConnectionMessageMonitor monitor = new ConnectionMessageMonitor();
+    private final PeerDetailWindow peerDetailWindow;
 
     public P2PManagementWindow(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory, final Preferences preferences) {
         this.gui = gui;
         this.storageProviderFactory = storageProviderFactory;
         this.preferences = preferences;
         belaContext = new MainNetContext(storageProviderFactory);
+        peerDetailWindow = new PeerDetailWindow();
     }
 
 
@@ -104,12 +107,12 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
 
         final List<Capability> supportedCapabilities = belaContext.getSupportedCapabilities();
 
-        final Panel counters = new Panel(new LinearLayout(Direction.HORIZONTAL));
-        panel.addComponent(counters);
+        final Panel countersPanel = new Panel(new LinearLayout(Direction.HORIZONTAL));
+        panel.addComponent(countersPanel);
 
         final Panel firstColumn = new Panel();
-        counters.addComponent(firstColumn);
-        counters.addComponent(rightCounters);
+        countersPanel.addComponent(firstColumn);
+        countersPanel.addComponent(rightCounters);
 
         rightCounters.addComponent(connect.createComponent());
         rightCounters.addComponent(disconnect.createComponent());
@@ -127,24 +130,25 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
     }
 
     private void showMaintainedPeers() {
-
         final BelaP2PNetworkFacade p2PNetwork = (BelaP2PNetworkFacade) belaContext.getP2PNetwork();
-        final ImmutableList<String> list = p2PNetwork.streamMaintainedPeers()
-                .map(p -> p.getEnodeURL().toString()).collect(ImmutableList.toImmutableList());
-        BelaDialog.showListDialog(gui, "Peers (" + list.size() + ")", list);
+        showPeers(p2PNetwork.streamMaintainedPeers().collect(Collectors.toList()));
+    }
+
+    private void showPeers(final List<Peer> peers) {
+        BelaDialog.showDelegateListDialog(gui,peers, Peer::getEnodeURLString, peer -> {
+            peerDetailWindow.setActivePeer(peer);
+            final Window window = peerDetailWindow.createWindow();
+            gui.addWindowAndWait(window);
+        });
     }
 
     private void showDisoveredPeers() {
-        final ImmutableList<String> list = belaContext.getP2PNetwork().streamDiscoveredPeers()
-//                .map(p -> p.getEnodeURL().toString()+" ("+messages.getOrDefault(p,new ArrayList<>()).size()+")").collect(ImmutableList.toImmutableList());
-                .map(p -> p.getEnodeURL().toString()+" ("+monitor.countAllMessages(p)+")").collect(ImmutableList.toImmutableList());
-        BelaDialog.showListDialog(gui, "Peers (" + list.size() + ")", list);
+        showPeers(belaContext.getP2PNetwork().streamDiscoveredPeers().collect(Collectors.toList()));
     }
 
     private void connections() {
-        final ImmutableList<String> list = belaContext.getP2PNetwork().getPeers().stream()
-                .map(p -> p.getPeer().getEnodeURL().toString()).collect(ImmutableList.toImmutableList());
-        BelaDialog.showListDialog(gui, "Peers (" + list.size() + ")", list);
+        showPeers(belaContext.getP2PNetwork().getPeers().stream().map(PeerConnection::getPeer).collect(Collectors.toList()));
+
     }
 
     private void addPeer() {

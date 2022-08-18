@@ -19,9 +19,9 @@ import org.hyperledger.besu.ethereum.p2p.peers.Peer;
 import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 
 public class PeerDetailWindow implements BelaWindow {
+    private final WindowBasedTextGUI gui;
     private Peer activePeer;
     private List<List<ConnectionMessageMonitor.DirectedMessage>> conversations = new ArrayList<>();
-    private final WindowBasedTextGUI gui;
 
     public PeerDetailWindow(final WindowBasedTextGUI gui) {
         this.gui = gui;
@@ -53,12 +53,18 @@ public class PeerDetailWindow implements BelaWindow {
         final ActionListBox actionListBox = new ActionListBox(new TerminalSize(20, 10));
 
         for (List<ConnectionMessageMonitor.DirectedMessage> conversation : conversations) {
-            actionListBox.addItem(""+ conversation.size(),() -> {
-                final List<String> messages = conversation.stream().map(m->{
-                    return m.toString()+" "+m.getMessageData().getSize();
-                }).collect(Collectors.toList());
+            actionListBox.addItem("" + conversation.size(), () -> {
+//                final List<String> messages = conversation.stream().map(m -> {
+//                    return m.toString() + " " + m.getMessageData().getSize();
+//                }).collect(Collectors.toList());
+//
+//                BelaDialog.showListDialog(gui, "Conversation", messages);
 
-                BelaDialog.showListDialog(gui,"Conversation",messages);
+                BelaDialog.showDelegateListDialog(gui, "Conversation", conversation,
+                        directedMessage -> directedMessage.toString() + "(" + directedMessage.getMessageData()
+                                .getSize() + ")",
+                        item -> BelaDialog.showMessage(gui, "Message Data", item.getMessageData().getData()
+                                .toBase64String()));
 
             });
         }

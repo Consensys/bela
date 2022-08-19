@@ -37,7 +37,7 @@ import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 import static org.hyperledger.bela.windows.Constants.KEY_DETECT_COLUMNS;
 import static org.hyperledger.bela.windows.Constants.KEY_PRUNE_COLUMNS;
-import static org.hyperledger.bela.windows.Constants.KEY_TEST_OPEN_DATABASE;
+import static org.hyperledger.bela.windows.Constants.KEY_SEGMENT_SIZE;
 
 public class SegmentManipulationWindow implements BelaWindow {
     private static final LambdaLogger log = getLogger(SegmentManipulationWindow.class);
@@ -83,7 +83,7 @@ public class SegmentManipulationWindow implements BelaWindow {
 
         KeyControls controls = new KeyControls()
                 .addControl("Detect", KEY_DETECT_COLUMNS, this::detect)
-                .addControl("Test", KEY_TEST_OPEN_DATABASE, this::test)
+                .addControl("Size", KEY_SEGMENT_SIZE, this::getSegmentSizes)
                 .addControl("Prune", KEY_PRUNE_COLUMNS, this::prune)
                 .addControl("Close", KEY_CLOSE, window::close);
         window.addWindowListener(controls);
@@ -189,7 +189,7 @@ public class SegmentManipulationWindow implements BelaWindow {
         return columns;
     }
 
-    private void test() {
+    private void getSegmentSizes() {
         try {
             final ArrayList<SegmentIdentifier> listOfSegments = new ArrayList<>(selected);
             final StorageProvider provider = storageProviderFactory.createProvider(listOfSegments);

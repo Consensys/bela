@@ -43,7 +43,7 @@ public class ListDialog implements BelaDialog {
                         .setLeftMarginSize(1)
                         .setRightMarginSize(1));
 
-        final StringListBox component = new StringListBox(new TerminalSize(calculateWidth(), 10));
+        final StringListBox component = new StringListBox(new TerminalSize(calculateWidth(), Math.min(items.size(),30)));
         for (String element : items) {
             component.addItem(element);
         }

@@ -17,11 +17,9 @@ import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialogBuilder;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.dialogs.BelaDialog;
-import org.hyperledger.bela.dialogs.BelaExceptionDialog;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
@@ -48,6 +46,9 @@ public class SegmentManipulationWindow implements BelaWindow {
     private final List<CheckBox> columnCheckBoxes = new ArrayList<>();
     private final Set<SegmentIdentifier> selected = new HashSet<>();
     private WindowBasedTextGUI gui;
+    private static final long KILOBYTE = 1024;
+    private static final long MEGABYTE = KILOBYTE * 1024;
+    private static final long GIGABYTE = MEGABYTE * 1024;
 
     public SegmentManipulationWindow(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory) {
         this.gui = gui;
@@ -208,7 +209,7 @@ public class SegmentManipulationWindow implements BelaWindow {
                     dbField.setAccessible(true);
                     final TransactionDB db = (TransactionDB) dbField.get(s);
                     final long longProperty = db.getLongProperty(identifier.get(), "rocksdb.total-sst-files-size");
-                    return segment.getName() + ": " + longProperty;
+                    return segment.getName() + ": " +round(longProperty,GIGABYTE,"GB ")+ round(longProperty%GIGABYTE,MEGABYTE,"MB ")+ round(longProperty%MEGABYTE,KILOBYTE,"KB ") +round(longProperty%KILOBYTE,1,"B");
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -224,5 +225,10 @@ public class SegmentManipulationWindow implements BelaWindow {
             log.error("There was an error", t);
         }
 
+    }
+
+    private String round(final long value, final long divisor, final String title) {
+        final long amount = value / divisor;
+        return amount>0?amount + title:"";
     }
 }

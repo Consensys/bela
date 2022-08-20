@@ -43,7 +43,7 @@ enum LongRocksDbProperty {
 
     TOTAL_SST_FILES_SIZE("rocksdb.total-sst-files-size") {
         @Override
-        public String format( final long value) {
+        public String format(final long value) {
             return round(value, GIGABYTE, "GB ") + round(value % GIGABYTE, MEGABYTE, "MB ") + round(value % MEGABYTE, KILOBYTE, "KB ") + round(value % KILOBYTE, 1, "B");
         }
     };
@@ -136,23 +136,9 @@ public class SegmentManipulationWindow implements BelaWindow {
 
 
             final List<String> segmentInfos = listOfSegments.stream().map(segment -> {
-                final SegmentedKeyValueStorageAdapter<RocksDbSegmentIdentifier> storageBySegmentIdentifier = (SegmentedKeyValueStorageAdapter) provider.getStorageBySegmentIdentifier(segment);
-                try {
-                    final Field segmentHandleField = storageBySegmentIdentifier.getClass()
-                            .getDeclaredField("segmentHandle");
-                    segmentHandleField.setAccessible(true);
-                    final RocksDbSegmentIdentifier identifier = (RocksDbSegmentIdentifier) segmentHandleField.get(storageBySegmentIdentifier);
-                    final Field storageField = storageBySegmentIdentifier.getClass().getDeclaredField("storage");
-                    storageField.setAccessible(true);
-                    final RocksDBColumnarKeyValueStorage s = (RocksDBColumnarKeyValueStorage) storageField.get(storageBySegmentIdentifier);
-                    final Field dbField = s.getClass().getDeclaredField("db");
-                    dbField.setAccessible(true);
-                    final TransactionDB db = (TransactionDB) dbField.get(s);
-                    final long longPropertyValue = db.getLongProperty(identifier.get(), longRocksDbProperty.getName());
-                    return segment.getName() + ": " + longRocksDbProperty.format(longPropertyValue);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
+                final long longPropertyValue;
+                longPropertyValue = accessLongPropertyForSegment(provider, segment, longRocksDbProperty);
+                return segment.getName() + ": " + longRocksDbProperty.format(longPropertyValue);
             }).collect(Collectors.toList());
 
 
@@ -161,10 +147,29 @@ public class SegmentManipulationWindow implements BelaWindow {
 
         } catch (Exception e) {
             BelaDialog.showException(gui, e);
-        } catch (Throwable t) {
-            log.error("There was an error", t);
         }
 
+    }
+
+    private static long accessLongPropertyForSegment(StorageProvider provider, final SegmentIdentifier segment, final LongRocksDbProperty longRocksDbProperty) {
+        final long longPropertyValue;
+        try {
+            final SegmentedKeyValueStorageAdapter<RocksDbSegmentIdentifier> storageBySegmentIdentifier = (SegmentedKeyValueStorageAdapter) provider.getStorageBySegmentIdentifier(segment);
+            final Field segmentHandleField = storageBySegmentIdentifier.getClass()
+                    .getDeclaredField("segmentHandle");
+            segmentHandleField.setAccessible(true);
+            final RocksDbSegmentIdentifier identifier = (RocksDbSegmentIdentifier) segmentHandleField.get(storageBySegmentIdentifier);
+            final Field storageField = storageBySegmentIdentifier.getClass().getDeclaredField("storage");
+            storageField.setAccessible(true);
+            final RocksDBColumnarKeyValueStorage s = (RocksDBColumnarKeyValueStorage) storageField.get(storageBySegmentIdentifier);
+            final Field dbField = s.getClass().getDeclaredField("db");
+            dbField.setAccessible(true);
+            final TransactionDB db = (TransactionDB) dbField.get(s);
+            longPropertyValue = db.getLongProperty(identifier.get(), longRocksDbProperty.getName());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return longPropertyValue;
     }
 
     private void prune() {

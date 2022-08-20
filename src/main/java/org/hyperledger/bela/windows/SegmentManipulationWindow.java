@@ -36,19 +36,47 @@ import org.rocksdb.TransactionDB;
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 import static org.hyperledger.bela.windows.Constants.KEY_DETECT_COLUMNS;
+import static org.hyperledger.bela.windows.Constants.KEY_LONG_PROPERTY;
 import static org.hyperledger.bela.windows.Constants.KEY_PRUNE_COLUMNS;
-import static org.hyperledger.bela.windows.Constants.KEY_SEGMENT_SIZE;
+
+enum LongRocksDbProperty {
+
+    TOTAL_SST_FILES_SIZE("rocksdb.total-sst-files-size") {
+        @Override
+        public String format( final long value) {
+            return round(value, GIGABYTE, "GB ") + round(value % GIGABYTE, MEGABYTE, "MB ") + round(value % MEGABYTE, KILOBYTE, "KB ") + round(value % KILOBYTE, 1, "B");
+        }
+    };
+
+    private static final long KILOBYTE = 1024;
+    private static final long MEGABYTE = KILOBYTE * 1024;
+    private static final long GIGABYTE = MEGABYTE * 1024;
+    private final String name;
+
+    LongRocksDbProperty(final String name) {
+        this.name = name;
+    }
+
+    private static String round(final long value, final long divisor, final String title) {
+        return value / divisor > 0 ? value / divisor + title : "";
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String format(final long value) {
+        return String.valueOf(value);
+    }
+}
 
 public class SegmentManipulationWindow implements BelaWindow {
     private static final LambdaLogger log = getLogger(SegmentManipulationWindow.class);
 
-    private StorageProviderFactory storageProviderFactory;
     private final List<CheckBox> columnCheckBoxes = new ArrayList<>();
     private final Set<SegmentIdentifier> selected = new HashSet<>();
+    private StorageProviderFactory storageProviderFactory;
     private WindowBasedTextGUI gui;
-    private static final long KILOBYTE = 1024;
-    private static final long MEGABYTE = KILOBYTE * 1024;
-    private static final long GIGABYTE = MEGABYTE * 1024;
 
     public SegmentManipulationWindow(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory) {
         this.gui = gui;
@@ -83,7 +111,7 @@ public class SegmentManipulationWindow implements BelaWindow {
 
         KeyControls controls = new KeyControls()
                 .addControl("Detect", KEY_DETECT_COLUMNS, this::detect)
-                .addControl("Size", KEY_SEGMENT_SIZE, this::getSegmentSizes)
+                .addControl("LongProp", KEY_LONG_PROPERTY, this::getLongProperty)
                 .addControl("Prune", KEY_PRUNE_COLUMNS, this::prune)
                 .addControl("Close", KEY_CLOSE, window::close);
         window.addWindowListener(controls);
@@ -93,6 +121,50 @@ public class SegmentManipulationWindow implements BelaWindow {
 
 
         return window;
+    }
+
+    private void getLongProperty() {
+        BelaDialog.showDelegateListDialog(gui, "Select a property", Arrays.asList(LongRocksDbProperty.values()), LongRocksDbProperty::getName,
+                this::getLongProperty);
+    }
+
+    private void getLongProperty(final LongRocksDbProperty longRocksDbProperty) {
+        try {
+            final ArrayList<SegmentIdentifier> listOfSegments = new ArrayList<>(selected);
+            final StorageProvider provider = storageProviderFactory.createProvider(listOfSegments);
+            provider.close();
+
+
+            final List<String> segmentInfos = listOfSegments.stream().map(segment -> {
+                final SegmentedKeyValueStorageAdapter<RocksDbSegmentIdentifier> storageBySegmentIdentifier = (SegmentedKeyValueStorageAdapter) provider.getStorageBySegmentIdentifier(segment);
+                try {
+                    final Field segmentHandleField = storageBySegmentIdentifier.getClass()
+                            .getDeclaredField("segmentHandle");
+                    segmentHandleField.setAccessible(true);
+                    final RocksDbSegmentIdentifier identifier = (RocksDbSegmentIdentifier) segmentHandleField.get(storageBySegmentIdentifier);
+                    final Field storageField = storageBySegmentIdentifier.getClass().getDeclaredField("storage");
+                    storageField.setAccessible(true);
+                    final RocksDBColumnarKeyValueStorage s = (RocksDBColumnarKeyValueStorage) storageField.get(storageBySegmentIdentifier);
+                    final Field dbField = s.getClass().getDeclaredField("db");
+                    dbField.setAccessible(true);
+                    final TransactionDB db = (TransactionDB) dbField.get(s);
+                    final long longPropertyValue = db.getLongProperty(identifier.get(), longRocksDbProperty.getName());
+                    return segment.getName() + ": " + longRocksDbProperty.format(longPropertyValue);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }).collect(Collectors.toList());
+
+
+            BelaDialog.showListDialog(gui, "Segments information", segmentInfos);
+
+
+        } catch (Exception e) {
+            BelaDialog.showException(gui, e);
+        } catch (Throwable t) {
+            log.error("There was an error", t);
+        }
+
     }
 
     private void prune() {
@@ -187,48 +259,5 @@ public class SegmentManipulationWindow implements BelaWindow {
         }
         log.info("Columns: {}", columns);
         return columns;
-    }
-
-    private void getSegmentSizes() {
-        try {
-            final ArrayList<SegmentIdentifier> listOfSegments = new ArrayList<>(selected);
-            final StorageProvider provider = storageProviderFactory.createProvider(listOfSegments);
-            provider.close();
-
-
-            final List<String> segmentInfos = listOfSegments.stream().map(segment -> {
-                final SegmentedKeyValueStorageAdapter<RocksDbSegmentIdentifier> storageBySegmentIdentifier = (SegmentedKeyValueStorageAdapter)provider.getStorageBySegmentIdentifier(segment);
-                try {
-                    final Field segmentHandleField = storageBySegmentIdentifier.getClass().getDeclaredField("segmentHandle");
-                    segmentHandleField.setAccessible(true);
-                    final RocksDbSegmentIdentifier identifier = (RocksDbSegmentIdentifier) segmentHandleField.get(storageBySegmentIdentifier);
-                    final Field storageField = storageBySegmentIdentifier.getClass().getDeclaredField("storage");
-                    storageField.setAccessible(true);
-                    final RocksDBColumnarKeyValueStorage s = (RocksDBColumnarKeyValueStorage) storageField.get(storageBySegmentIdentifier);
-                    final Field dbField   = s.getClass().getDeclaredField("db");
-                    dbField.setAccessible(true);
-                    final TransactionDB db = (TransactionDB) dbField.get(s);
-                    final long longProperty = db.getLongProperty(identifier.get(), "rocksdb.total-sst-files-size");
-                    return segment.getName() + ": " +round(longProperty,GIGABYTE,"GB ")+ round(longProperty%GIGABYTE,MEGABYTE,"MB ")+ round(longProperty%MEGABYTE,KILOBYTE,"KB ") +round(longProperty%KILOBYTE,1,"B");
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }).collect(Collectors.toList());
-
-
-            BelaDialog.showListDialog(gui,"Segments information", segmentInfos);
-
-
-        } catch (Exception e) {
-            BelaDialog.showException(gui, e);
-        } catch (Throwable t) {
-            log.error("There was an error", t);
-        }
-
-    }
-
-    private String round(final long value, final long divisor, final String title) {
-        final long amount = value / divisor;
-        return amount>0?amount + title:"";
     }
 }

@@ -46,6 +46,18 @@ enum LongRocksDbProperty {
         public String format(final long value) {
             return round(value, GIGABYTE, "GB ") + round(value % GIGABYTE, MEGABYTE, "MB ") + round(value % MEGABYTE, KILOBYTE, "KB ") + round(value % KILOBYTE, 1, "B");
         }
+    },
+    LIVE_SST_FILES_SIZE("rocksdb.live-sst-files-size"){
+        @Override
+        public String format(final long value) {
+            return round(value, GIGABYTE, "GB ") + round(value % GIGABYTE, MEGABYTE, "MB ") + round(value % MEGABYTE, KILOBYTE, "KB ") + round(value % KILOBYTE, 1, "B");
+        }
+    },
+    SIZE_ALL_MEM_TABLES("rocksdb.size-all-mem-tables"){
+        @Override
+        public String format(final long value) {
+            return round(value, GIGABYTE, "GB ") + round(value % GIGABYTE, MEGABYTE, "MB ") + round(value % MEGABYTE, KILOBYTE, "KB ") + round(value % KILOBYTE, 1, "B");
+        }
     };
 
     private static final long KILOBYTE = 1024;

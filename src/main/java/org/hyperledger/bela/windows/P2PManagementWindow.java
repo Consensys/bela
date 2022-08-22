@@ -137,7 +137,7 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
         BelaDialog.showDelegateListDialog(gui, "Select a peer", peers,
                 this::constructPeerString,
                 peer -> {
-                    peerDetailWindow.setActivePeer(peer, monitor.getConversations(peer));
+                    peerDetailWindow.setActivePeer(peer, monitor.getConversation(peer));
                     final Window window = peerDetailWindow.createWindow();
                     gui.addWindowAndWait(window);
                 });
@@ -273,7 +273,6 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
         });
         counter.add(1);
         disconnect.add(1);
-        monitor.disconnected(connection.getPeer());
     }
 }
 

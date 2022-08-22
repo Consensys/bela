@@ -11,8 +11,7 @@ import org.hyperledger.besu.ethereum.p2p.rlpx.wire.MessageData;
 
 public class ConnectionMessageMonitor {
 
-    Map<Bytes, List<DirectedMessage>> currentConversations = new ConcurrentHashMap<>();
-    Map<Bytes, List<List<DirectedMessage>>> pastConversations = new ConcurrentHashMap<>();
+    Map<Bytes, List<DirectedMessage>> conversations = new ConcurrentHashMap<>();
 
     public void addReceivedMessage(Message message) {
         getCurrentConversation(message.getConnection().getPeer()).add(new IncomingMessage(message.getData()));
@@ -22,36 +21,33 @@ public class ConnectionMessageMonitor {
         getCurrentConversation(peer).add(new OutgoingMessage(messageData));
     }
 
-    public void disconnected(final Peer peer) {
-        final List<DirectedMessage> removed = currentConversations.remove(peer.getId());
-        if (removed != null) {
-            getPastConversations(peer).add(removed);
-        }
-    }
-
     public int countAllMessages(final Peer peer) {
-        return getCurrentConversation(peer)
-                .size() + getPastConversations(peer).stream().mapToInt(List::size).sum();
-    }
-
-    private List<List<DirectedMessage>> getPastConversations(final Peer peer) {
-        return pastConversations.computeIfAbsent(peer.getId(), k -> new ArrayList<>());
+        return getCurrentConversation(peer).size();
     }
 
     private List<DirectedMessage> getCurrentConversation(final Peer peer) {
-        return currentConversations.computeIfAbsent(peer.getId(), k -> new ArrayList<>());
+        return conversations.computeIfAbsent(peer.getId(), k -> new ArrayList<>());
     }
 
-    public List<List<DirectedMessage>> getConversations(final Peer peer) {
-        final List<List<DirectedMessage>> result = new ArrayList<>(getPastConversations(peer));
-        result.add(getCurrentConversation(peer));
-        return result;
+    public List<DirectedMessage> getConversation(final Peer peer) {
+        return getCurrentConversation(peer);
+
+    }
+
+    public enum MessageType {
+        INCOMING, OUTGOING;
+
+
+        @Override
+        public String toString() {
+            return String.valueOf(name().charAt(0));
+        }
     }
 
     public interface DirectedMessage{
 
         MessageData getMessageData();
-
+        MessageType getMessageType();
     }
     public static class IncomingMessage  implements DirectedMessage{
         private final MessageData data;
@@ -66,8 +62,8 @@ public class ConnectionMessageMonitor {
         }
 
         @Override
-        public String toString() {
-            return "I:"+data.getCode();
+        public MessageType getMessageType() {
+            return MessageType.INCOMING;
         }
     }
 
@@ -80,6 +76,11 @@ public class ConnectionMessageMonitor {
         @Override
         public MessageData getMessageData() {
             return data;
+        }
+
+        @Override
+        public MessageType getMessageType() {
+            return MessageType.OUTGOING;
         }
 
         @Override

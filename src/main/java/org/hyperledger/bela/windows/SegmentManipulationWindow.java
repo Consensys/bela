@@ -30,6 +30,7 @@ import org.hyperledger.besu.plugin.services.storage.rocksdb.segmented.RocksDBCol
 import org.hyperledger.besu.services.kvstore.SegmentedKeyValueStorageAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.rocksdb.ColumnFamilyHandle;
+import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.TransactionDB;
 
@@ -146,7 +147,6 @@ public class SegmentManipulationWindow implements BelaWindow {
             final StorageProvider provider = storageProviderFactory.createProvider(listOfSegments);
             provider.close();
 
-
             final List<String> segmentInfos = listOfSegments.stream().map(segment -> {
                 final long longPropertyValue;
                 longPropertyValue = accessLongPropertyForSegment(provider, segment, longRocksDbProperty);
@@ -176,7 +176,7 @@ public class SegmentManipulationWindow implements BelaWindow {
             final RocksDBColumnarKeyValueStorage s = (RocksDBColumnarKeyValueStorage) storageField.get(storageBySegmentIdentifier);
             final Field dbField = s.getClass().getDeclaredField("db");
             dbField.setAccessible(true);
-            final TransactionDB db = (TransactionDB) dbField.get(s);
+            final RocksDB db = (RocksDB) dbField.get(s);
             longPropertyValue = db.getLongProperty(identifier.get(), longRocksDbProperty.getName());
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -241,7 +241,7 @@ public class SegmentManipulationWindow implements BelaWindow {
 
     private void detect() {
         try {
-            storageProviderFactory.createProvider(new ArrayList<>());
+            storageProviderFactory.createProvider(new ArrayList<>(), false);
         } catch (Exception e) {
             final List<Byte> columns;
             try {

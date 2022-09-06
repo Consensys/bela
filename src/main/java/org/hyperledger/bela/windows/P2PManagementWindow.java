@@ -28,7 +28,7 @@ import org.hyperledger.bela.context.BelaP2PNetworkFacade;
 import org.hyperledger.bela.context.MainNetContext;
 import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.utils.ConnectionMessageMonitor;
-import org.hyperledger.bela.utils.SentMessageMonitor;
+import org.hyperledger.bela.utils.hacks.SentMessageMonitor;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.core.BlockHeader;

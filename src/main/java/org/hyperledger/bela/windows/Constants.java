@@ -10,6 +10,7 @@ public class Constants {
     public static final String GENESIS_PATH = "GENESIS_PATH";
     public static final String GENESIS_PATH_DEFAULT = "";
     public static final String NODE_KEY = "NODE_KEY";
+    public static final String READ_ONLY_DB = "READ_ONLY_DB";
     public static final String NODE_PATH_DEFAULT = "./key";
     public static final String THEME_KEY = "THEME_KEY";
     public static final String DEFAULT_THEME = "default";

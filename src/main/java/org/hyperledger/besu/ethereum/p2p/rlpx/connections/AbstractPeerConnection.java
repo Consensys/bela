@@ -22,7 +22,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import com.google.common.base.MoreObjects;
-import org.hyperledger.bela.utils.SentMessageMonitor;
+import org.hyperledger.bela.utils.hacks.SentMessageMonitor;
 import org.hyperledger.besu.ethereum.p2p.peers.Peer;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.Capability;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.CapabilityMultiplexer;

@@ -9,14 +9,11 @@ import java.util.List;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
-import com.googlecode.lanterna.gui2.dialogs.DialogWindow;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialogBuilder;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.config.BelaConfigurationImpl;
 import org.hyperledger.bela.converter.RocksDBKeyValueStorageConverterFactory;
 import org.hyperledger.bela.dialogs.NonClosableMessage;
+import org.hyperledger.bela.utils.hacks.ReadOnlyDatabaseDecider;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueStorageProviderBuilder;
@@ -32,6 +29,7 @@ import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.DATA_PATH;
 import static org.hyperledger.bela.windows.Constants.DATA_PATH_DEFAULT;
 import static org.hyperledger.bela.windows.Constants.DETECT_COLUMNS;
+import static org.hyperledger.bela.windows.Constants.READ_ONLY_DB;
 import static org.hyperledger.bela.windows.Constants.STORAGE_PATH;
 import static org.hyperledger.bela.windows.Constants.STORAGE_PATH_DEFAULT;
 
@@ -51,7 +49,6 @@ public class StorageProviderFactory implements AutoCloseable {
     }
 
     public StorageProvider createProvider() {
-
         Path data = Path.of(preferences.get(DATA_PATH, DATA_PATH_DEFAULT));
         Path storage = Path.of(preferences.get(STORAGE_PATH, STORAGE_PATH_DEFAULT));
         if (data.equals(dataPath) && storage.equals(storagePath) && provider != null) {
@@ -68,6 +65,7 @@ public class StorageProviderFactory implements AutoCloseable {
         storagePath = storage;
 
         final NonClosableMessage nonClosableMessage = NonClosableMessage.showMessage(gui, "Creating storage provider...");
+        ReadOnlyDatabaseDecider.getInstance().setReadOnly(preferences.getBoolean(READ_ONLY_DB,true));
 
         if (preferences.getBoolean(DETECT_COLUMNS, true)) {
             provider = createKeyValueStorageProvider(dataPath, storagePath, detectSegments());
@@ -113,7 +111,7 @@ public class StorageProviderFactory implements AutoCloseable {
         storagePath = null;
     }
 
-    public StorageProvider createProvider(final List<SegmentIdentifier> listOfSegments) {
+    public StorageProvider createProvider(final List<SegmentIdentifier> listOfSegments, final boolean readOnly) {
         if (provider != null) {
             try {
                 provider.close();
@@ -121,6 +119,8 @@ public class StorageProviderFactory implements AutoCloseable {
                 throw new RuntimeException(e);
             }
         }
+
+        ReadOnlyDatabaseDecider.getInstance().setReadOnly(readOnly);
 
         dataPath = Path.of(preferences.get(DATA_PATH, DATA_PATH_DEFAULT));
         storagePath = Path.of(preferences.get(STORAGE_PATH, STORAGE_PATH_DEFAULT));
@@ -133,7 +133,7 @@ public class StorageProviderFactory implements AutoCloseable {
     }
 
     public List<SegmentIdentifier> detectSegments() {
-        try (StorageProvider ignored = createProvider(new ArrayList<>())) {
+        try (StorageProvider ignored = createWritableProvider(new ArrayList<>())) {
             close();
             return new ArrayList<>();
         } catch (Exception e) {
@@ -141,6 +141,10 @@ public class StorageProviderFactory implements AutoCloseable {
             final KeyValueSegmentIdentifier[] values = KeyValueSegmentIdentifier.values();
             return columns.stream().map(aByte -> values[aByte - 1]).collect(Collectors.toList());
         }
+    }
+
+    private StorageProvider createWritableProvider(final List<SegmentIdentifier> listOfSegments) {
+        return createProvider(listOfSegments, false);
     }
 
     @NotNull
@@ -160,5 +164,9 @@ public class StorageProviderFactory implements AutoCloseable {
         }
         log.info("Columns: {}", columns);
         return columns;
+    }
+
+    public StorageProvider createProvider(final List<SegmentIdentifier> listOfSegments) {
+        return createProvider(listOfSegments,preferences.getBoolean(READ_ONLY_DB,true));
     }
 }

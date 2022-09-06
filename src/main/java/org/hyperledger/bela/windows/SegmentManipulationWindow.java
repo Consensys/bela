@@ -4,6 +4,7 @@ import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.utils.StorageProviderFactory;
+import org.hyperledger.bela.utils.hacks.ReadOnlyDatabaseDecider;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
@@ -48,13 +50,13 @@ enum LongRocksDbProperty {
             return round(value, GIGABYTE, "GB ") + round(value % GIGABYTE, MEGABYTE, "MB ") + round(value % MEGABYTE, KILOBYTE, "KB ") + round(value % KILOBYTE, 1, "B");
         }
     },
-    LIVE_SST_FILES_SIZE("rocksdb.live-sst-files-size"){
+    LIVE_SST_FILES_SIZE("rocksdb.live-sst-files-size") {
         @Override
         public String format(final long value) {
             return round(value, GIGABYTE, "GB ") + round(value % GIGABYTE, MEGABYTE, "MB ") + round(value % MEGABYTE, KILOBYTE, "KB ") + round(value % KILOBYTE, 1, "B");
         }
     },
-    SIZE_ALL_MEM_TABLES("rocksdb.size-all-mem-tables"){
+    SIZE_ALL_MEM_TABLES("rocksdb.size-all-mem-tables") {
         @Override
         public String format(final long value) {
             return round(value, GIGABYTE, "GB ") + round(value % GIGABYTE, MEGABYTE, "MB ") + round(value % MEGABYTE, KILOBYTE, "KB ") + round(value % KILOBYTE, 1, "B");
@@ -102,6 +104,27 @@ public class SegmentManipulationWindow implements BelaWindow {
                 } else selected.remove(value);
             }));
         }
+    }
+
+    private static long accessLongPropertyForSegment(StorageProvider provider, final SegmentIdentifier segment, final LongRocksDbProperty longRocksDbProperty) {
+        final long longPropertyValue;
+        try {
+            final SegmentedKeyValueStorageAdapter<RocksDbSegmentIdentifier> storageBySegmentIdentifier = (SegmentedKeyValueStorageAdapter) provider.getStorageBySegmentIdentifier(segment);
+            final Field segmentHandleField = storageBySegmentIdentifier.getClass()
+                    .getDeclaredField("segmentHandle");
+            segmentHandleField.setAccessible(true);
+            final RocksDbSegmentIdentifier identifier = (RocksDbSegmentIdentifier) segmentHandleField.get(storageBySegmentIdentifier);
+            final Field storageField = storageBySegmentIdentifier.getClass().getDeclaredField("storage");
+            storageField.setAccessible(true);
+            final RocksDBColumnarKeyValueStorage s = (RocksDBColumnarKeyValueStorage) storageField.get(storageBySegmentIdentifier);
+            final Field dbField = s.getClass().getDeclaredField("db");
+            dbField.setAccessible(true);
+            final RocksDB db = (RocksDB) dbField.get(s);
+            longPropertyValue = db.getLongProperty(identifier.get(), longRocksDbProperty.getName());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return longPropertyValue;
     }
 
     @Override
@@ -163,27 +186,6 @@ public class SegmentManipulationWindow implements BelaWindow {
 
     }
 
-    private static long accessLongPropertyForSegment(StorageProvider provider, final SegmentIdentifier segment, final LongRocksDbProperty longRocksDbProperty) {
-        final long longPropertyValue;
-        try {
-            final SegmentedKeyValueStorageAdapter<RocksDbSegmentIdentifier> storageBySegmentIdentifier = (SegmentedKeyValueStorageAdapter) provider.getStorageBySegmentIdentifier(segment);
-            final Field segmentHandleField = storageBySegmentIdentifier.getClass()
-                    .getDeclaredField("segmentHandle");
-            segmentHandleField.setAccessible(true);
-            final RocksDbSegmentIdentifier identifier = (RocksDbSegmentIdentifier) segmentHandleField.get(storageBySegmentIdentifier);
-            final Field storageField = storageBySegmentIdentifier.getClass().getDeclaredField("storage");
-            storageField.setAccessible(true);
-            final RocksDBColumnarKeyValueStorage s = (RocksDBColumnarKeyValueStorage) storageField.get(storageBySegmentIdentifier);
-            final Field dbField = s.getClass().getDeclaredField("db");
-            dbField.setAccessible(true);
-            final RocksDB db = (RocksDB) dbField.get(s);
-            longPropertyValue = db.getLongProperty(identifier.get(), longRocksDbProperty.getName());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return longPropertyValue;
-    }
-
     private void prune() {
         try {
             Set<SegmentIdentifier> toRemove = new HashSet<>(Arrays.asList(KeyValueSegmentIdentifier.values()));
@@ -240,8 +242,34 @@ public class SegmentManipulationWindow implements BelaWindow {
     }
 
     private void detect() {
+        if (ReadOnlyDatabaseDecider.getInstance().isReadOnly()) {
+            detectReadOnly();
+        } else {
+            detectReadWrite();
+        }
+    }
+
+    private void detectReadOnly() {
+        columnCheckBoxes.forEach(checkBox -> checkBox.setChecked(false));
+        final List<SegmentIdentifier> listOfSegments = Arrays.asList(KeyValueSegmentIdentifier.values());
+        selected.clear();
+
+        for (SegmentIdentifier segment : listOfSegments) {
+            try {
+                final StorageProvider provider = storageProviderFactory.createProvider(Collections.singletonList(segment), true);
+                provider.close();
+//                accessLongPropertyForSegment(provider, segment, LongRocksDbProperty.LIVE_SST_FILES_SIZE);
+                selected.add(segment);
+                columnCheckBoxes.get(listOfSegments.indexOf(segment)).setChecked(true);
+            } catch (Exception e) {
+                //ignore on purpouse
+            }
+        }
+    }
+
+    private void detectReadWrite() {
         try {
-            storageProviderFactory.createProvider(new ArrayList<>(), false);
+            final StorageProvider provider = storageProviderFactory.createProvider(new ArrayList<>(), false);
         } catch (Exception e) {
             final List<Byte> columns;
             try {

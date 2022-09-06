@@ -56,7 +56,7 @@ public class Bela {
             mainWindow.registerWindow(new LogoWindow());
             mainWindow.registerWindow(new P2PManagementWindow(gui, storageProviderFactory, preferences));
             mainWindow.registerWindow(new RocksDBViewer(gui, storageProviderFactory));
-            mainWindow.registerWindow(new SegmentManipulationWindow(gui, storageProviderFactory));
+            mainWindow.registerWindow(new SegmentManipulationWindow(gui, storageProviderFactory, preferences));
             mainWindow.registerWindow(new BonsaiStorageBrowserWindow(gui, storageProviderFactory));
             mainWindow.registerWindow(new BonsaiTrieLogLayersViewer(gui, storageProviderFactory));
             final Window window = mainWindow.createWindow();

@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.CheckBox;
@@ -22,7 +23,6 @@ import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.utils.StorageProviderFactory;
-import org.hyperledger.bela.utils.hacks.ReadOnlyDatabaseDecider;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
@@ -41,6 +41,7 @@ import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 import static org.hyperledger.bela.windows.Constants.KEY_DETECT_COLUMNS;
 import static org.hyperledger.bela.windows.Constants.KEY_LONG_PROPERTY;
 import static org.hyperledger.bela.windows.Constants.KEY_PRUNE_COLUMNS;
+import static org.hyperledger.bela.windows.Constants.READ_ONLY_DB;
 
 enum LongRocksDbProperty {
 
@@ -90,12 +91,14 @@ public class SegmentManipulationWindow implements BelaWindow {
 
     private final List<CheckBox> columnCheckBoxes = new ArrayList<>();
     private final Set<SegmentIdentifier> selected = new HashSet<>();
+    private final Preferences preferences;
     private StorageProviderFactory storageProviderFactory;
     private WindowBasedTextGUI gui;
 
-    public SegmentManipulationWindow(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory) {
+    public SegmentManipulationWindow(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory, final Preferences preferences) {
         this.gui = gui;
         this.storageProviderFactory = storageProviderFactory;
+        this.preferences = preferences;
 
         for (KeyValueSegmentIdentifier value : KeyValueSegmentIdentifier.values()) {
             columnCheckBoxes.add(new CheckBox(value.getName()).addListener(checked -> {
@@ -170,7 +173,8 @@ public class SegmentManipulationWindow implements BelaWindow {
             final StorageProvider provider = storageProviderFactory.createProvider(listOfSegments);
             provider.close();
 
-            final List<String> segmentInfos = listOfSegments.stream().map(segment -> {
+
+            final List<String> segmentInfos = Arrays.stream(KeyValueSegmentIdentifier.values()).filter(selected::contains).map(segment -> {
                 final long longPropertyValue;
                 longPropertyValue = accessLongPropertyForSegment(provider, segment, longRocksDbProperty);
                 return segment.getName() + ": " + longRocksDbProperty.format(longPropertyValue);
@@ -242,7 +246,7 @@ public class SegmentManipulationWindow implements BelaWindow {
     }
 
     private void detect() {
-        if (ReadOnlyDatabaseDecider.getInstance().isReadOnly()) {
+        if (preferences.getBoolean(READ_ONLY_DB,true)) {
             detectReadOnly();
         } else {
             detectReadWrite();

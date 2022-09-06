@@ -27,6 +27,7 @@ import static org.hyperledger.bela.windows.Constants.DETECT_COLUMNS;
 import static org.hyperledger.bela.windows.Constants.GENESIS_PATH;
 import static org.hyperledger.bela.windows.Constants.GENESIS_PATH_DEFAULT;
 import static org.hyperledger.bela.windows.Constants.OVERRIDE_STORAGE_PATH;
+import static org.hyperledger.bela.windows.Constants.READ_ONLY_DB;
 import static org.hyperledger.bela.windows.Constants.STORAGE_PATH;
 import static org.hyperledger.bela.windows.Constants.STORAGE_PATH_DEFAULT;
 import static org.hyperledger.bela.windows.Constants.THEME_KEY;
@@ -37,17 +38,19 @@ public class SettingsWindow implements BelaWindow {
     Preferences preferences;
     private ThemePicker themePickerMenu;
     private TextBox dataPath;
-    private CheckBoxList<String> checkBoxList;
+    private CheckBoxList<String> assumeCheckBoxList;
     private TextBox storagePath;
     private TextBox genesisPath;
     private Button storagePathButton;
     private final CheckBox detectColumns = new CheckBox("Auto detect columns in rocksdb");
+    private final CheckBox readOnlyDB = new CheckBox("Read only database access");
 
     public SettingsWindow(final WindowBasedTextGUI gui, final Preferences preferences) {
         this.gui = gui;
         this.preferences = preferences;
         themePickerMenu = new ThemePicker(gui, preferences.get(THEME_KEY, DEFAULT_THEME));
         detectColumns.setChecked(preferences.getBoolean(DETECT_COLUMNS, true));
+        readOnlyDB.setChecked(preferences.getBoolean(READ_ONLY_DB, true));
 
 
     }
@@ -80,11 +83,11 @@ public class SettingsWindow implements BelaWindow {
             path.ifPresent(dataPath::setText);
         }));
 
-        checkBoxList = new CheckBoxList<>();
-        checkBoxList.addItem("Assume Storage path", preferences.getBoolean(OVERRIDE_STORAGE_PATH, true));
+        assumeCheckBoxList = new CheckBoxList<>();
+        assumeCheckBoxList.addItem("Assume Storage path", preferences.getBoolean(OVERRIDE_STORAGE_PATH, true));
         panel.addComponent(new EmptySpace());
-        panel.addComponent(checkBoxList.setLayoutData(GridLayout.createLayoutData(GridLayout.Alignment.BEGINNING, GridLayout.Alignment.BEGINNING, true, false, 2, 1)));
-        checkBoxList.addListener((itemIndex, checked) -> assumeStoragePath());
+        panel.addComponent(assumeCheckBoxList.setLayoutData(GridLayout.createLayoutData(GridLayout.Alignment.BEGINNING, GridLayout.Alignment.BEGINNING, true, false, 2, 1)));
+        assumeCheckBoxList.addListener((itemIndex, checked) -> assumeStoragePath());
 
         panel.addComponent(new Label("Storage Path"));
         storagePath = new TextBox(preferences.get(STORAGE_PATH, STORAGE_PATH_DEFAULT));
@@ -96,6 +99,9 @@ public class SettingsWindow implements BelaWindow {
         panel.addComponent(storagePathButton);
         assumeStoragePath();
 
+        panel.addComponent(new EmptySpace());
+        panel.addComponent(readOnlyDB);
+        panel.addComponent(new EmptySpace());
 
         panel.addComponent(new Label("Genesis Path"));
         genesisPath = new TextBox(preferences.get(GENESIS_PATH, GENESIS_PATH_DEFAULT));
@@ -106,9 +112,7 @@ public class SettingsWindow implements BelaWindow {
         }));
 
         panel.addComponent(new EmptySpace());
-
         panel.addComponent(detectColumns);
-
         panel.addComponent(new EmptySpace());
 
         panel.addComponent(new Label("Theme"));
@@ -132,7 +136,7 @@ public class SettingsWindow implements BelaWindow {
     }
 
     private void assumeStoragePath() {
-        if (Boolean.TRUE.equals(checkBoxList.isChecked(0))) {
+        if (Boolean.TRUE.equals(assumeCheckBoxList.isChecked(0))) {
             storagePath.setEnabled(false);
             storagePathButton.setEnabled(false);
             storagePath.setText(dataPath.getText() + "/" + STORAGE_PATH_DEFAULT);
@@ -146,9 +150,10 @@ public class SettingsWindow implements BelaWindow {
         preferences.put(DATA_PATH, dataPath.getText());
         preferences.put(STORAGE_PATH, storagePath.getText());
         preferences.put(GENESIS_PATH, genesisPath.getText());
-        preferences.putBoolean(OVERRIDE_STORAGE_PATH, checkBoxList.isChecked(0));
+        preferences.putBoolean(OVERRIDE_STORAGE_PATH, assumeCheckBoxList.isChecked(0));
         preferences.put(THEME_KEY, themePickerMenu.getCurrentTheme());
         preferences.putBoolean(DETECT_COLUMNS, detectColumns.isChecked());
+        preferences.putBoolean(READ_ONLY_DB, readOnlyDB.isChecked());
         themePickerMenu.applyCurrent();
     }
 

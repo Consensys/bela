@@ -49,12 +49,10 @@ public class BonsaiTrieLogView extends AbstractBonsaiNodeView {
         } else {
             children.add(new LabelNodeView("No code changes", depth + 1));
         }
-        final List<LabelNodeView> storageChanges = streamStorageChanges().map(storageChange -> {
-            final Address hash = storageChange.getKey();
-            final UInt256 prior = storageChange.getValue().getPrior();
-            final UInt256 updated = storageChange.getValue().getUpdated();
-            return new LabelNodeView(hash.toHexString() + ":" + prior.toHexString() + " -> " + updated.toHexString(), depth + 2);
-
+        final List<AddressStorageNodeView> storageChanges = streamStorageChanges().map(storageChange -> {
+            final Address address = storageChange.getKey();
+            final Map<Hash, BonsaiValue<UInt256>> tree = storageChange.getValue();
+            return new AddressStorageNodeView(address, tree, depth + 2);
         }).collect(Collectors.toList());
         if (!storageChanges.isEmpty()) {
             children.add(new BonsaiListView("Storage Changes", storageChanges, depth + 1));
@@ -88,11 +86,11 @@ public class BonsaiTrieLogView extends AbstractBonsaiNodeView {
         //        return layer.streamCodeChanges();
     }
 
-    private Stream<Map.Entry<Address, BonsaiValue<UInt256>>> streamStorageChanges() {
+    private Stream<Map.Entry<Address, Map<Hash, BonsaiValue<UInt256>>>> streamStorageChanges() {
         try {
             final Method streamAccounts = layer.getClass().getDeclaredMethod("streamStorageChanges");
             streamAccounts.setAccessible(true);
-            return (Stream<Map.Entry<Address, BonsaiValue<UInt256>>>) streamAccounts.invoke(layer);
+            return (Stream<Map.Entry<Address, Map<Hash, BonsaiValue<UInt256>>>>) streamAccounts.invoke(layer);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

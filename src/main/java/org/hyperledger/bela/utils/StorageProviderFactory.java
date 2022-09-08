@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
@@ -12,6 +13,7 @@ import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.config.BelaConfigurationImpl;
 import org.hyperledger.bela.converter.RocksDBKeyValueStorageConverterFactory;
+import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.dialogs.NonClosableMessage;
 import org.hyperledger.bela.utils.hacks.ReadOnlyDatabaseDecider;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
@@ -68,7 +70,7 @@ public class StorageProviderFactory implements AutoCloseable {
         ReadOnlyDatabaseDecider.getInstance().setReadOnly(preferences.getBoolean(READ_ONLY_DB,true));
 
         if (preferences.getBoolean(DETECT_COLUMNS, true)) {
-            provider = createKeyValueStorageProvider(dataPath, storagePath, detectSegments());
+            provider = createKeyValueStorageProvider(dataPath, storagePath, detect());
         } else {
             provider = createKeyValueStorageProvider(dataPath, storagePath, Arrays.asList(KeyValueSegmentIdentifier.values()));
 
@@ -132,7 +134,7 @@ public class StorageProviderFactory implements AutoCloseable {
         return provider;
     }
 
-    public List<SegmentIdentifier> detectSegments() {
+    public List<SegmentIdentifier> detectReadWrite() {
         try (StorageProvider ignored = createWritableProvider(new ArrayList<>())) {
             close();
             return new ArrayList<>();
@@ -141,6 +143,31 @@ public class StorageProviderFactory implements AutoCloseable {
             final KeyValueSegmentIdentifier[] values = KeyValueSegmentIdentifier.values();
             return columns.stream().map(aByte -> values[aByte - 1]).collect(Collectors.toList());
         }
+    }
+
+    private List<SegmentIdentifier> detect() {
+        if (preferences.getBoolean(READ_ONLY_DB,true)) {
+            return detectReadOnly();
+        } else {
+            return detectReadWrite();
+        }
+    }
+
+    private List<SegmentIdentifier> detectReadOnly() {
+        final SegmentIdentifier[] listOfSegments = KeyValueSegmentIdentifier.values();
+        final List<SegmentIdentifier> detectedSegments = new ArrayList<>();
+
+        for (SegmentIdentifier segment : listOfSegments) {
+            try {
+                final StorageProvider provider = createProvider(Collections.singletonList(segment), true);
+                provider.close();
+//                accessLongPropertyForSegment(provider, segment, LongRocksDbProperty.LIVE_SST_FILES_SIZE);
+                detectedSegments.add(segment);
+            } catch (Exception e) {
+                //ignore on purpouse
+            }
+        }
+        return detectedSegments;
     }
 
     private StorageProvider createWritableProvider(final List<SegmentIdentifier> listOfSegments) {

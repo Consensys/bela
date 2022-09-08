@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
+import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.EmptySpace;
@@ -52,6 +53,7 @@ public class BonsaiTrieLogLayersViewer implements BelaWindow {
 
         this.gui = gui;
         this.storageProviderFactory = storageProviderFactory;
+        triesPanel.setPreferredSize(new TerminalSize(50,20));
     }
 
     @Override

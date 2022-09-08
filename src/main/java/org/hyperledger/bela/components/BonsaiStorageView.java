@@ -2,6 +2,7 @@ package org.hyperledger.bela.components;
 
 import java.util.Objects;
 import java.util.Optional;
+import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
@@ -38,6 +39,7 @@ public class BonsaiStorageView implements BelaComponent<Panel> {
     public Panel createComponent() {
         initStorage();
         panel = new Panel(new LinearLayout(Direction.HORIZONTAL));
+        panel.setPreferredSize(new TerminalSize(50, 20));
         return panel;
     }
 

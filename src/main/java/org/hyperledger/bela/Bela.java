@@ -47,7 +47,7 @@ public class Bela {
             StorageProviderFactory storageProviderFactory = new StorageProviderFactory(gui,preferences);
 
             gui.setTheme(LanternaThemes.getRegisteredTheme(preferences.get(THEME_KEY, DEFAULT_THEME)));
-            MainWindow mainWindow = new MainWindow(gui);
+            MainWindow mainWindow = new MainWindow(gui, preferences);
             final SettingsWindow config = new SettingsWindow(gui, preferences);
             mainWindow.registerWindow(config);
             mainWindow.registerWindow(new BlockChainBrowserWindow(storageProviderFactory, gui, preferences));

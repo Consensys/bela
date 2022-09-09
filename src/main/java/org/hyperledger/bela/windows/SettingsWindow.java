@@ -29,6 +29,7 @@ import static org.hyperledger.bela.windows.Constants.FULL_SCREEN_WINDOWS;
 import static org.hyperledger.bela.windows.Constants.GENESIS_PATH;
 import static org.hyperledger.bela.windows.Constants.GENESIS_PATH_DEFAULT;
 import static org.hyperledger.bela.windows.Constants.KEY_APPLY;
+import static org.hyperledger.bela.windows.Constants.KEY_RESET;
 import static org.hyperledger.bela.windows.Constants.OVERRIDE_STORAGE_PATH;
 import static org.hyperledger.bela.windows.Constants.READ_ONLY_DB;
 import static org.hyperledger.bela.windows.Constants.STORAGE_PATH;
@@ -78,7 +79,7 @@ public class SettingsWindow extends AbstractBelaWindow {
     @Override
     public KeyControls createControls() {
         return new KeyControls()
-                .addControl("Reset", KEY_APPLY, this::reset)
+                .addControl("Reset", KEY_RESET, this::reset)
                 .addControl("Apply", KEY_APPLY, this::apply);
     }
 

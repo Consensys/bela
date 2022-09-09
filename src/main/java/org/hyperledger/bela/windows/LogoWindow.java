@@ -1,13 +1,11 @@
 package org.hyperledger.bela.windows;
 
-import com.googlecode.lanterna.gui2.BasicWindow;
-import com.googlecode.lanterna.gui2.Button;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
-import com.googlecode.lanterna.gui2.Window;
+import org.hyperledger.bela.components.KeyControls;
 
-public class LogoWindow implements BelaWindow {
+public class LogoWindow extends AbstractBelaWindow {
     @Override
     public String label() {
         return "About";
@@ -18,9 +16,14 @@ public class LogoWindow implements BelaWindow {
         return MenuGroup.FILE;
     }
 
+
     @Override
-    public Window createWindow() {
-        Window window = new BasicWindow("Bela");
+    public KeyControls createControls() {
+        return new KeyControls();
+    }
+
+    @Override
+    public Panel createMainPanel() {
         Panel panel = new Panel(new LinearLayout());
         final Label logo = new Label("""
                                                                                                \s
@@ -43,8 +46,6 @@ public class LogoWindow implements BelaWindow {
                                                     /(((.                                      \s
                 """);
         panel.addComponent(logo);
-        panel.addComponent(new Button("Acknowledge", window::close));
-        window.setComponent(panel);
-        return window;
+        return panel;
     }
 }

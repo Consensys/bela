@@ -1,37 +1,32 @@
 package org.hyperledger.bela.windows;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import com.googlecode.lanterna.TerminalSize;
-import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.ComboBox;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.TextBox;
-import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.dialogs.BelaDialog;
-import org.hyperledger.bela.dialogs.BelaExceptionDialog;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 
-import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 import static org.hyperledger.bela.windows.Constants.KEY_SEARCH;
 
-public class RocksDBViewer implements BelaWindow {
-    private final ComboBox<KeyValueSegmentIdentifier> identifierCombo = new ComboBox<>(KeyValueSegmentIdentifier.values());
+public class RocksDBViewer extends AbstractBelaWindow {
     private static final Pattern HEX_ONLY = Pattern.compile("^[0-9A-Fa-f]+$");
-    private StorageProviderFactory storageProviderFactory;
+    private final ComboBox<KeyValueSegmentIdentifier> identifierCombo = new ComboBox<>(KeyValueSegmentIdentifier.values());
     private final TextBox keyBox = new TextBox(new TerminalSize(80, 1));
     private final Label valueLabel = new Label("");
-    private WindowBasedTextGUI gui;
+    private final StorageProviderFactory storageProviderFactory;
+    private final WindowBasedTextGUI gui;
 
     public RocksDBViewer(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory) {
         this.gui = gui;
@@ -51,21 +46,17 @@ public class RocksDBViewer implements BelaWindow {
         return MenuGroup.DATABASE;
     }
 
+
     @Override
-    public Window createWindow() {
+    public KeyControls createControls() {
+        return new KeyControls()
+                .addControl("Search", KEY_SEARCH, this::search);
+    }
 
-        Window window = new BasicWindow(label());
-        window.setHints(List.of(Window.Hint.FULL_SCREEN));
-
+    @Override
+    public Panel createMainPanel() {
         Panel panel = new Panel(new LinearLayout());
 
-
-        // add possible actions
-        KeyControls controls = new KeyControls()
-                .addControl("Search", KEY_SEARCH, this::search)
-                .addControl("Close", KEY_CLOSE, window::close);
-        window.addWindowListener(controls);
-        panel.addComponent(controls.createComponent());
 
         Panel columnFamily = new Panel(new LinearLayout(Direction.HORIZONTAL));
         columnFamily.addComponent(new Label("Column family: "));
@@ -83,8 +74,7 @@ public class RocksDBViewer implements BelaWindow {
         panel.addComponent(valuePanel);
 
 
-        window.setComponent(panel);
-        return window;
+        return panel;
     }
 
     private void search() {

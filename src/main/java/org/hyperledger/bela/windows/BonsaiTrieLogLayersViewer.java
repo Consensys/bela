@@ -2,22 +2,18 @@ package org.hyperledger.bela.windows;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.List;
 import java.util.Optional;
 import com.googlecode.lanterna.TerminalSize;
-import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.EmptySpace;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
-import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.components.bonsai.BonsaiTrieLogView;
 import org.hyperledger.bela.dialogs.BelaDialog;
-import org.hyperledger.bela.dialogs.BelaExceptionDialog;
 import org.hyperledger.bela.utils.BlockChainContext;
 import org.hyperledger.bela.utils.BlockChainContextFactory;
 import org.hyperledger.bela.utils.StorageProviderFactory;
@@ -34,26 +30,25 @@ import org.hyperledger.besu.ethereum.worldstate.DataStorageConfiguration;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
-import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 import static org.hyperledger.bela.windows.Constants.KEY_FOCUS;
 import static org.hyperledger.bela.windows.Constants.KEY_HEAD;
 import static org.hyperledger.bela.windows.Constants.KEY_LOOKUP_BY_HASH;
 import static org.hyperledger.bela.windows.Constants.KEY_ROLL_BACKWARD;
 import static org.hyperledger.bela.windows.Constants.KEY_ROLL_FORWARD;
 
-public class BonsaiTrieLogLayersViewer implements BelaWindow {
+public class BonsaiTrieLogLayersViewer extends AbstractBelaWindow {
     private static final LambdaLogger log = getLogger(BonsaiTrieLogLayersViewer.class);
 
     private final WindowBasedTextGUI gui;
     private final StorageProviderFactory storageProviderFactory;
-    private BonsaiTrieLogView view;
     private final Panel triesPanel = new Panel();
+    private BonsaiTrieLogView view;
 
     public BonsaiTrieLogLayersViewer(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory) {
 
         this.gui = gui;
         this.storageProviderFactory = storageProviderFactory;
-        triesPanel.setPreferredSize(new TerminalSize(50,20));
+        triesPanel.setPreferredSize(new TerminalSize(50, 20));
     }
 
     @Override
@@ -67,28 +62,24 @@ public class BonsaiTrieLogLayersViewer implements BelaWindow {
     }
 
     @Override
-    public Window createWindow() {
-        Window window = new BasicWindow(label());
-        window.setHints(List.of(Window.Hint.FULL_SCREEN));
-        Panel panel = new Panel(new LinearLayout(Direction.VERTICAL));
-
-        KeyControls controls = new KeyControls()
+    public KeyControls createControls() {
+        return new KeyControls()
                 .addControl("Focus", KEY_FOCUS, this::checkFocus)
                 .addControl("By Hash", KEY_LOOKUP_BY_HASH, this::lookupByHash)
                 .addControl("Head", KEY_HEAD, this::lookupByChainHead)
                 .addControl("Roll Forward", KEY_ROLL_FORWARD, this::rollForward)
-                .addControl("Roll Backward", KEY_ROLL_BACKWARD, this::rollBackward)
-                .addControl("Close", KEY_CLOSE, window::close);
-        window.addWindowListener(controls);
-        panel.addComponent(controls.createComponent());
-        panel.addComponent(new EmptySpace());
+                .addControl("Roll Backward", KEY_ROLL_BACKWARD, this::rollBackward);
+    }
 
+    @Override
+    public Panel createMainPanel() {
+        Panel panel = new Panel(new LinearLayout(Direction.VERTICAL));
+
+        panel.addComponent(new EmptySpace());
 
         panel.addComponent(triesPanel);
 
-
-        window.setComponent(panel);
-        return window;
+        return panel;
     }
 
 

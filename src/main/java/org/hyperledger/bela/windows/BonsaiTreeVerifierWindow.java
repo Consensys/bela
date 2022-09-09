@@ -1,17 +1,14 @@
 package org.hyperledger.bela.windows;
 
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import com.googlecode.lanterna.TerminalSize;
-import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.TextBox;
-import com.googlecode.lanterna.gui2.Window;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
@@ -24,20 +21,17 @@ import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
-import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 import static org.hyperledger.bela.windows.Constants.KEY_START;
 
-public class BonsaiTreeVerifierWindow implements BelaWindow, BonsaiListener {
+public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements BonsaiListener {
     private static final LambdaLogger log = getLogger(BonsaiTreeVerifierWindow.class);
-
-    private BasicWindow window;
     private final StorageProviderFactory storageProviderFactory;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
-    private Future<?> execution;
     private final Label runningLabel = new Label("Not Running...");
     private final Label counterLabel = new Label("0");
-    AtomicInteger visited = new AtomicInteger(0);
     private final TextBox logTextBox = new TextBox(new TerminalSize(80, 7));
+    AtomicInteger visited = new AtomicInteger(0);
+    private Future<?> execution;
 
     public BonsaiTreeVerifierWindow(final StorageProviderFactory storageProviderFactory) {
         this.storageProviderFactory = storageProviderFactory;
@@ -54,28 +48,22 @@ public class BonsaiTreeVerifierWindow implements BelaWindow, BonsaiListener {
         return MenuGroup.DATABASE;
     }
 
+
     @Override
-    public Window createWindow() {
-        window = new BasicWindow("BonsaiTreeVerifier");
-        window.setHints(List.of(Window.Hint.FULL_SCREEN));
+    public KeyControls createControls() {
+        return new KeyControls()
+                .addControl("Start", KEY_START, this::startVerifier);
+    }
 
+    @Override
+    public Panel createMainPanel() {
         Panel panel = new Panel(new LinearLayout());
-
-        KeyControls controls = new KeyControls()
-                .addControl("Start", KEY_START, this::startVerifier)
-                .addControl("Close", KEY_CLOSE, window::close);
-        window.addWindowListener(controls);
-        panel.addComponent(controls.createComponent());
-
 
         panel.addComponent(runningLabel);
         panel.addComponent(counterLabel);
         panel.addComponent(logTextBox);
 
-
-        window.setComponent(panel);
-
-        return window;
+        return panel;
     }
 
 

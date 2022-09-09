@@ -15,7 +15,7 @@ public class Constants {
     public static final String THEME_KEY = "THEME_KEY";
     public static final String DEFAULT_THEME = "default";
     public static final String DETECT_COLUMNS = "detect_columns";
-
+    public static final String FULL_SCREEN_WINDOWS = "full_screen_windows";
 
     public static final Character KEY_BACK = 'h';
     public static final Character KEY_FORWARD = 'l';
@@ -42,4 +42,6 @@ public class Constants {
     public static final Character KEY_HEAD = 'h';
     public static final Character KEY_ROOT = 'r';
     public static final Character KEY_FOCUS = 'f';
+    public static final Character KEY_RESET = 'r';
+    public static final Character KEY_APPLY = 'a';
 }

@@ -13,16 +13,20 @@ import com.googlecode.lanterna.gui2.menu.Menu;
 import com.googlecode.lanterna.gui2.menu.MenuBar;
 import com.googlecode.lanterna.gui2.menu.MenuItem;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
+import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.dialogs.BelaDialog;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
+import static org.hyperledger.bela.windows.Constants.FULL_SCREEN_WINDOWS;
 
-public class MainWindow implements BelaWindow {
+public class MainWindow {
     private static final LambdaLogger log = getLogger(MainWindow.class);
-
-    private List<BelaWindow> windows = new ArrayList<>();
-    private WindowBasedTextGUI gui;
+    private final Window window = new BasicWindow("Main Window");
     private final Preferences preferences;
+    private final Panel mainPanel = new Panel();
+    private final List<BelaWindow> windows = new ArrayList<>();
+    private final WindowBasedTextGUI gui;
+    private KeyControls controls;
 
     public MainWindow(final WindowBasedTextGUI gui, final Preferences preferences) {
         this.gui = gui;
@@ -33,20 +37,9 @@ public class MainWindow implements BelaWindow {
         this.windows.add(window);
     }
 
-    @Override
-    public String label() {
-        return "Main Window";
-    }
-
-    @Override
-    public MenuGroup group() {
-        return MenuGroup.FILE;
-    }
-
-    @Override
     public Window createWindow() {
-        final Window window = new BasicWindow(label());
         window.setMenuBar(createMainMenu(window));
+        window.setComponent(mainPanel);
         return window;
     }
 
@@ -68,12 +61,25 @@ public class MainWindow implements BelaWindow {
     }
 
     private void launchWindow(final BelaWindow window) {
-        try {
-            gui.addWindowAndWait(window.createWindow());
-        } catch (Exception e) {
-            log.error("There was an error when launching window {}", window.label(), e);
-            BelaDialog.showException(gui, e);
+        if (preferences.getBoolean(FULL_SCREEN_WINDOWS, true)) {
+            try {
+                gui.addWindowAndWait(window.createWindow());
+            } catch (Exception e) {
+                log.error("There was an error when launching window {}", window.label(), e);
+                BelaDialog.showException(gui, e);
+
+            }
+        } else {
+            mainPanel.removeAllComponents();
+            if (controls != null) {
+                this.window.removeWindowListener(controls);
+            }
+            controls = window.createControls();
+            mainPanel.addComponent(controls.createComponent());
+            mainPanel.addComponent(window.createMainPanel());
+            this.window.addWindowListener(controls);
 
         }
+
     }
 }

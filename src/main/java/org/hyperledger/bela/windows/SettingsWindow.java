@@ -25,6 +25,7 @@ import static org.hyperledger.bela.windows.Constants.DATA_PATH;
 import static org.hyperledger.bela.windows.Constants.DATA_PATH_DEFAULT;
 import static org.hyperledger.bela.windows.Constants.DEFAULT_THEME;
 import static org.hyperledger.bela.windows.Constants.DETECT_COLUMNS;
+import static org.hyperledger.bela.windows.Constants.FULL_SCREEN_WINDOWS;
 import static org.hyperledger.bela.windows.Constants.GENESIS_PATH;
 import static org.hyperledger.bela.windows.Constants.GENESIS_PATH_DEFAULT;
 import static org.hyperledger.bela.windows.Constants.KEY_APPLY;
@@ -58,6 +59,7 @@ public class SettingsWindow extends AbstractBelaWindow {
         settings.put(GENESIS_PATH, new PathSetting(this.gui, "Genesis path", GENESIS_PATH, GENESIS_PATH_DEFAULT));
 
         settings.put(DETECT_COLUMNS, new CheckBoxSetting(this.gui, "Auto detect columns in rocksdb", DETECT_COLUMNS, true));
+        settings.put(FULL_SCREEN_WINDOWS, new CheckBoxSetting(this.gui, "open windows in full screen", FULL_SCREEN_WINDOWS, true));
 
         themePickerMenu = new ThemePicker(gui, preferences.get(THEME_KEY, DEFAULT_THEME));
     }

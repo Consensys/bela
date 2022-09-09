@@ -38,6 +38,7 @@ public class MainWindow {
     }
 
     public Window createWindow() {
+        window.setHints(List.of(Window.Hint.FULL_SCREEN));
         window.setMenuBar(createMainMenu(window));
         window.setComponent(mainPanel);
         return window;

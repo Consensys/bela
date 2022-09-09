@@ -1,34 +1,26 @@
 package org.hyperledger.bela.windows;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import com.googlecode.lanterna.SGR;
-import com.googlecode.lanterna.TerminalPosition;
-import com.googlecode.lanterna.TerminalSize;
-import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.Borders;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
-import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
-import com.googlecode.lanterna.gui2.WindowListener;
-import com.googlecode.lanterna.input.KeyStroke;
+import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.utils.BlockChainContext;
 import org.hyperledger.bela.utils.TransactionTraceBrowser;
 import org.hyperledger.besu.ethereum.api.jsonrpc.internal.results.tracing.flat.FlatTrace;
 import org.jetbrains.annotations.NotNull;
 
-public class TransactionTraceBrowserWindow implements BelaWindow, WindowListener {
+public class TransactionTraceBrowserWindow extends AbstractBelaWindow {
 
     private static final String[] PREV_NEXT_TRACE_COMMANDS = {"prev Frame", "'<-'", "next Frame", "'->'", "Close", "'c'"};
-
-    private TransactionTraceBrowser browser;
-    private BasicWindow window;
     private final BlockChainContext context;
     private final WindowBasedTextGUI gui;
     private final List<FlatTrace> traces;
+    private TransactionTraceBrowser browser;
 
     public TransactionTraceBrowserWindow(final BlockChainContext context,
                                          final WindowBasedTextGUI gui, final List<FlatTrace> traces) {
@@ -36,41 +28,6 @@ public class TransactionTraceBrowserWindow implements BelaWindow, WindowListener
         this.gui = gui;
         this.traces = traces;
     }
-
-    @Override
-    public String label() {
-        return "Transaction Browser";
-    }
-
-    @Override
-    public MenuGroup group() {
-        return MenuGroup.DATABASE;
-    }
-
-    @Override
-    public Window createWindow() {
-        browser = new TransactionTraceBrowser(traces);
-
-        // Create window to hold the panel
-
-        window = new BasicWindow("Bela Transaction Trace Browser");
-        window.setHints(List.of(Window.Hint.FULL_SCREEN));
-
-        Panel panel = new Panel(new LinearLayout());
-
-        Panel commands = getCommandsPanel(PREV_NEXT_TRACE_COMMANDS);
-
-        // add possible actions
-        panel.addComponent(commands);
-
-        // add transaction detail panel
-        panel.addComponent(browser.transactionTracePanel().createComponent());
-
-        window.addWindowListener(this);
-        window.setComponent(panel);
-        return window;
-    }
-
 
     @NotNull
     private static Panel getCommandsPanel(final String[] strings) {
@@ -91,43 +48,44 @@ public class TransactionTraceBrowserWindow implements BelaWindow, WindowListener
     }
 
     @Override
-    public void onResized(final Window window, final TerminalSize oldSize, final TerminalSize newSize) {
-
+    public String label() {
+        return "Transaction Browser";
     }
 
     @Override
-    public void onMoved(final Window window, final TerminalPosition oldPosition, final TerminalPosition newPosition) {
-
+    public MenuGroup group() {
+        return MenuGroup.DATABASE;
     }
 
     @Override
-    public void onInput(final Window basePane, final KeyStroke keyStroke, final AtomicBoolean deliverEvent) {
-        switch (keyStroke.getKeyType()) {
-            case ArrowLeft:
-                browser = browser.moveBackward();
-                break;
+    public KeyControls createControls() {
+        return new KeyControls().addControl("Back", Constants.KEY_BACK, this::back)
+                .addControl("Forward", Constants.KEY_FORWARD, this::forward);
+    }
 
-            case ArrowRight:
-                browser = browser.moveForward();
-                break;
+    private void forward() {
+        browser = browser.moveForward();
 
-            case Escape:
-                window.close();
-                break;
-            case Character:
-                switch (keyStroke.getCharacter()) {
-                    case 'c' -> window.close();
-                    default -> {
-                    }
-                }
-                break;
-            default:
-        }
+    }
+
+    private void back() {
+        browser = browser.moveBackward();
     }
 
     @Override
-    public void onUnhandledInput(final Window basePane, final KeyStroke keyStroke, final AtomicBoolean hasBeenHandled) {
+    public Panel createMainPanel() {
+        browser = new TransactionTraceBrowser(traces);
 
+        Panel panel = new Panel(new LinearLayout());
+
+        Panel commands = getCommandsPanel(PREV_NEXT_TRACE_COMMANDS);
+
+        // add possible actions
+        panel.addComponent(commands);
+
+        // add transaction detail panel
+        panel.addComponent(browser.transactionTracePanel().createComponent());
+
+        return panel;
     }
-
 }

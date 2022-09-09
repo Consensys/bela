@@ -5,12 +5,10 @@ import java.util.List;
 import java.util.Optional;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.ActionListBox;
-import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
-import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.dialogs.BelaDialog;
@@ -18,9 +16,6 @@ import org.hyperledger.bela.utils.ConnectionMessageMonitor;
 import org.hyperledger.besu.ethereum.p2p.peers.Peer;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.MessageData;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.messages.DisconnectMessage;
-import org.hyperledger.besu.ethereum.p2p.rlpx.wire.messages.HelloMessage;
-
-import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 
 enum MessageCode {
     HELLO(0x00),
@@ -44,7 +39,7 @@ enum MessageCode {
     }
 }
 
-public class PeerDetailWindow implements BelaWindow {
+public class PeerDetailWindow extends AbstractBelaWindow {
     private final WindowBasedTextGUI gui;
     private Peer activePeer;
     private List<ConnectionMessageMonitor.DirectedMessage> messages = new ArrayList<>();
@@ -58,7 +53,7 @@ public class PeerDetailWindow implements BelaWindow {
             return "DisconnectMessage: " + disconnectMessage.getReason();
         }
 
-        return  "code: "+ message.getCode();
+        return "code: " + message.getCode();
     }
 
     @Override
@@ -71,16 +66,15 @@ public class PeerDetailWindow implements BelaWindow {
         return MenuGroup.P2P;
     }
 
-    @Override
-    public Window createWindow() {
-        final Window window = new BasicWindow(label());
-        window.setHints(List.of(Window.Hint.FULL_SCREEN));
-        Panel panel = new Panel(new LinearLayout());
 
-        KeyControls controls = new KeyControls()
-                .addControl("Close", KEY_CLOSE, window::close);
-        window.addWindowListener(controls);
-        panel.addComponent(controls.createComponent());
+    @Override
+    public KeyControls createControls() {
+        return new KeyControls();
+    }
+
+    @Override
+    public Panel createMainPanel() {
+        Panel panel = new Panel(new LinearLayout());
 
         panel.addComponent(new Label("Peer ID: " + activePeer.getId()));
         panel.addComponent(new Label("Peer URL: " + activePeer.getEnodeURLString()));
@@ -88,16 +82,16 @@ public class PeerDetailWindow implements BelaWindow {
 
         Panel conversation = new Panel(new LinearLayout(Direction.VERTICAL));
         for (ConnectionMessageMonitor.DirectedMessage message : messages) {
-            actionListBox.addItem(message.getMessageType().toString()+": "+ parseMessage(message.getMessageData()), () -> {
-                BelaDialog.showMessage(gui,"Data", message.getMessageData().getData().toString());
+            actionListBox.addItem(message.getMessageType()
+                    .toString() + ": " + parseMessage(message.getMessageData()), () -> {
+                BelaDialog.showMessage(gui, "Data", message.getMessageData().getData().toString());
             });
         }
         conversation.addComponent(actionListBox);
 
         panel.addComponent(conversation);
 
-        window.setComponent(panel);
-        return window;
+        return panel;
     }
 
     public void setActivePeer(final Peer peer, final List<ConnectionMessageMonitor.DirectedMessage> conversations) {

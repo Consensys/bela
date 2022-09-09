@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
-import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
@@ -28,8 +27,8 @@ import org.hyperledger.bela.context.BelaP2PNetworkFacade;
 import org.hyperledger.bela.context.MainNetContext;
 import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.utils.ConnectionMessageMonitor;
-import org.hyperledger.bela.utils.hacks.SentMessageMonitor;
 import org.hyperledger.bela.utils.StorageProviderFactory;
+import org.hyperledger.bela.utils.hacks.SentMessageMonitor;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.core.BlockHeader;
 import org.hyperledger.besu.ethereum.eth.manager.task.RetryingGetHeadersEndingAtFromPeerByHashTask;
@@ -48,9 +47,8 @@ import org.hyperledger.besu.ethereum.p2p.rlpx.wire.messages.DisconnectMessage;
 import org.jetbrains.annotations.NotNull;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
-import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 
-public class P2PManagementWindow implements BelaWindow, MessageCallback, ConnectCallback, DisconnectCallback {
+public class P2PManagementWindow extends AbstractBelaWindow implements MessageCallback, ConnectCallback, DisconnectCallback {
     private static final LambdaLogger log = getLogger(P2PManagementWindow.class);
 
     private final StorageProviderFactory storageProviderFactory;
@@ -85,15 +83,10 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
     }
 
     @Override
-    public Window createWindow() {
-        final Window window = new BasicWindow(label());
-        window.setHints(List.of(Window.Hint.FULL_SCREEN));
-        Panel panel = new Panel(new LinearLayout());
-
-        KeyControls controls = new KeyControls()
+    public KeyControls createControls() {
+        return new KeyControls()
                 .addControl("Start P2P", 's', this::startP2P)
                 .addControl("Stop P2P", 'x', this::stopP2P)
-                .addControl("Close", KEY_CLOSE, window::close)
                 .addSection("Peers")
                 .addControl("Add Peer", 'a', this::addPeer)
                 .addControl("Connections", 'c', this::connections)
@@ -101,8 +94,11 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
                 .addControl("Maintained Peers", 'm', this::showMaintainedPeers)
                 .addSection("Operations")
                 .addControl("Ask For Header", 'h', this::askForHeader);
-        window.addWindowListener(controls);
-        panel.addComponent(controls.createComponent());
+    }
+
+    @Override
+    public Panel createMainPanel() {
+        Panel panel = new Panel(new LinearLayout());
 
         final List<Capability> supportedCapabilities = belaContext.getSupportedCapabilities();
 
@@ -123,9 +119,7 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
             firstColumn.addComponent(counter.createComponent());
         });
 
-
-        window.setComponent(panel);
-        return window;
+        return panel;
     }
 
     private void showMaintainedPeers() {
@@ -145,7 +139,7 @@ public class P2PManagementWindow implements BelaWindow, MessageCallback, Connect
 
     @NotNull
     private String constructPeerString(final Peer peer) {
-        return monitor.countAllMessages(peer) + ":" +peer.getEnodeURLString() ;
+        return monitor.countAllMessages(peer) + ":" + peer.getEnodeURLString();
     }
 
     private void showDiscoveredPeers() {

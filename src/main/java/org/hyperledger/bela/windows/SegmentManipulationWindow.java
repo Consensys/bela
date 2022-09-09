@@ -13,11 +13,9 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
-import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.CheckBox;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
-import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.components.KeyControls;
@@ -37,7 +35,6 @@ import org.rocksdb.RocksDBException;
 import org.rocksdb.TransactionDB;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
-import static org.hyperledger.bela.windows.Constants.KEY_CLOSE;
 import static org.hyperledger.bela.windows.Constants.KEY_DETECT_COLUMNS;
 import static org.hyperledger.bela.windows.Constants.KEY_LONG_PROPERTY;
 import static org.hyperledger.bela.windows.Constants.KEY_PRUNE_COLUMNS;
@@ -86,14 +83,14 @@ enum LongRocksDbProperty {
     }
 }
 
-public class SegmentManipulationWindow implements BelaWindow {
+public class SegmentManipulationWindow extends AbstractBelaWindow {
     private static final LambdaLogger log = getLogger(SegmentManipulationWindow.class);
 
     private final List<CheckBox> columnCheckBoxes = new ArrayList<>();
     private final Set<SegmentIdentifier> selected = new HashSet<>();
     private final Preferences preferences;
-    private StorageProviderFactory storageProviderFactory;
-    private WindowBasedTextGUI gui;
+    private final StorageProviderFactory storageProviderFactory;
+    private final WindowBasedTextGUI gui;
 
     public SegmentManipulationWindow(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory, final Preferences preferences) {
         this.gui = gui;
@@ -141,25 +138,21 @@ public class SegmentManipulationWindow implements BelaWindow {
     }
 
     @Override
-    public Window createWindow() {
-        final BasicWindow window = new BasicWindow(label());
-        window.setHints(List.of(Window.Hint.FULL_SCREEN));
-
-        Panel panel = new Panel(new LinearLayout());
-        window.setComponent(panel);
-
-        KeyControls controls = new KeyControls()
+    public KeyControls createControls() {
+        return new KeyControls()
                 .addControl("Detect", KEY_DETECT_COLUMNS, this::detect)
                 .addControl("LongProp", KEY_LONG_PROPERTY, this::getLongProperty)
-                .addControl("Prune", KEY_PRUNE_COLUMNS, this::prune)
-                .addControl("Close", KEY_CLOSE, window::close);
-        window.addWindowListener(controls);
-        panel.addComponent(controls.createComponent());
+                .addControl("Prune", KEY_PRUNE_COLUMNS, this::prune);
+    }
 
+    @Override
+    public Panel createMainPanel() {
+
+        Panel panel = new Panel(new LinearLayout());
         columnCheckBoxes.forEach(panel::addComponent);
 
 
-        return window;
+        return panel;
     }
 
     private void getLongProperty() {
@@ -174,11 +167,12 @@ public class SegmentManipulationWindow implements BelaWindow {
             provider.close();
 
 
-            final List<String> segmentInfos = Arrays.stream(KeyValueSegmentIdentifier.values()).filter(selected::contains).map(segment -> {
-                final long longPropertyValue;
-                longPropertyValue = accessLongPropertyForSegment(provider, segment, longRocksDbProperty);
-                return segment.getName() + ": " + longRocksDbProperty.format(longPropertyValue);
-            }).collect(Collectors.toList());
+            final List<String> segmentInfos = Arrays.stream(KeyValueSegmentIdentifier.values())
+                    .filter(selected::contains).map(segment -> {
+                        final long longPropertyValue;
+                        longPropertyValue = accessLongPropertyForSegment(provider, segment, longRocksDbProperty);
+                        return segment.getName() + ": " + longRocksDbProperty.format(longPropertyValue);
+                    }).collect(Collectors.toList());
 
 
             BelaDialog.showListDialog(gui, "Segments information", segmentInfos);
@@ -246,7 +240,7 @@ public class SegmentManipulationWindow implements BelaWindow {
     }
 
     private void detect() {
-        if (preferences.getBoolean(READ_ONLY_DB,true)) {
+        if (preferences.getBoolean(READ_ONLY_DB, true)) {
             detectReadOnly();
         } else {
             detectReadWrite();

@@ -1,10 +1,12 @@
 package org.hyperledger.bela.windows;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.prefs.Preferences;
 import com.googlecode.lanterna.gui2.BasicWindow;
+import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.gui2.menu.Menu;
@@ -12,7 +14,6 @@ import com.googlecode.lanterna.gui2.menu.MenuBar;
 import com.googlecode.lanterna.gui2.menu.MenuItem;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.dialogs.BelaDialog;
-import org.hyperledger.bela.dialogs.BelaExceptionDialog;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 
@@ -21,10 +22,11 @@ public class MainWindow implements BelaWindow {
 
     private List<BelaWindow> windows = new ArrayList<>();
     private WindowBasedTextGUI gui;
+    private final Preferences preferences;
 
-    public MainWindow(final WindowBasedTextGUI gui) {
-
+    public MainWindow(final WindowBasedTextGUI gui, final Preferences preferences) {
         this.gui = gui;
+        this.preferences = preferences;
     }
 
     public void registerWindow(BelaWindow window) {
@@ -44,10 +46,14 @@ public class MainWindow implements BelaWindow {
     @Override
     public Window createWindow() {
         final Window window = new BasicWindow(label());
+        window.setMenuBar(createMainMenu(window));
+        return window;
+    }
+
+    private MenuBar createMainMenu(final Window window) {
         final MenuBar bar = new MenuBar();
 
-        Map<MenuGroup, Menu> groups = new HashMap<>();
-
+        Map<MenuGroup, Menu> groups = new EnumMap<>(MenuGroup.class);
         for (MenuGroup menuGroup : MenuGroup.values()) {
             groups.put(menuGroup, new Menu(menuGroup.name()));
             bar.add(groups.get(menuGroup));
@@ -58,9 +64,7 @@ public class MainWindow implements BelaWindow {
         }
 
         groups.get(MenuGroup.FILE).add(new MenuItem("Exit", window::close));
-
-        window.setMenuBar(bar);
-        return window;
+        return bar;
     }
 
     private void launchWindow(final BelaWindow window) {

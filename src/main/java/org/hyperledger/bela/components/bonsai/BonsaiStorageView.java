@@ -1,4 +1,4 @@
-package org.hyperledger.bela.components;
+package org.hyperledger.bela.components.bonsai;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -8,6 +8,7 @@ import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.hyperledger.bela.components.BelaComponent;
 import org.hyperledger.bela.components.bonsai.AccountTreeNodeView;
 import org.hyperledger.bela.components.bonsai.BonsaiView;
 import org.hyperledger.bela.utils.StorageProviderFactory;

@@ -3,7 +3,6 @@ package org.hyperledger.bela.components.bonsai;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.tuweni.bytes.Bytes;
-import org.hyperledger.bela.components.BonsaiStorageView;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.trie.Node;
 import org.hyperledger.besu.ethereum.trie.TrieNodeDecoder;

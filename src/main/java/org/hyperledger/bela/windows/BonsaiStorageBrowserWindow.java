@@ -7,7 +7,7 @@ import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
-import org.hyperledger.bela.components.BonsaiStorageView;
+import org.hyperledger.bela.components.bonsai.BonsaiStorageView;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 

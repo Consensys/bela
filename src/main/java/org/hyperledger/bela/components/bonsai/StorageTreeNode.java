@@ -43,7 +43,7 @@ public class StorageTreeNode extends AbstractBonsaiNode {
                                 .orElseThrow()), depth + 1);
 
                     } else {
-                        return new LabelNode("Missing value in storage for account " + accountHash.toHexString() + " on " + label(node), depth + 1);
+                        return new LabelNode("Missing value in storage", accountHash.toHexString() + " on " + label(node), depth + 1);
                     }
 
                 }).collect(Collectors.toList());

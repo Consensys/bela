@@ -47,10 +47,11 @@ public class AccountTreeNode extends AbstractBonsaiNode {
                                                         Bytes.concatenate(
                                                                 parentNode.getLocation()
                                                                         .orElseThrow(), node.getPath()))));
-                        return new AccountValueNode(bonsaiStorageView, accountHash, node.getValue().get(), depth + 1);
+                        return new AccountValueNode(bonsaiStorageView, accountHash, node.getValue()
+                                .get(), depth + 1, AccountValueNode.StorageLocation.BONSAI);
 
                     } else {
-                        return new LabelNode("Missing value for " + calculateLabel(node), depth + 1);
+                        return new LabelNode("Missing value for ", calculateLabel(node), depth + 1);
                     }
 
 

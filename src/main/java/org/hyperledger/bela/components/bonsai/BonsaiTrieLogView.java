@@ -33,7 +33,7 @@ public class BonsaiTrieLogView extends AbstractBonsaiNodeView {
 
         if (trieLog.isPresent()) {
             bonsaiTrieLogNode = new BonsaiTrieLogNode(hash, trieLog.get(), 0);
-            selectChild(bonsaiTrieLogNode);
+            selectNode(bonsaiTrieLogNode);
         } else {
             log.error("Trie log not found for hash: {}", hash);
         }

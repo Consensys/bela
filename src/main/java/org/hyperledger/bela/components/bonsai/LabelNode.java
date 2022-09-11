@@ -8,8 +8,11 @@ import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
 
 public class LabelNode extends AbstractBonsaiNode {
-    public LabelNode(final String label, final int depth) {
-        super(label, depth);
+    private final String value;
+
+    public LabelNode(final String title, final String value, final int depth) {
+        super(title, depth);
+        this.value = value;
     }
 
 
@@ -21,7 +24,7 @@ public class LabelNode extends AbstractBonsaiNode {
     @Override
     public Component createComponent() {
         Panel panel = new Panel();
-        panel.addComponent(new Label("Label: " + getLabel()));
-        return panel.withBorder(Borders.singleLine("Label"));
+        panel.addComponent(new Label(value));
+        return panel.withBorder(Borders.singleLine(getLabel()));
     }
 }

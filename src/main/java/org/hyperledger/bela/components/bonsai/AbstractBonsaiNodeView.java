@@ -1,6 +1,8 @@
 package org.hyperledger.bela.components.bonsai;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.ActionListBox;
 import com.googlecode.lanterna.gui2.Border;
@@ -15,6 +17,7 @@ public abstract class AbstractBonsaiNodeView implements BelaComponent<Panel> {
     private final ActionListBox pathListBox;
     private final Panel detailsPanel;
     private final ActionListBox childrenListBox;
+    private final Map<String, Runnable> path = new HashMap<>();
 
     public AbstractBonsaiNodeView() {
         pathListBox = new ActionListBox(new TerminalSize(30, 20));
@@ -34,22 +37,34 @@ public abstract class AbstractBonsaiNodeView implements BelaComponent<Panel> {
         return panel;
     }
 
-    protected void selectChild(final BonsaiNode newLeaf) {
-        //TODO: if not exists
-        pathListBox.addItem(newLeaf.getLabel(), () -> select(newLeaf));
+    protected void selectNode(final BonsaiNode newLeaf) {
+        updatePath(newLeaf);
         detailsPanel.removeAllComponents();
         final Component component = newLeaf.createComponent();
         component.setPreferredSize(new TerminalSize(30, 22));
         detailsPanel.addComponent(component);
         childrenListBox.clearItems();
         final List<BonsaiNode> children = newLeaf.getChildren();
-        children.forEach(child -> childrenListBox.addItem(child.getLabel(), () -> selectChild(child)));
-
-        // else
+        children.forEach(child -> childrenListBox.addItem(child.getLabel(), () -> selectNode(child)));
     }
 
+    private void updatePath(final BonsaiNode node) {
+        final int selectedIndex = pathListBox.getSelectedIndex();
+        if (selectedIndex >= 0 && pathListBox.getSelectedItem().toString().equals(node.getLabel())) {
+            for (int i = (pathListBox.getItemCount() - 1); i >= selectedIndex; --i) {
+                pathListBox.removeItem(i);
+            }
+        }
+        pathListBox.addItem(new Runnable() {
+            @Override
+            public void run() {
+                selectNode(node);
+            }
 
-    private void select(final BonsaiNode newLeaf) {
-
+            @Override
+            public String toString() {
+                return node.getLabel();
+            }
+        });
     }
 }

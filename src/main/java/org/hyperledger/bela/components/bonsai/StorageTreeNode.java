@@ -2,17 +2,21 @@ package org.hyperledger.bela.components.bonsai;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import com.googlecode.lanterna.gui2.Borders;
+import com.googlecode.lanterna.gui2.Component;
+import com.googlecode.lanterna.gui2.Label;
+import com.googlecode.lanterna.gui2.Panel;
 import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.trie.Node;
 import org.hyperledger.besu.ethereum.trie.TrieNodeDecoder;
 
-public class StorageTreeNodeView extends AbstractBonsaiNodeView {
+public class StorageTreeNode extends AbstractBonsaiNode {
     private final BonsaiStorageView bonsaiStorageView;
     private final Hash accountHash;
     private final Node<Bytes> parentNode;
 
-    public StorageTreeNodeView(final BonsaiStorageView bonsaiStorageView, final Hash accountHash, final Node<Bytes> storageNodeValue, final int depth) {
+    public StorageTreeNode(final BonsaiStorageView bonsaiStorageView, final Hash accountHash, final Node<Bytes> storageNodeValue, final int depth) {
         super(label(storageNodeValue), depth);
         this.bonsaiStorageView = bonsaiStorageView;
         this.accountHash = accountHash;
@@ -26,31 +30,37 @@ public class StorageTreeNodeView extends AbstractBonsaiNodeView {
     }
 
     @Override
-    public void expand() {
+    public List<BonsaiNode> getChildren() {
         final List<Node<Bytes>> nodes =
                 TrieNodeDecoder.decodeNodes(parentNode.getLocation().orElseThrow(), parentNode.getRlp());
-        final List<BonsaiView> children = nodes.stream()
+        final List<BonsaiNode> children = nodes.stream()
                 .map(node -> {
                     if (bonsaiStorageView.nodeIsHashReferencedDescendant(parentNode, node)) {
-                        return new StorageTreeNodeView(bonsaiStorageView, accountHash, bonsaiStorageView.getStorageNodeValue(node.getHash(), accountHash, node.getLocation()
+                        return new StorageTreeNode(bonsaiStorageView, accountHash, bonsaiStorageView.getStorageNodeValue(node.getHash(), accountHash, node.getLocation()
                                 .orElseThrow()), depth + 1);
                     } else if (node.getValue().isPresent()) {
-                        return new StorageValueView(bonsaiStorageView, accountHash, bonsaiStorageView.getStorageNodeValue(node.getHash(), accountHash, node.getLocation()
+                        return new StorageValueNode(bonsaiStorageView, accountHash, bonsaiStorageView.getStorageNodeValue(node.getHash(), accountHash, node.getLocation()
                                 .orElseThrow()), depth + 1);
 
                     } else {
-                        return new LabelNodeView("Missing value in storage for account " + accountHash.toHexString() + " on " + label(node), depth + 1);
+                        return new LabelNode("Missing value in storage for account " + accountHash.toHexString() + " on " + label(node), depth + 1);
                     }
 
                 }).collect(Collectors.toList());
         if (children.size() > 1) {
-            setChildren(children.stream().filter(child -> !(child instanceof LabelNodeView))
+            return (children.stream().filter(child -> !(child instanceof LabelNode))
                     .collect(Collectors.toList()));
-        } else {
-            setChildren(children);
         }
-        redraw();
-        takeFocus();
+        return children;
 
+    }
+
+    @Override
+    public Component createComponent() {
+        Panel panel = new Panel();
+        panel.addComponent(new Label("Account: " + accountHash.toHexString()));
+        panel.addComponent(new Label("Location: " + parentNode.getLocation().map(Bytes::toHexString).orElse("")));
+        panel.addComponent(new Label("Hash: " + parentNode.getHash().toHexString()));
+        return panel.withBorder(Borders.singleLine("Storage Tree Node"));
     }
 }

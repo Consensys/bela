@@ -2,15 +2,8 @@ package org.hyperledger.bela.components.bonsai;
 
 import java.util.Objects;
 import java.util.Optional;
-import com.googlecode.lanterna.TerminalSize;
-import com.googlecode.lanterna.gui2.Direction;
-import com.googlecode.lanterna.gui2.LinearLayout;
-import com.googlecode.lanterna.gui2.Panel;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.hyperledger.bela.components.BelaComponent;
-import org.hyperledger.bela.components.bonsai.AccountTreeNodeView;
-import org.hyperledger.bela.components.bonsai.BonsaiView;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
@@ -20,28 +13,15 @@ import org.hyperledger.besu.ethereum.trie.Node;
 import org.hyperledger.besu.ethereum.trie.TrieNodeDecoder;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 
-public class BonsaiStorageView implements BelaComponent<Panel> {
+public class BonsaiStorageView extends AbstractBonsaiNodeView {
+    private final StorageProviderFactory storageProviderFactory;
     private KeyValueStorage accountStorage;
     private KeyValueStorage storageStorage;
     private KeyValueStorage trieBranchStorage;
     private KeyValueStorage codeStorage;
 
-    private BonsaiView rootNodeView;
-
-
-    public Panel panel;
-    private StorageProviderFactory storageProviderFactory;
-
     public BonsaiStorageView(final StorageProviderFactory storageProviderFactory) {
         this.storageProviderFactory = storageProviderFactory;
-    }
-
-    @Override
-    public Panel createComponent() {
-        initStorage();
-        panel = new Panel(new LinearLayout(Direction.HORIZONTAL));
-        panel.setPreferredSize(new TerminalSize(50, 20));
-        return panel;
     }
 
     private void initStorage() {
@@ -54,6 +34,7 @@ public class BonsaiStorageView implements BelaComponent<Panel> {
     }
 
     public void findRoot() {
+        initStorage();
         final Hash rootHash =
                 trieBranchStorage
                         .get(Bytes.EMPTY.toArrayUnsafe())
@@ -61,17 +42,8 @@ public class BonsaiStorageView implements BelaComponent<Panel> {
                         .map(Hash::hash)
                         .orElseThrow();
         Node<Bytes> root = getAccountNodeValue(rootHash, Bytes.EMPTY);
-        rootNodeView = new AccountTreeNodeView(this, root, 0);
-        redraw();
-    }
-
-    private void redraw() {
-        panel.removeAllComponents();
-        panel.addComponent(rootNodeView.createComponent());
-    }
-
-    public void checkFocus() {
-        rootNodeView.focus();
+        BonsaiNode rootNodeView = new AccountTreeNode(this, root, 0);
+        selectChild(rootNodeView);
     }
 
     public Node<Bytes> getAccountNodeValue(final Bytes32 hash, final Bytes location) {

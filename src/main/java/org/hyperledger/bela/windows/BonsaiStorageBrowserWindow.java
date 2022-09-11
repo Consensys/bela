@@ -7,7 +7,6 @@ import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.components.bonsai.BonsaiStorageView;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 
-import static org.hyperledger.bela.windows.Constants.KEY_FOCUS;
 import static org.hyperledger.bela.windows.Constants.KEY_ROOT;
 
 public class BonsaiStorageBrowserWindow extends AbstractBelaWindow {
@@ -37,8 +36,7 @@ public class BonsaiStorageBrowserWindow extends AbstractBelaWindow {
     @Override
     public KeyControls createControls() {
         return new KeyControls()
-                .addControl("Root", KEY_ROOT, storageView::findRoot)
-                .addControl("Focus", KEY_FOCUS, storageView::checkFocus);
+                .addControl("Root", KEY_ROOT, storageView::findRoot);
     }
 
 

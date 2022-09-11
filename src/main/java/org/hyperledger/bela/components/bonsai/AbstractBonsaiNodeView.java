@@ -1,80 +1,55 @@
 package org.hyperledger.bela.components.bonsai;
 
-import java.util.ArrayList;
 import java.util.List;
+import com.googlecode.lanterna.TerminalSize;
+import com.googlecode.lanterna.gui2.ActionListBox;
+import com.googlecode.lanterna.gui2.Border;
+import com.googlecode.lanterna.gui2.Borders;
+import com.googlecode.lanterna.gui2.Component;
+import com.googlecode.lanterna.gui2.Direction;
+import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
-import com.googlecode.lanterna.gui2.TextBox;
+import org.hyperledger.bela.components.BelaComponent;
 
-public abstract class AbstractBonsaiNodeView implements BonsaiView {
-    private final TextBox labelBox;
-    protected final int depth;
+public abstract class AbstractBonsaiNodeView implements BelaComponent<Panel> {
+    private final ActionListBox pathListBox;
+    private final Panel detailsPanel;
+    private final ActionListBox childrenListBox;
 
-    private List<BonsaiView> children = new ArrayList<>();
-
-
-    protected Panel panel = new Panel();
-
-
-    public AbstractBonsaiNodeView(final String label, final int depth) {
-        this.depth = depth;
-        String content = " ".repeat(depth * 2) + "└─" + label;
-        labelBox = new TextBox(content, TextBox.Style.SINGLE_LINE);
-        labelBox.setReadOnly(true);
-    }
-
-    @Override
-    public void takeFocus() {
-        labelBox.takeFocus();
-    }
-
-    public boolean isFocused() {
-        return labelBox.isFocused();
+    public AbstractBonsaiNodeView() {
+        pathListBox = new ActionListBox(new TerminalSize(30, 20));
+        detailsPanel = new Panel(new LinearLayout(Direction.VERTICAL));
+        final Border border = new Panel().withBorder(Borders.singleLine("Details"));
+        border.setPreferredSize(new TerminalSize(30, 22));
+        detailsPanel.addComponent(border);
+        childrenListBox = new ActionListBox(new TerminalSize(30, 20));
     }
 
     @Override
     public Panel createComponent() {
-        redraw();
+        Panel panel = new Panel(new LinearLayout(Direction.HORIZONTAL));
+        panel.addComponent(pathListBox.withBorder(Borders.singleLine("Location Path")));
+        panel.addComponent(detailsPanel);
+        panel.addComponent(childrenListBox.withBorder(Borders.singleLine("Children")));
         return panel;
     }
 
-    protected void redraw() {
-        panel.removeAllComponents();
-        panel.addComponent(labelBox);
-        children.forEach(c -> panel.addComponent(c.createComponent()));
+    protected void selectChild(final BonsaiNode newLeaf) {
+        //TODO: if not exists
+        pathListBox.addItem(newLeaf.getLabel(), () -> select(newLeaf));
+        detailsPanel.removeAllComponents();
+        final Component component = newLeaf.createComponent();
+        component.setPreferredSize(new TerminalSize(30, 22));
+        detailsPanel.addComponent(component);
+        childrenListBox.clearItems();
+        final List<BonsaiNode> children = newLeaf.getChildren();
+        children.forEach(child -> childrenListBox.addItem(child.getLabel(), () -> selectChild(child)));
+
+        // else
     }
 
-    public void focus() {
-        if (isFocused()) {
-            expand();
-        } else {
-            checkChildren();
-        }
-    }
 
-    private void checkChildren() {
-        for (BonsaiView child : children) {
-            child.focus();
-            if (child.isFocused()) {
-                this.children = new ArrayList<>();
-                children.add(child);
-                redraw();
-                child.takeFocus();
-                return;
-            }
-        }
-    }
+    private void select(final BonsaiNode newLeaf) {
 
-    protected void setChildren(List<BonsaiView> children) {
-        this.children = children;
-    }
-
-    protected void addChild(final LabelNodeView child) {
-        children.add(child);
-    }
-
-    @Override
-    public void collapse() {
-        this.children.clear();
-        redraw();
     }
 }

@@ -4,6 +4,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.LinearLayout;
@@ -22,16 +23,19 @@ import org.hyperledger.besu.ethereum.storage.StorageProvider;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.KEY_START;
+import static org.hyperledger.bela.windows.Constants.KEY_STOP;
 
 public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements BonsaiListener {
+    public static final String NOT_RUNNING = "Not Running...";
     private static final LambdaLogger log = getLogger(BonsaiTreeVerifierWindow.class);
     private final StorageProviderFactory storageProviderFactory;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
-    private final Label runningLabel = new Label("Not Running...");
+    private final Label runningLabel = new Label(NOT_RUNNING);
     private final Label counterLabel = new Label("0");
     private final TextBox logTextBox = new TextBox(new TerminalSize(80, 7));
     AtomicInteger visited = new AtomicInteger(0);
     private Future<?> execution;
+    private final AtomicReference<BonsaiTraversal> bonsaiTraversal = new AtomicReference<>();
 
     public BonsaiTreeVerifierWindow(final StorageProviderFactory storageProviderFactory) {
         this.storageProviderFactory = storageProviderFactory;
@@ -52,7 +56,8 @@ public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements Bons
     @Override
     public KeyControls createControls() {
         return new KeyControls()
-                .addControl("Start", KEY_START, this::startVerifier);
+                .addControl("Start", KEY_START, this::startVerifier)
+                .addControl("Stop", KEY_STOP, this::stopVerifier);
     }
 
     @Override
@@ -69,9 +74,8 @@ public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements Bons
 
     private void stopVerifier() {
         if (execution != null) {
-            execution.cancel(true);
+            bonsaiTraversal.get().stop();
             execution = null;
-            runningLabel.setText("Not Running...");
         }
     }
 
@@ -85,13 +89,14 @@ public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements Bons
                 try {
                     runningLabel.setText("Opening db...");
                     final StorageProvider provider = storageProviderFactory.createProvider();
-                    final BonsaiTraversal bonsaiTraversal = new BonsaiTraversal(provider, this);
+                    final BonsaiTraversal traversal = new BonsaiTraversal(provider, this);
+                    bonsaiTraversal.set(traversal);
                     runningLabel.setText("Running...");
-                    bonsaiTraversal.traverse();
+                    traversal.traverse();
+                    runningLabel.setText("Stopped...");
                 } catch (Exception e) {
+                    runningLabel.setText("There was an error...");
                     log.error("There was an error", e);
-                } finally {
-                    stopVerifier();
                 }
             });
         }

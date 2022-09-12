@@ -24,14 +24,12 @@ public class BonsaiTraversal {
     private static final LambdaLogger log = getLogger(BonsaiTraversal.class);
     private final KeyValueStorage accountStorage;
     private final KeyValueStorage storageStorage;
-
-    int visited = 0;
-
     private final KeyValueStorage trieBranchStorage;
     private final BonsaiListener listener;
     private final KeyValueStorage codeStorage;
-
+    int visited = 0;
     private Node<Bytes> root;
+    private volatile boolean shouldStop = false;
 
     public BonsaiTraversal(final StorageProvider provider, BonsaiListener listener) {
         accountStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_INFO_STATE);
@@ -52,38 +50,19 @@ public class BonsaiTraversal {
                         .map(Hash::hash)
                         .orElseThrow();
         root = getAccountNodeValue(x, Bytes.EMPTY);
-        //        breakTree(x);
-        log.info("Starting from root {}", root.getHash());
-        listener.root(root.getHash());
-        traverseAccountTrie(root);
+        traverseStartingFrom(root);
     }
 
-  /*    private void breakTree(final Hash x) {
-      MerklePatriciaTrie<Bytes,Bytes> trie =  new StoredMerklePatriciaTrie<>(
-              new StoredNodeFactory<>(
-                      (location, hash) -> Optional.ofNullable(getAccountNodeValue(hash, location).getRlp()), Function.identity(), Function.identity()),
-              x);
-      trie.entriesFrom(Bytes32.ZERO, 1).entrySet().stream().findFirst().ifPresent(
-              account -> {
-                  final StateTrieAccountValue accountValue = StateTrieAccountValue.readFrom(RLP.input(account.getValue()));
-                  final StateTrieAccountValue updatedAccountValue
-                          = new StateTrieAccountValue(accountValue.getNonce(), accountValue.getBalance().add(Wei.ONE), accountValue.getStorageRoot(), accountValue.getCodeHash());
-                  final Bytes dataToSave = RLP.encode(updatedAccountValue::writeTo);
-                  trie.put(account.getKey(), dataToSave);
-                  final KeyValueStorageTransaction transaction = trieBranchStorage.startTransaction();
-                  final AtomicInteger countNode = new AtomicInteger();
-                  trie.commit((location, hash, value) -> {
-                      if(countNode.getAndIncrement()==0){
-                          System.out.println("Updated account node "+account.getKey()+" with "+value);
-                          transaction.put(location.toArrayUnsafe(), dataToSave.toArrayUnsafe());
-                      }
-                  });
-                  transaction.commit();
-              }
-      );
-  }*/
+    private void traverseStartingFrom(final Node<Bytes> node) {
+        log.info("Starting from root {}", node.getHash());
+        listener.root(node.getHash());
+        traverseAccountTrie(node);
+    }
 
     public void traverseAccountTrie(final Node<Bytes> parentNode) {
+        if (shouldStop) {
+            return;
+        }
         if (parentNode == null) {
             return;
         }
@@ -143,6 +122,9 @@ public class BonsaiTraversal {
     }
 
     public void traverseStorageTrie(final Bytes32 accountHash, final Node<Bytes> parentNode) {
+        if (shouldStop) {
+            return;
+        }
         if (parentNode == null) {
             return;
         }
@@ -220,5 +202,9 @@ public class BonsaiTraversal {
 
     public String getRoot() {
         return root.getHash().toHexString();
+    }
+
+    public void stop() {
+        shouldStop = true;
     }
 }

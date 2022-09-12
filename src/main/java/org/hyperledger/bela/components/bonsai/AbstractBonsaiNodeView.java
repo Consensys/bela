@@ -1,8 +1,7 @@
 package org.hyperledger.bela.components.bonsai;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.ActionListBox;
 import com.googlecode.lanterna.gui2.Border;
@@ -17,7 +16,7 @@ public abstract class AbstractBonsaiNodeView implements BelaComponent<Panel> {
     private final ActionListBox pathListBox;
     private final Panel detailsPanel;
     private final ActionListBox childrenListBox;
-    private final Map<String, Runnable> path = new HashMap<>();
+    private BonsaiNode currentNode;
 
     public AbstractBonsaiNodeView() {
         pathListBox = new ActionListBox(new TerminalSize(30, 20));
@@ -39,6 +38,7 @@ public abstract class AbstractBonsaiNodeView implements BelaComponent<Panel> {
 
     protected void selectNode(final BonsaiNode newLeaf) {
         updatePath(newLeaf);
+        this.currentNode = newLeaf;
         detailsPanel.removeAllComponents();
         final Component component = newLeaf.createComponent();
         component.setPreferredSize(new TerminalSize(30, 22));
@@ -66,5 +66,15 @@ public abstract class AbstractBonsaiNodeView implements BelaComponent<Panel> {
                 return node.getLabel();
             }
         });
+    }
+
+
+    public void logCurrent() {
+        final Optional<BonsaiNode> current = getCurrentNode();
+        current.ifPresent(BonsaiNode::log);
+    }
+
+    private Optional<BonsaiNode> getCurrentNode() {
+        return Optional.ofNullable(currentNode);
     }
 }

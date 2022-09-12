@@ -31,9 +31,9 @@ import static org.hyperledger.bela.windows.Constants.KEY_ROLL_HEAD;
 public class BlockChainBrowserWindow extends AbstractBelaWindow {
     private static final LambdaLogger log = getLogger(BlockChainBrowserWindow.class);
     private final Preferences preferences;
-    private BlockChainBrowser browser;
     private final StorageProviderFactory storageProviderFactory;
     private final WindowBasedTextGUI gui;
+    private BlockChainBrowser browser;
     private BlockChainContext context;
 
     public BlockChainBrowserWindow(final StorageProviderFactory storageProviderFactory,

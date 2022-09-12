@@ -27,4 +27,9 @@ public class LabelNode extends AbstractBonsaiNode {
         panel.addComponent(new Label(value));
         return panel.withBorder(Borders.singleLine(getLabel()));
     }
+
+    @Override
+    public void log() {
+        log.info("{} {}", getLabel(), value);
+    }
 }

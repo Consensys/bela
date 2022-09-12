@@ -9,7 +9,6 @@ import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.ethereum.worldstate.StateTrieAccountValue;
 
 public class AccountChangeNode extends AbstractBonsaiNode {
-
     private final StateTrieAccountValue prior;
     private final StateTrieAccountValue updated;
     private final Address address;
@@ -34,6 +33,16 @@ public class AccountChangeNode extends AbstractBonsaiNode {
         panel.addComponent(LabelWithTextBox.labelWithTextBox("Storage:", prior.getStorageRoot() + " -> " + updated.getStorageRoot())
                 .createComponent());
         return panel.withBorder(Borders.singleLine("Account Change"));
+    }
+
+    @Override
+    public void log() {
+        log.info("Account Change");
+        log.info("Address: {}", address.toHexString());
+        log.info("Nonce: {} -> {}", prior.getNonce(), updated.getNonce());
+        log.info("Balance: {} -> {}", prior.getBalance(), updated.getBalance());
+        log.info("Code: {} -> {}", prior.getCodeHash(), updated.getCodeHash());
+        log.info("Storage: {} -> {}", prior.getStorageRoot(), updated.getStorageRoot());
     }
 
     @Override

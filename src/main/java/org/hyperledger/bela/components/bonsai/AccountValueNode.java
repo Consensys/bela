@@ -13,7 +13,6 @@ import org.hyperledger.besu.ethereum.trie.MerklePatriciaTrie;
 import org.hyperledger.besu.ethereum.worldstate.StateTrieAccountValue;
 
 class AccountValueNode extends AbstractBonsaiNode {
-
     private final Hash accountHash;
     private final Bytes accountValueBytes;
     private final BonsaiStorageView bonsaiStorageView;
@@ -86,6 +85,15 @@ class AccountValueNode extends AbstractBonsaiNode {
                 .createComponent());
 
         return panel.withBorder(Borders.singleLine("Account Value Node"));
+    }
+
+    @Override
+    public void log() {
+        log.info("Account Value Node: {}", accountHash.toHexString());
+        log.info("Balance: {}", accountValue.getBalance().getValue().toString());
+        log.info("Nonce: {}", accountValue.getNonce());
+        log.info("RLP: {}", accountValueBytes.toHexString());
+        log.info("Storage Location: {}", storageLocation.toString());
     }
 
     enum StorageLocation {

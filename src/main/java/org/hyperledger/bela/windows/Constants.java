@@ -28,6 +28,7 @@ public class Constants {
     public static final Character KEY_TRACE_TRANSACTION = 't';
     public static final Character KEY_LOOKUP_BY_HASH = '/';
     public static final Character KEY_LOOKUP_BY_NUMBER = '?';
+    public static final Character KEY_ACCOUNT_BY_ADDRESS = '?';
     public static final Character KEY_ROLL_HEAD = 'r';
     public static final Character KEY_ROLL_FORWARD = 'r';
     public static final Character KEY_ROLL_BACKWARD = 'e';
@@ -41,6 +42,7 @@ public class Constants {
     public static final Character KEY_DETECT_COLUMNS = 'd';
     public static final Character KEY_HEAD = 'h';
     public static final Character KEY_ROOT = 'r';
+    public static final Character KEY_LOG = 'l';
     public static final Character KEY_FOCUS = 'f';
     public static final Character KEY_RESET = 'r';
     public static final Character KEY_APPLY = 'a';

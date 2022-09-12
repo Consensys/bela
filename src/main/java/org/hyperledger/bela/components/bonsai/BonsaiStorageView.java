@@ -1,10 +1,12 @@
 package org.hyperledger.bela.components.bonsai;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.utils.StorageProviderFactory;
+import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
@@ -12,6 +14,8 @@ import org.hyperledger.besu.ethereum.trie.CompactEncoding;
 import org.hyperledger.besu.ethereum.trie.Node;
 import org.hyperledger.besu.ethereum.trie.TrieNodeDecoder;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
+
+import static org.hyperledger.besu.ethereum.trie.CompactEncoding.bytesToPath;
 
 public class BonsaiStorageView extends AbstractBonsaiNodeView {
     private final StorageProviderFactory storageProviderFactory;
@@ -25,6 +29,9 @@ public class BonsaiStorageView extends AbstractBonsaiNodeView {
     }
 
     private void initStorage() {
+        if (accountStorage != null) {
+            return;
+        }
         final StorageProvider provider = storageProviderFactory.createProvider();
         accountStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_INFO_STATE);
         codeStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.CODE_STORAGE);
@@ -33,7 +40,7 @@ public class BonsaiStorageView extends AbstractBonsaiNodeView {
                 provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_BRANCH_STORAGE);
     }
 
-    public void findRoot() {
+    public BonsaiNode findRoot() {
         initStorage();
         final Hash rootHash =
                 trieBranchStorage
@@ -43,7 +50,7 @@ public class BonsaiStorageView extends AbstractBonsaiNodeView {
                         .orElseThrow();
         Node<Bytes> root = getAccountNodeValue(rootHash, Bytes.EMPTY);
         BonsaiNode rootNodeView = new AccountTreeNode(this, root, 0);
-        selectNode(rootNodeView);
+        return rootNodeView;
     }
 
     public Node<Bytes> getAccountNodeValue(final Bytes32 hash, final Bytes location) {
@@ -94,5 +101,39 @@ public class BonsaiStorageView extends AbstractBonsaiNodeView {
 
     private Hash getSlotHash(final Bytes location, final Bytes path) {
         return Hash.wrap(Bytes32.wrap(CompactEncoding.pathToBytes(Bytes.concatenate(location, path))));
+    }
+
+    public void findByHash(final Hash accountHash) {
+        final Bytes targetPath = bytesToPath(accountHash);
+        BonsaiNode node = findRoot();
+        selectNode(node);
+
+        while (node != null) {
+            final List<BonsaiNode> children = node.getChildren();
+            f:
+            for (BonsaiNode child : children) {
+                if (child instanceof AccountTreeNode accountTreeNode) {
+                    final Bytes path = accountTreeNode.getLocation();
+                    if (targetPath.toHexString().startsWith(path.toHexString())) {
+                        selectNode(accountTreeNode);
+                        node = accountTreeNode;
+                        break;
+                    }
+                } else {
+                    return;
+                }
+            }
+        }
+
+    }
+
+    public void selectRoot() {
+        final BonsaiNode root = findRoot();
+        selectNode(root);
+    }
+
+    public void findByAddress(final Address address) {
+        final Hash accountHash = Hash.hash(address);
+        findByHash(accountHash);
     }
 }

@@ -28,6 +28,7 @@ public abstract class AbstractBonsaiNodeView implements BelaComponent<Panel> {
     private void resetDetailsPanel() {
         final Border border = new Panel().withBorder(Borders.singleLine("Details"));
         border.setPreferredSize(new TerminalSize(30, 22));
+        detailsPanel.removeAllComponents();
         detailsPanel.addComponent(border);
     }
 

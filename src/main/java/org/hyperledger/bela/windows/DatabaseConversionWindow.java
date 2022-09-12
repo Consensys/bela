@@ -149,8 +149,8 @@ public class DatabaseConversionWindow extends AbstractBelaWindow implements Bons
     }
 
     @Override
-    public void invalidStorageTrieForHash(final Bytes32 hash, final Bytes location, final Hash foundHashNode) {
-        logTextBox.addLine(String.format("invalid storage trie node for hash %s and location %s (found %s)", hash, location, foundHashNode));
+    public void invalidStorageTrieForHash(final Bytes32 accountHash, final Bytes32 hash, final Bytes location, final Hash foundHashNode) {
+        logTextBox.addLine(String.format("invalid storage trie node for account %s hash %s and location %s (found %s)",accountHash, hash, location, foundHashNode));
     }
 
     @Override

@@ -195,7 +195,7 @@ public class BonsaiTraversal {
         }
         final Hash foundHashNode = Hash.hash(bytes.orElseThrow());
         if (!foundHashNode.equals(hash)) {
-            listener.invalidStorageTrieForHash(hash, location, foundHashNode);
+            listener.invalidStorageTrieForHash(accountHash, hash, location, foundHashNode);
             return null;
         }
         return TrieNodeDecoder.decode(location, bytes.get());

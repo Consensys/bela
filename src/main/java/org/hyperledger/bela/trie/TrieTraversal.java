@@ -169,7 +169,7 @@ public class TrieTraversal {
         }
         final Hash foundHashNode = Hash.hash(bytes.orElseThrow());
         if (!foundHashNode.equals(hash)) {
-            listener.invalidStorageTrieForHash(hash, location, foundHashNode);
+            listener.invalidStorageTrieForHash(accountHash, hash, location, foundHashNode);
             return null;
         } else {
             nodeFoundListener.onStorageNode(accountHash, location, bytes.orElseThrow());

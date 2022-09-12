@@ -21,7 +21,7 @@ class AccountValueNode extends AbstractBonsaiNode {
     private final StorageLocation storageLocation;
 
     public AccountValueNode(final BonsaiStorageView bonsaiStorageView, final Hash accountHash, final Bytes accountValueBytes, final int depth, final StorageLocation storageLocation) {
-        super("A:" + accountHash.toHexString(), depth);
+        super("Account " + storageLocation, depth);
         this.bonsaiStorageView = bonsaiStorageView;
         this.accountHash = accountHash;
         this.accountValueBytes = accountValueBytes;

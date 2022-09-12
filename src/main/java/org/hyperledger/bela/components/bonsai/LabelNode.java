@@ -6,6 +6,7 @@ import com.googlecode.lanterna.gui2.Borders;
 import com.googlecode.lanterna.gui2.Component;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
+import com.googlecode.lanterna.gui2.TextBox;
 
 public class LabelNode extends AbstractBonsaiNode {
     private final String value;
@@ -24,7 +25,9 @@ public class LabelNode extends AbstractBonsaiNode {
     @Override
     public Component createComponent() {
         Panel panel = new Panel();
-        panel.addComponent(new Label(value));
+        final TextBox component = new TextBox(value);
+        component.setReadOnly(true);
+        panel.addComponent(component);
         return panel.withBorder(Borders.singleLine(getLabel()));
     }
 

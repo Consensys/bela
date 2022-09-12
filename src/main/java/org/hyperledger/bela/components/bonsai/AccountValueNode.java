@@ -10,6 +10,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.rlp.RLP;
 import org.hyperledger.besu.ethereum.trie.MerklePatriciaTrie;
+import org.hyperledger.besu.ethereum.trie.Node;
 import org.hyperledger.besu.ethereum.worldstate.StateTrieAccountValue;
 
 class AccountValueNode extends AbstractBonsaiNode {
@@ -61,7 +62,13 @@ class AccountValueNode extends AbstractBonsaiNode {
         }
         // Add storage, if appropriate
         if (!accountValue.getStorageRoot().equals(MerklePatriciaTrie.EMPTY_TRIE_NODE_HASH)) {
-            children.add(new StorageTreeNode(bonsaiStorageView, accountHash, bonsaiStorageView.getStorageNodeValue(accountValue.getStorageRoot(), accountHash, Bytes.EMPTY), depth + 1));
+            final Node<Bytes> storageNodeValue = bonsaiStorageView.getStorageNodeValue(accountValue.getStorageRoot(), accountHash, Bytes.EMPTY);
+            if (storageNodeValue == null) {
+                children.add(new LabelNode("Missing Storage", "Storage root: " + accountValue.getStorageRoot()
+                        .toHexString(), depth + 1));
+            } else {
+                children.add(new StorageTreeNode(bonsaiStorageView, accountHash, storageNodeValue, depth + 1));
+            }
         } else {
             children.add(new LabelNode("No Storage", "No storage", depth + 1));
         }

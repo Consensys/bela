@@ -51,7 +51,7 @@ public class Bela {
             final SettingsWindow config = new SettingsWindow(gui, preferences);
             mainWindow.registerWindow(config);
             mainWindow.registerWindow(new BlockChainBrowserWindow(storageProviderFactory, gui, preferences));
-            mainWindow.registerWindow(new BonsaiTreeVerifierWindow(storageProviderFactory));
+            mainWindow.registerWindow(new BonsaiTreeVerifierWindow(gui, storageProviderFactory));
             mainWindow.registerWindow(new DatabaseConversionWindow(storageProviderFactory));
             mainWindow.registerWindow(new LogoWindow());
             mainWindow.registerWindow(new P2PManagementWindow(gui, storageProviderFactory, preferences));

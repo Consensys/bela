@@ -138,11 +138,11 @@ public class BonsaiTreeVerifier implements BonsaiListener {
     }
 
     @Override
-    public void invalidStorageTrieForHash(final Bytes32 hash, final Bytes location, final Hash foundHashNode) {
+    public void invalidStorageTrieForHash(final Bytes32 accountHash, final Bytes32 hash, final Bytes location, final Hash foundHashNode) {
 
         System.err.format(
-                "invalid storage trie node for hash %s and location %s (found %s)",
-                hash, location, foundHashNode);
+                "invalid storage trie node for account %s hash %s and location %s (found %s)",
+                accountHash, hash, location, foundHashNode);
     }
 
     @Override

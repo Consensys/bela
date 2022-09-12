@@ -43,6 +43,7 @@ public class StorageValueNode extends AbstractBonsaiNode {
         panel.addComponent(LabelWithTextBox.labelWithTextBox("Location:", node.getLocation().map(Bytes::toHexString)
                 .orElse("")).createComponent());
         panel.addComponent(LabelWithTextBox.labelWithTextBox("Hash:", node.getHash().toHexString()).createComponent());
+        panel.addComponent(LabelWithTextBox.labelWithTextBox("Value:", value.toHexString()).createComponent());
 
         final Optional<Bytes> storageInFlatDB = bonsaiStorageView.getStorageInFlatDB(accountHash, node.getLocation()
                 .orElseThrow(), node.getPath());
@@ -62,6 +63,7 @@ public class StorageValueNode extends AbstractBonsaiNode {
         log.info("Location: {}", node.getLocation().map(Bytes::toHexString)
                 .orElse(""));
         log.info("Hash: {}", node.getHash().toHexString());
+        log.info("Value: {}", value.toHexString());
         final Optional<Bytes> storageInFlatDB = bonsaiStorageView.getStorageInFlatDB(accountHash, node.getLocation()
                 .orElseThrow(), node.getPath());
         if (storageInFlatDB.isPresent()) {

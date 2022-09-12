@@ -58,9 +58,9 @@ public class StorageTreeNode extends AbstractBonsaiNode {
     @Override
     public Component createComponent() {
         Panel panel = new Panel();
-        panel.addComponent(new Label("Account: " + accountHash.toHexString()));
-        panel.addComponent(new Label("Location: " + node.getLocation().map(Bytes::toHexString).orElse("")));
-        panel.addComponent(new Label("Hash: " + node.getHash().toHexString()));
+        panel.addComponent(LabelWithTextBox.labelWithTextBox("Account", accountHash.toHexString()).createComponent());
+        panel.addComponent(LabelWithTextBox.labelWithTextBox("Hash", node.getHash().toHexString()).createComponent());
+        panel.addComponent(LabelWithTextBox.labelWithTextBox("Location", node.getLocation().map(Bytes::toHexString).orElse("")).createComponent());
         return panel.withBorder(Borders.singleLine("Storage Tree Node"));
     }
 

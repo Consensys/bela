@@ -19,7 +19,7 @@ import org.hyperledger.bela.dialogs.BelaDialog;
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.FULL_SCREEN_WINDOWS;
 
-public class MainWindow {
+public class MainWindow implements AutoCloseable{
     private static final LambdaLogger log = getLogger(MainWindow.class);
     private final Window window = new BasicWindow("Main Window");
     private final Preferences preferences;
@@ -82,5 +82,12 @@ public class MainWindow {
 
         }
 
+    }
+
+    @Override
+    public void close() {
+        for (BelaWindow belaWindow : windows) {
+            belaWindow.close();
+        }
     }
 }

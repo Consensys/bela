@@ -19,6 +19,7 @@ import org.hyperledger.besu.ethereum.worldstate.StateTrieAccountValue;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
+import static org.hyperledger.besu.ethereum.trie.CompactEncoding.bytesToPath;
 
 public class BonsaiTraversal {
     private static final LambdaLogger log = getLogger(BonsaiTraversal.class);
@@ -53,7 +54,17 @@ public class BonsaiTraversal {
         traverseStartingFrom(root);
     }
 
+    public void traverse(final Hash hash) {
+        final Bytes targetPath = bytesToPath(hash);
+        root = getAccountNodeValue(hash, targetPath);
+        traverseStartingFrom(root);
+    }
+
     private void traverseStartingFrom(final Node<Bytes> node) {
+        if (node == null) {
+            log.info("Root is null");
+            return;
+        }
         log.info("Starting from root {}", node.getHash());
         listener.root(node.getHash());
         traverseAccountTrie(node);
@@ -207,4 +218,5 @@ public class BonsaiTraversal {
     public void stop() {
         shouldStop = true;
     }
+
 }

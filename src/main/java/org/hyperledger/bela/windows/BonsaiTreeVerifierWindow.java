@@ -10,10 +10,13 @@ import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.TextBox;
+import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
+import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.components.KeyControls;
+import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.bela.utils.bonsai.BonsaiListener;
 import org.hyperledger.bela.utils.bonsai.BonsaiTraversal;
@@ -22,22 +25,25 @@ import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
+import static org.hyperledger.bela.windows.Constants.KEY_LOOKUP_BY_HASH;
 import static org.hyperledger.bela.windows.Constants.KEY_START;
 import static org.hyperledger.bela.windows.Constants.KEY_STOP;
 
 public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements BonsaiListener {
     public static final String NOT_RUNNING = "Not Running...";
     private static final LambdaLogger log = getLogger(BonsaiTreeVerifierWindow.class);
+    private final WindowBasedTextGUI gui;
     private final StorageProviderFactory storageProviderFactory;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final Label runningLabel = new Label(NOT_RUNNING);
     private final Label counterLabel = new Label("0");
     private final TextBox logTextBox = new TextBox(new TerminalSize(80, 7));
+    private final AtomicReference<BonsaiTraversal> bonsaiTraversal = new AtomicReference<>();
     AtomicInteger visited = new AtomicInteger(0);
     private Future<?> execution;
-    private final AtomicReference<BonsaiTraversal> bonsaiTraversal = new AtomicReference<>();
 
-    public BonsaiTreeVerifierWindow(final StorageProviderFactory storageProviderFactory) {
+    public BonsaiTreeVerifierWindow(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory) {
+        this.gui = gui;
         this.storageProviderFactory = storageProviderFactory;
         logTextBox.setReadOnly(true);
     }
@@ -57,7 +63,44 @@ public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements Bons
     public KeyControls createControls() {
         return new KeyControls()
                 .addControl("Start", KEY_START, this::startVerifier)
-                .addControl("Stop", KEY_STOP, this::stopVerifier);
+                .addControl("Stop", KEY_STOP, this::stopVerifier)
+                .addControl("Hash?", KEY_LOOKUP_BY_HASH, this::startFromHash);
+    }
+
+    private void startFromHash() {
+        final String s = TextInputDialog.showDialog(gui, "Enter Node Hash", "Hash", "0x033424ed0313251e88bd49730108ee8901a506c0a4309478fbf8a14adea9d02a");
+        if (s == null) {
+            return;
+        }
+        try {
+            startVerifier(Hash.fromHexString(s));
+        } catch (Exception e) {
+            log.error("There was an error when moving browser", e);
+            BelaDialog.showException(gui, e);
+        }
+    }
+
+    private void startVerifier(final Hash fromHash) {
+        if (execution != null && !execution.isDone()) {
+            BelaDialog.showMessage(gui, "Already running", "Already running");
+            return;
+        }
+        runningLabel.setText("Initialising...");
+        Thread.yield();
+        logTextBox.setText("");
+        visited.set(0);
+        final StorageProvider storageProvider = storageProviderFactory.createProvider();
+        this.bonsaiTraversal.set(new BonsaiTraversal(storageProvider, this));
+        execution = executorService.submit(() -> {
+            try {
+                runningLabel.setText("Running...");
+                this.bonsaiTraversal.get().traverse(fromHash);
+                runningLabel.setText("Stopped...");
+            } catch (Exception e) {
+                runningLabel.setText("There was an error...");
+                log.error("There was an error", e);
+            }
+        });
     }
 
     @Override
@@ -80,26 +123,28 @@ public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements Bons
     }
 
     private void startVerifier() {
-        if (execution == null) {
-            runningLabel.setText("Initialising...");
-            Thread.yield();
-            logTextBox.setText("");
-            visited.set(0);
-            execution = executorService.submit(() -> {
-                try {
-                    runningLabel.setText("Opening db...");
-                    final StorageProvider provider = storageProviderFactory.createProvider();
-                    final BonsaiTraversal traversal = new BonsaiTraversal(provider, this);
-                    bonsaiTraversal.set(traversal);
-                    runningLabel.setText("Running...");
-                    traversal.traverse();
-                    runningLabel.setText("Stopped...");
-                } catch (Exception e) {
-                    runningLabel.setText("There was an error...");
-                    log.error("There was an error", e);
-                }
-            });
+        if (execution != null && !execution.isDone()) {
+            BelaDialog.showMessage(gui, "Already running", "Already running");
+            return;
         }
+        runningLabel.setText("Initialising...");
+        Thread.yield();
+        logTextBox.setText("");
+        visited.set(0);
+
+        final StorageProvider provider = storageProviderFactory.createProvider();
+        this.bonsaiTraversal.set(new BonsaiTraversal(provider, this));
+
+        execution = executorService.submit(() -> {
+            try {
+                runningLabel.setText("Running...");
+                this.bonsaiTraversal.get().traverse();
+                runningLabel.setText("Stopped...");
+            } catch (Exception e) {
+                runningLabel.setText("There was an error...");
+                log.error("There was an error", e);
+            }
+        });
     }
 
     @Override

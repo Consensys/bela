@@ -7,6 +7,7 @@ import com.googlecode.lanterna.gui2.Borders;
 import com.googlecode.lanterna.gui2.Component;
 import com.googlecode.lanterna.gui2.Panel;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.rlp.RLP;
 import org.hyperledger.besu.ethereum.trie.MerklePatriciaTrie;
@@ -67,7 +68,7 @@ class AccountValueNode extends AbstractBonsaiNode {
                 children.add(new LabelNode("Missing Storage", "Storage root: " + accountValue.getStorageRoot()
                         .toHexString(), depth + 1));
             } else {
-                children.add(new StorageTreeNode(bonsaiStorageView, accountHash, storageNodeValue, depth + 1));
+                children.add(new StorageTreeNode(bonsaiStorageView, accountHash, storageNodeValue,accountValue.getStorageRoot(), depth + 1));
             }
         } else {
             children.add(new LabelNode("No Storage", "No storage", depth + 1));

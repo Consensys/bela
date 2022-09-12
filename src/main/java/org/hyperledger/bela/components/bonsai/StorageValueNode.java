@@ -67,7 +67,7 @@ public class StorageValueNode extends AbstractBonsaiNode {
         final Optional<Bytes> storageInFlatDB = bonsaiStorageView.getStorageInFlatDB(accountHash, node.getLocation()
                 .orElseThrow(), node.getPath());
         if (storageInFlatDB.isPresent()) {
-            log.info("Hash in Flat DB: {}", storageInFlatDB.get()
+            log.info("Value in Flat DB: {}", storageInFlatDB.get()
                     .toHexString());
         } else {
             log.info("No value in flat DB");

@@ -18,17 +18,22 @@ public class StorageTreeNode extends AbstractBonsaiNode {
     private final Bytes32 storageRootHash;
 
     public StorageTreeNode(final BonsaiStorageView bonsaiStorageView, final Hash accountHash, final Node<Bytes> storageNodeValue, final Bytes32 storageRootHash, final int depth) {
-        super(label(storageNodeValue), depth);
+        super(label(storageNodeValue, storageRootHash), depth);
         this.bonsaiStorageView = bonsaiStorageView;
         this.accountHash = accountHash;
         this.node = storageNodeValue;
         this.storageRootHash = storageRootHash;
     }
 
-    private static String label(final Node<Bytes> storageNodeValue) {
-        return "S(" + storageNodeValue.getLocation().map(Bytes::toHexString)
-                .orElse("") + ")" + storageNodeValue.getHash()
-                .toHexString();
+    private static String label(final Node<Bytes> storageNodeValue, final Bytes32 storageRootHash) {
+        if (storageRootHash.equals(storageNodeValue.getHash())) {
+            return storageNodeValue.getLocation().map(Bytes::toHexString)
+                    .orElse("");
+        } else {
+            return "!!!" + storageNodeValue.getLocation().map(Bytes::toHexString)
+                    .orElse("");
+        }
+
     }
 
     @Override
@@ -45,7 +50,7 @@ public class StorageTreeNode extends AbstractBonsaiNode {
                                 .orElseThrow()), depth + 1);
 
                     } else {
-                        return new LabelNode("Missing value in storage", accountHash.toHexString() + " on " + label(node), depth + 1);
+                        return new LabelNode("Missing value in storage", accountHash.toHexString() + " on " + label(node, storageRootHash), depth + 1);
                     }
 
                 }).collect(Collectors.toList());

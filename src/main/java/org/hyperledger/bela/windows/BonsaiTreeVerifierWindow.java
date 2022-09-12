@@ -80,7 +80,7 @@ public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements Bons
         }
     }
 
-    private void startVerifier(final Hash fromHash) {
+    private synchronized void startVerifier(final Hash fromHash) {
         if (execution != null && !execution.isDone()) {
             BelaDialog.showMessage(gui, "Already running", "Already running");
             return;
@@ -115,14 +115,14 @@ public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements Bons
     }
 
 
-    private void stopVerifier() {
+    private synchronized void stopVerifier() {
         if (execution != null) {
             bonsaiTraversal.get().stop();
             execution = null;
         }
     }
 
-    private void startVerifier() {
+    private synchronized void startVerifier() {
         if (execution != null && !execution.isDone()) {
             BelaDialog.showMessage(gui, "Already running", "Already running");
             return;
@@ -143,6 +143,8 @@ public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements Bons
             } catch (Exception e) {
                 runningLabel.setText("There was an error...");
                 log.error("There was an error", e);
+            } finally {
+                stopVerifier();
             }
         });
     }
@@ -212,5 +214,13 @@ public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements Bons
     public void differentDataInFlatDatabaseForStorage(final Bytes32 accountHash, final Bytes32 slotHash) {
         log.info("Different data in flat database for account {} and slot {}", accountHash, slotHash);
         logTextBox.addLine(String.format("inconsistent data in flat database for account %s on slot %s", accountHash, slotHash));
+    }
+
+    @Override
+    public void close() {
+        executorService.shutdownNow();
+        if (execution!=null){
+            bonsaiTraversal.get().stop();
+        }
     }
 }

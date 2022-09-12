@@ -31,6 +31,4 @@ public abstract class AbstractBelaWindow implements BelaWindow {
 
         return window;
     }
-
-
 }

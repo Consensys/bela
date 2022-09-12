@@ -61,6 +61,7 @@ public class Bela {
             mainWindow.registerWindow(new BonsaiTrieLogLayersViewer(gui, storageProviderFactory));
             final Window window = mainWindow.createWindow();
             gui.addWindowAndWait(window);
+            mainWindow.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

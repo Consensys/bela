@@ -37,7 +37,7 @@ public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements Bons
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final Label runningLabel = new Label(NOT_RUNNING);
     private final Label counterLabel = new Label("0");
-    private final TextBox logTextBox = new TextBox(new TerminalSize(80, 7));
+    private final TextBox logTextBox = new TextBox(new TerminalSize(120, 30));
     private final AtomicReference<BonsaiTraversal> bonsaiTraversal = new AtomicReference<>();
     AtomicInteger visited = new AtomicInteger(0);
     private Future<?> execution;

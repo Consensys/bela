@@ -33,6 +33,7 @@ public class Constants {
     public static final Character KEY_ROLL_FORWARD = 'r';
     public static final Character KEY_ROLL_BACKWARD = 'e';
     public static final Character KEY_START = 's';
+    public static final Character KEY_STOP = 'x';
     public static final Character KEY_CONVERT_TO_FOREST = 'f';
     public static final Character KEY_CONVERT_TO_BONSAI = 'b';
     public static final Character KEY_TEST_OPEN_DATABASE = 't';

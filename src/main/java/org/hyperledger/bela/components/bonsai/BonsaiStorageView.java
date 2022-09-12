@@ -104,13 +104,12 @@ public class BonsaiStorageView extends AbstractBonsaiNodeView {
     }
 
     public void findByHash(final Hash accountHash) {
+        clear();
         final Bytes targetPath = bytesToPath(accountHash);
         BonsaiNode node = findRoot();
-        selectNode(node);
 
         while (node != null) {
             final List<BonsaiNode> children = node.getChildren();
-            f:
             for (BonsaiNode child : children) {
                 if (child instanceof AccountTreeNode accountTreeNode) {
                     final Bytes path = accountTreeNode.getLocation();
@@ -127,13 +126,13 @@ public class BonsaiStorageView extends AbstractBonsaiNodeView {
 
     }
 
+
     public void selectRoot() {
-        final BonsaiNode root = findRoot();
-        selectNode(root);
+        clear();
+        selectNode(findRoot());
     }
 
     public void findByAddress(final Address address) {
-        final Hash accountHash = Hash.hash(address);
-        findByHash(accountHash);
+        findByHash(Hash.hash(address));
     }
 }

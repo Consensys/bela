@@ -21,10 +21,14 @@ public abstract class AbstractBonsaiNodeView implements BelaComponent<Panel> {
     public AbstractBonsaiNodeView() {
         pathListBox = new ActionListBox(new TerminalSize(30, 20));
         detailsPanel = new Panel(new LinearLayout(Direction.VERTICAL));
+        resetDetailsPanel();
+        childrenListBox = new ActionListBox(new TerminalSize(30, 20));
+    }
+
+    private void resetDetailsPanel() {
         final Border border = new Panel().withBorder(Borders.singleLine("Details"));
         border.setPreferredSize(new TerminalSize(30, 22));
         detailsPanel.addComponent(border);
-        childrenListBox = new ActionListBox(new TerminalSize(30, 20));
     }
 
     @Override
@@ -76,5 +80,13 @@ public abstract class AbstractBonsaiNodeView implements BelaComponent<Panel> {
 
     private Optional<BonsaiNode> getCurrentNode() {
         return Optional.ofNullable(currentNode);
+    }
+
+
+    protected void clear() {
+        this.pathListBox.clearItems();
+        this.childrenListBox.clearItems();
+        resetDetailsPanel();
+        this.currentNode = null;
     }
 }

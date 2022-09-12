@@ -82,10 +82,6 @@ public class BonsaiStorageView extends AbstractBonsaiNodeView {
         if (bytes.isEmpty()) {
             return null;
         }
-        final Hash foundHashNode = Hash.hash(bytes.orElseThrow());
-        if (!foundHashNode.equals(hash)) {
-            return null;
-        }
         return TrieNodeDecoder.decode(location, bytes.get());
     }
 

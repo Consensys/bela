@@ -8,4 +8,6 @@ public interface BonsaiNode extends BelaComponent<Component> {
     String getLabel();
 
     List<BonsaiNode> getChildren();
+
+    void log();
 }

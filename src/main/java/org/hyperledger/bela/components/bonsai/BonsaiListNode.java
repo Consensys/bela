@@ -26,4 +26,9 @@ public class BonsaiListNode extends AbstractBonsaiNode {
         Panel panel = new Panel();
         return panel.withBorder(Borders.singleLine(title));
     }
+
+    @Override
+    public void log() {
+        log.info(title);
+    }
 }

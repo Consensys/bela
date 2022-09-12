@@ -111,4 +111,9 @@ public class BonsaiTrieLogNode extends AbstractBonsaiNode {
         panel.addComponent(new Label("BlockHash: " + blockHash.toHexString()));
         return panel.withBorder(Borders.singleLine("Bonsai Trie Log Node"));
     }
+
+    @Override
+    public void log() {
+        log.info("Bonsai Trie Log Node: {}", blockHash.toHexString());
+    }
 }

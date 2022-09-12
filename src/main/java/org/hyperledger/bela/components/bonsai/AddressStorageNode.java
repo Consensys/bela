@@ -40,4 +40,17 @@ public class AddressStorageNode extends AbstractBonsaiNode {
         });
         return panel.withBorder(Borders.singleLine("Address Storage Node"));
     }
+
+    @Override
+    public void log() {
+        log.info("Address Storage Node");
+        log.info("Address: {}", address.toHexString());
+        tree.forEach((key, value) -> {
+            final UInt256 prior = value.getPrior();
+            final UInt256 updated = value.getUpdated();
+            log.info("Key: {}", key.toHexString());
+            log.info("Prior: {}", prior.toString());
+            log.info("Updated: {}", updated.toString());
+        });
+    }
 }

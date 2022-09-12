@@ -14,13 +14,13 @@ import org.hyperledger.besu.ethereum.trie.TrieNodeDecoder;
 public class StorageTreeNode extends AbstractBonsaiNode {
     private final BonsaiStorageView bonsaiStorageView;
     private final Hash accountHash;
-    private final Node<Bytes> parentNode;
+    private final Node<Bytes> node;
 
     public StorageTreeNode(final BonsaiStorageView bonsaiStorageView, final Hash accountHash, final Node<Bytes> storageNodeValue, final int depth) {
         super(label(storageNodeValue), depth);
         this.bonsaiStorageView = bonsaiStorageView;
         this.accountHash = accountHash;
-        this.parentNode = storageNodeValue;
+        this.node = storageNodeValue;
     }
 
     private static String label(final Node<Bytes> storageNodeValue) {
@@ -32,10 +32,10 @@ public class StorageTreeNode extends AbstractBonsaiNode {
     @Override
     public List<BonsaiNode> getChildren() {
         final List<Node<Bytes>> nodes =
-                TrieNodeDecoder.decodeNodes(parentNode.getLocation().orElseThrow(), parentNode.getRlp());
+                TrieNodeDecoder.decodeNodes(node.getLocation().orElseThrow(), node.getRlp());
         final List<BonsaiNode> children = nodes.stream()
                 .map(node -> {
-                    if (bonsaiStorageView.nodeIsHashReferencedDescendant(parentNode, node)) {
+                    if (bonsaiStorageView.nodeIsHashReferencedDescendant(this.node, node)) {
                         return new StorageTreeNode(bonsaiStorageView, accountHash, bonsaiStorageView.getStorageNodeValue(node.getHash(), accountHash, node.getLocation()
                                 .orElseThrow()), depth + 1);
                     } else if (node.getValue().isPresent()) {
@@ -59,8 +59,16 @@ public class StorageTreeNode extends AbstractBonsaiNode {
     public Component createComponent() {
         Panel panel = new Panel();
         panel.addComponent(new Label("Account: " + accountHash.toHexString()));
-        panel.addComponent(new Label("Location: " + parentNode.getLocation().map(Bytes::toHexString).orElse("")));
-        panel.addComponent(new Label("Hash: " + parentNode.getHash().toHexString()));
+        panel.addComponent(new Label("Location: " + node.getLocation().map(Bytes::toHexString).orElse("")));
+        panel.addComponent(new Label("Hash: " + node.getHash().toHexString()));
         return panel.withBorder(Borders.singleLine("Storage Tree Node"));
+    }
+
+    @Override
+    public void log() {
+        log.info("Storage Tree Node");
+        log.info("Account: {}", accountHash.toHexString());
+        log.info("Location: {}", node.getLocation().map(Bytes::toHexString).orElse(""));
+        log.info("Hash: {}", node.getHash().toHexString());
     }
 }

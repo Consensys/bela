@@ -24,7 +24,7 @@ public class BonsaiTrieLogNode extends AbstractBonsaiNode {
     private final Hash blockHash;
 
     public BonsaiTrieLogNode(final Hash blockHash, final TrieLogLayer layer, final int depth) {
-        super("B:" + blockHash.toHexString(), depth);
+        super(blockHash.toHexString(), depth);
         this.blockHash = blockHash;
         this.layer = layer;
     }
@@ -108,7 +108,7 @@ public class BonsaiTrieLogNode extends AbstractBonsaiNode {
     @Override
     public Component createComponent() {
         Panel panel = new Panel();
-        panel.addComponent(new Label("BlockHash: " + blockHash.toHexString()));
+        panel.addComponent(LabelWithTextBox.labelWithTextBox("Block Hash", blockHash.toHexString()).createComponent());
         return panel.withBorder(Borders.singleLine("Bonsai Trie Log Node"));
     }
 

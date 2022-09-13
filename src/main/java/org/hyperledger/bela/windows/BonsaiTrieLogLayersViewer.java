@@ -1,5 +1,6 @@
 package org.hyperledger.bela.windows;
 
+import java.util.List;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
@@ -22,18 +23,19 @@ import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.ethereum.worldstate.DataStorageConfiguration;
 
+import static java.util.stream.Collectors.toList;
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.KEY_HEAD;
 import static org.hyperledger.bela.windows.Constants.KEY_LOOKUP_BY_HASH;
 import static org.hyperledger.bela.windows.Constants.KEY_ROLL_BACKWARD;
 import static org.hyperledger.bela.windows.Constants.KEY_ROLL_FORWARD;
+import static org.hyperledger.bela.windows.Constants.KEY_SHOW_ALL;
 
 public class BonsaiTrieLogLayersViewer extends AbstractBelaWindow {
     private static final LambdaLogger log = getLogger(BonsaiTrieLogLayersViewer.class);
 
     private final WindowBasedTextGUI gui;
     private final StorageProviderFactory storageProviderFactory;
-    private final Panel triesPanel = new Panel();
 
     private final BonsaiTrieLogView view;
 
@@ -60,15 +62,21 @@ public class BonsaiTrieLogLayersViewer extends AbstractBelaWindow {
         return new KeyControls()
                 .addControl("By Hash", KEY_LOOKUP_BY_HASH, this::lookupByHash)
                 .addControl("Head", KEY_HEAD, this::lookupByChainHead)
+                .addControl("All", KEY_SHOW_ALL, this::showAll)
                 .addControl("Roll Forward", KEY_ROLL_FORWARD, this::rollForward)
                 .addControl("Roll Backward", KEY_ROLL_BACKWARD, this::rollBackward);
+    }
+
+    private void showAll() {
+        final List<String> allHashes = view.getAllHashes().stream().map(Hash::toHexString).collect(toList());
+        BelaDialog.showListDialog(gui, "All Hashes", allHashes);
     }
 
     @Override
     public Panel createMainPanel() {
         Panel panel = new Panel(new LinearLayout(Direction.VERTICAL));
 
-        panel.addComponent(triesPanel);
+        panel.addComponent(view.createComponent());
 
         return panel;
     }
@@ -127,7 +135,7 @@ public class BonsaiTrieLogLayersViewer extends AbstractBelaWindow {
     private void lookupByHash() {
         final BlockChainContext blockChainContext = BlockChainContextFactory.createBlockChainContext(storageProviderFactory.createProvider());
         final ChainHead chainHead = blockChainContext.getBlockchain().getChainHead();
-        final String s = TextInputDialog.showDialog(gui, "Enter Hash", "Hash", chainHead.getHash().toHexString());
+        final String s = TextInputDialog.showDialog(gui, "Enter Block Hash", "Hash", chainHead.getHash().toHexString());
         if (s == null) {
             return;
         }
@@ -135,7 +143,7 @@ public class BonsaiTrieLogLayersViewer extends AbstractBelaWindow {
             final Hash hash = Hash.fromHexString(s);
             updateTrieFromHash(hash);
         } catch (Exception e) {
-            log.error("There was an error when moving browser", e);
+            log.error("There was an error when showing Trie", e);
             BelaDialog.showException(gui, e);
         }
     }

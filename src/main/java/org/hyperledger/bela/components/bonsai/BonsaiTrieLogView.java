@@ -84,4 +84,10 @@ public class BonsaiTrieLogView extends AbstractBonsaiNodeView {
         selectNode(new SearchResultNode(storage, results));
     }
 
+    public void shoResults(final KeyValueStorage storage, final List<BonsaiNode> results) {
+
+        clear();
+        selectNode(new SearchResultNode(storage, results));
+
+    }
 }

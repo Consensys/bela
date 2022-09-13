@@ -1,16 +1,24 @@
 package org.hyperledger.bela.windows;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
+import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.components.KeyControls;
+import org.hyperledger.bela.components.bonsai.BonsaiNode;
 import org.hyperledger.bela.components.bonsai.BonsaiTrieLogView;
+import org.hyperledger.bela.components.bonsai.RootTrieLogSearchResult;
 import org.hyperledger.bela.components.bonsai.queries.BonsaiTrieQuery;
+import org.hyperledger.bela.components.bonsai.queries.TrieQueryValidator;
 import org.hyperledger.bela.dialogs.BelaDialog;
+import org.hyperledger.bela.dialogs.ProgressBarPopup;
 import org.hyperledger.bela.utils.BlockChainContext;
 import org.hyperledger.bela.utils.BlockChainContextFactory;
 import org.hyperledger.bela.utils.StorageProviderFactory;
@@ -23,6 +31,7 @@ import org.hyperledger.besu.ethereum.chain.ChainHead;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.ethereum.worldstate.DataStorageConfiguration;
+import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.KEY_HEAD;
@@ -78,12 +87,30 @@ public class BonsaiTrieLogLayersViewer extends AbstractBelaWindow {
 
     private void executeQuery(final BonsaiTrieQuery query) {
         try {
-            view.executeQuery(query.createValidator(gui));
+            executeQuery(query.createValidator(gui));
         } catch (Exception e) {
             log.error("There was an error", e);
             BelaDialog.showException(gui, e);
         }
 
+    }
+
+    public void executeQuery(final TrieQueryValidator validator) {
+        final StorageProvider provider = storageProviderFactory.createProvider();
+        final long estimate = SegmentManipulationWindow.accessLongPropertyForSegment(provider, KeyValueSegmentIdentifier.TRIE_LOG_STORAGE, LongRocksDbProperty.ROCKSDB_ESTIMATE_NUM_KEYS);
+        final ProgressBarPopup popup = ProgressBarPopup.showPopup(gui, "Searching", (int) estimate);
+        final KeyValueStorage storage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_LOG_STORAGE);
+        final List<BonsaiNode> results = storage.streamKeys().map(entry -> Hash.wrap(Bytes32.wrap(entry)))
+                .map(hash -> {
+                    popup.increment();
+                    return BonsaiTrieLogView.getTrieLog(storage, hash);
+                })
+                .flatMap(Optional::stream)
+                .filter(validator::validate)
+                .map(trieLogLayer -> new RootTrieLogSearchResult(storage, trieLogLayer.getBlockHash()))
+                .collect(Collectors.toList());
+        view.shoResults(storage, results);
+        popup.close();
     }
 
     private void showAll() {

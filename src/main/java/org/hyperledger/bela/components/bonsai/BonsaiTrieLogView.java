@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.apache.tuweni.bytes.Bytes32;
+import org.hyperledger.bela.components.bonsai.queries.TrieQueryValidator;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.bonsai.TrieLogLayer;
@@ -64,9 +65,23 @@ public class BonsaiTrieLogView extends AbstractBonsaiNodeView {
         final StorageProvider provider = storageProviderFactory.createProvider();
         final KeyValueStorage storage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_LOG_STORAGE);
         final List<BonsaiNode> blocks = storage.streamKeys().map(entry -> Hash.wrap(Bytes32.wrap(entry)))
-                .map(hash -> new RootTrieLogSearchResult(storage,hash))
+                .map(hash -> new RootTrieLogSearchResult(storage, hash))
                 .collect(Collectors.toList());
         clear();
         selectNode(new SearchResultNode(storage, blocks));
     }
+
+    public void executeQuery(final TrieQueryValidator validator) {
+        final StorageProvider provider = storageProviderFactory.createProvider();
+        final KeyValueStorage storage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_LOG_STORAGE);
+        final List<BonsaiNode> results = storage.streamKeys().map(entry -> Hash.wrap(Bytes32.wrap(entry)))
+                .map(hash -> getTrieLog(storage, hash))
+                .flatMap(Optional::stream)
+                .filter(validator::validate)
+                .map(trieLogLayer -> new RootTrieLogSearchResult(storage, trieLogLayer.getBlockHash()))
+                .collect(Collectors.toList());
+        clear();
+        selectNode(new SearchResultNode(storage, results));
+    }
+
 }

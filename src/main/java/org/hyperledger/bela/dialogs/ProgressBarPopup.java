@@ -49,4 +49,14 @@ public class ProgressBarPopup extends DialogWindow {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public void close() {
+        super.close();
+        try {
+            gui.updateScreen();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

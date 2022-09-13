@@ -1,5 +1,6 @@
 package org.hyperledger.bela.windows;
 
+import java.util.Arrays;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
@@ -8,6 +9,7 @@ import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.components.bonsai.BonsaiTrieLogView;
+import org.hyperledger.bela.components.bonsai.queries.BonsaiTrieQuery;
 import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.utils.BlockChainContext;
 import org.hyperledger.bela.utils.BlockChainContextFactory;
@@ -24,7 +26,9 @@ import org.hyperledger.besu.ethereum.worldstate.DataStorageConfiguration;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.KEY_HEAD;
+import static org.hyperledger.bela.windows.Constants.KEY_LOG;
 import static org.hyperledger.bela.windows.Constants.KEY_LOOKUP_BY_HASH;
+import static org.hyperledger.bela.windows.Constants.KEY_QUERY;
 import static org.hyperledger.bela.windows.Constants.KEY_ROLL_BACKWARD;
 import static org.hyperledger.bela.windows.Constants.KEY_ROLL_FORWARD;
 import static org.hyperledger.bela.windows.Constants.KEY_SHOW_ALL;
@@ -59,10 +63,27 @@ public class BonsaiTrieLogLayersViewer extends AbstractBelaWindow {
     public KeyControls createControls() {
         return new KeyControls()
                 .addControl("By Hash", KEY_LOOKUP_BY_HASH, this::lookupByHash)
+                .addControl("To Log", KEY_LOG, view::logCurrent)
                 .addControl("Head", KEY_HEAD, this::lookupByChainHead)
+                .addControl("Query", KEY_QUERY, this::query)
                 .addControl("All", KEY_SHOW_ALL, this::showAll)
                 .addControl("Roll Forward", KEY_ROLL_FORWARD, this::rollForward)
                 .addControl("Roll Backward", KEY_ROLL_BACKWARD, this::rollBackward);
+    }
+
+    private void query() {
+        BelaDialog.showDelegateListDialog(gui, "Select a query", Arrays.asList(BonsaiTrieQuery.values()), BonsaiTrieQuery::getName,
+                this::executeQuery);
+    }
+
+    private void executeQuery(final BonsaiTrieQuery query) {
+        try {
+            view.executeQuery(query.createValidator(gui));
+        } catch (Exception e) {
+            log.error("There was an error", e);
+            BelaDialog.showException(gui, e);
+        }
+
     }
 
     private void showAll() {

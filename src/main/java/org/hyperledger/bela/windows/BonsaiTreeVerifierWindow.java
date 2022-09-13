@@ -129,6 +129,7 @@ public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements Bons
         }
         runningLabel.setText("Initialising...");
         Thread.yield();
+        counterLabel.setText("0");
         logTextBox.setText("");
         visited.set(0);
 

@@ -4,7 +4,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import com.googlecode.lanterna.gui2.Borders;
 import com.googlecode.lanterna.gui2.Component;
@@ -37,18 +36,18 @@ public class BonsaiTrieLogNode extends AbstractBonsaiNode {
             final StateTrieAccountValue prior = account.getValue().getPrior();
             final StateTrieAccountValue updated = account.getValue().getUpdated();
             return new AccountChangeNode(address, prior, updated);
-        }).collect(Collectors.toList());
+        }).toList();
         if (!accounts.isEmpty()) {
             children.add(new BonsaiListNode("Account changes", accounts));
         } else {
             children.add(new LabelNode("No accounts changes", blockHash.toHexString()));
         }
-        final List<LabelNode> codeChanges = streamCodeChanges().map(codeChange -> {
+        final List<CodeChangeNode> codeChanges = streamCodeChanges().map(codeChange -> {
             final Address address = codeChange.getKey();
             final Bytes prior = codeChange.getValue().getPrior();
             final Bytes updated = codeChange.getValue().getUpdated();
-            return new LabelNode(address.toHexString(), prior.toHexString() + " -> " + updated.toHexString());
-        }).collect(Collectors.toList());
+            return new CodeChangeNode(address, prior, updated);
+        }).toList();
         if (!codeChanges.isEmpty()) {
             children.add(new BonsaiListNode("Code Changes", codeChanges));
         } else {
@@ -58,7 +57,7 @@ public class BonsaiTrieLogNode extends AbstractBonsaiNode {
             final Address address = storageChange.getKey();
             final Map<Hash, BonsaiValue<UInt256>> tree = storageChange.getValue();
             return new AddressStorageNode(address, tree);
-        }).collect(Collectors.toList());
+        }).toList();
         if (!storageChanges.isEmpty()) {
             children.add(new BonsaiListNode("Storage Changes", storageChanges));
         } else {

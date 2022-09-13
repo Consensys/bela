@@ -60,7 +60,9 @@ enum LongRocksDbProperty {
         public String format(final long value) {
             return round(value, GIGABYTE, "GB ") + round(value % GIGABYTE, MEGABYTE, "MB ") + round(value % MEGABYTE, KILOBYTE, "KB ") + round(value % KILOBYTE, 1, "B");
         }
-    };
+    },
+    ROCKSDB_ESTIMATE_NUM_KEYS("rocksdb.estimate-num-keys");
+
 
     private static final long KILOBYTE = 1024;
     private static final long MEGABYTE = KILOBYTE * 1024;
@@ -107,7 +109,7 @@ public class SegmentManipulationWindow extends AbstractBelaWindow {
         }
     }
 
-    private static long accessLongPropertyForSegment(StorageProvider provider, final SegmentIdentifier segment, final LongRocksDbProperty longRocksDbProperty) {
+    public static long accessLongPropertyForSegment(StorageProvider provider, final SegmentIdentifier segment, final LongRocksDbProperty longRocksDbProperty) {
         final long longPropertyValue;
         try {
             final SegmentedKeyValueStorageAdapter<RocksDbSegmentIdentifier> storageBySegmentIdentifier = (SegmentedKeyValueStorageAdapter) provider.getStorageBySegmentIdentifier(segment);

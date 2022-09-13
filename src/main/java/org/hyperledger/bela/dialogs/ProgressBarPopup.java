@@ -14,6 +14,7 @@ public class ProgressBarPopup extends DialogWindow {
 
     private final ProgressBar progressBar;
     private final WindowBasedTextGUI gui;
+    private String oldLabel;
 
     protected ProgressBarPopup(final WindowBasedTextGUI gui, final String title, final int maxValue) {
         super(title);
@@ -28,6 +29,7 @@ public class ProgressBarPopup extends DialogWindow {
         mainPanel.addComponent(new EmptySpace(TerminalSize.ONE));
         setComponent(mainPanel);
         setHints(List.of(Hint.CENTERED));
+        oldLabel = progressBar.getFormattedLabel();
     }
 
     public static ProgressBarPopup showPopup(final WindowBasedTextGUI gui, final String title, final int maxValue) {
@@ -43,6 +45,11 @@ public class ProgressBarPopup extends DialogWindow {
 
     public void increment() {
         this.progressBar.setValue(this.progressBar.getValue() + 1);
+        final String newLabel = progressBar.getFormattedLabel();
+        if (newLabel.equals(oldLabel)){
+            return;
+        }
+        oldLabel = newLabel;
         try {
             gui.updateScreen();
         } catch (IOException e) {

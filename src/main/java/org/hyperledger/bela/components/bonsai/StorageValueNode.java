@@ -20,8 +20,8 @@ public class StorageValueNode extends AbstractBonsaiNode {
     private final BonsaiStorageView bonsaiStorageView;
     private final Bytes value;
 
-    public StorageValueNode(final BonsaiStorageView bonsaiStorageView, final Hash accountHash, final Node<Bytes> node, final int depth) {
-        super("Storage value", depth);
+    public StorageValueNode(final BonsaiStorageView bonsaiStorageView, final Hash accountHash, final Node<Bytes> node) {
+        super("Storage value");
         this.bonsaiStorageView = bonsaiStorageView;
         this.accountHash = accountHash;
         this.node = node;

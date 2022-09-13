@@ -2,9 +2,9 @@ package org.hyperledger.bela.components.bonsai;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.utils.StorageProviderFactory;
@@ -27,6 +27,18 @@ public class BonsaiTrieLogView extends AbstractBonsaiNodeView {
         this.storageProviderFactory = storageProviderFactory;
     }
 
+    public static Optional<TrieLogLayer> getTrieLog(final KeyValueStorage storage, final Hash blockHash) {
+        return storage.get(blockHash.toArrayUnsafe()).map(bytes -> {
+            try {
+                Method method = TrieLogLayer.class.getDeclaredMethod("fromBytes", byte[].class);
+                method.setAccessible(true);
+                return (TrieLogLayer) method.invoke(null, bytes);
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
     public void updateFromHash(final Hash hash) {
 
         final StorageProvider provider = storageProviderFactory.createProvider();
@@ -36,36 +48,24 @@ public class BonsaiTrieLogView extends AbstractBonsaiNodeView {
 
         if (trieLog.isPresent()) {
             clear();
-            bonsaiTrieLogNode = new BonsaiTrieLogNode(hash, trieLog.get(), 0);
+            bonsaiTrieLogNode = new BonsaiTrieLogNode(hash, trieLog.get());
             selectNode(bonsaiTrieLogNode);
         } else {
             log.error("Trie log not found for hash: {}", hash);
         }
     }
 
-    public Optional<TrieLogLayer> getTrieLog(final KeyValueStorage storage, final Hash blockHash) {
-        return storage.get(blockHash.toArrayUnsafe()).map(bytes -> {
-            try {
-                Method method = TrieLogLayer.class.getDeclaredMethod("fromBytes", byte[].class);
-                method.setAccessible(true);
-                return (TrieLogLayer) method.invoke(null, bytes);
-            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException(e);
-            }
-//            return TrieLogLayer.fromBytes(bytes);
-        });
-    }
-
     public TrieLogLayer getLayer() {
         return bonsaiTrieLogNode.getLayer();
     }
 
-    public List<Hash> getAllHashes() {
-        List<Hash> blocks = new ArrayList<>();
+    public void showAllTries() {
 
         final StorageProvider provider = storageProviderFactory.createProvider();
         final KeyValueStorage storage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_LOG_STORAGE);
-        storage.streamKeys().forEach(entry -> blocks.add(Hash.wrap(Bytes32.wrap(entry))));
-        return blocks;
+        final List<Hash> blocks = storage.streamKeys().map(entry -> Hash.wrap(Bytes32.wrap(entry)))
+                .collect(Collectors.toList());
+        clear();
+        selectNode(new SearchResultBlocksNode(storage, blocks));
     }
 }

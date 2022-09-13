@@ -16,8 +16,8 @@ public class AddressStorageNode extends AbstractBonsaiNode {
     private final Map<Hash, BonsaiValue<UInt256>> tree;
     private final Address address;
 
-    public AddressStorageNode(final Address address, Map<Hash, BonsaiValue<UInt256>> tree, final int depth) {
-        super(address.toHexString(), depth);
+    public AddressStorageNode(final Address address, Map<Hash, BonsaiValue<UInt256>> tree) {
+        super(address.toHexString());
         this.address = address;
         this.tree = tree;
 
@@ -35,7 +35,7 @@ public class AddressStorageNode extends AbstractBonsaiNode {
         tree.forEach((key, value) -> {
             final UInt256 prior = value.getPrior();
             final UInt256 updated = value.getUpdated();
-            if (!Objects.equals(prior,updated)) {
+            if (!Objects.equals(prior, updated)) {
                 panel.addComponent(LabelWithTextBox.labelWithTextBox("Key:", key.toHexString()).createComponent());
                 panel.addComponent(LabelWithTextBox.labelWithTextBox("Prior:", String.valueOf(prior))
                         .createComponent());

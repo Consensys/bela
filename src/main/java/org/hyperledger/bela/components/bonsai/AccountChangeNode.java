@@ -15,8 +15,8 @@ public class AccountChangeNode extends AbstractBonsaiNode {
     private final StateTrieAccountValue updated;
     private final Address address;
 
-    public AccountChangeNode(final Address address, final StateTrieAccountValue prior, final StateTrieAccountValue updated, final int depth) {
-        super(address.toHexString(), depth);
+    public AccountChangeNode(final Address address, final StateTrieAccountValue prior, final StateTrieAccountValue updated) {
+        super(address.toHexString());
         this.address = address;
         this.prior = prior;
         this.updated = updated;

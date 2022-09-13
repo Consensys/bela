@@ -17,8 +17,8 @@ public class StorageTreeNode extends AbstractBonsaiNode {
     private final Node<Bytes> node;
     private final Bytes32 storageRootHash;
 
-    public StorageTreeNode(final BonsaiStorageView bonsaiStorageView, final Hash accountHash, final Node<Bytes> storageNodeValue, final Bytes32 storageRootHash, final int depth) {
-        super(label(storageNodeValue, storageRootHash), depth);
+    public StorageTreeNode(final BonsaiStorageView bonsaiStorageView, final Hash accountHash, final Node<Bytes> storageNodeValue, final Bytes32 storageRootHash) {
+        super(label(storageNodeValue, storageRootHash));
         this.bonsaiStorageView = bonsaiStorageView;
         this.accountHash = accountHash;
         this.node = storageNodeValue;
@@ -44,13 +44,13 @@ public class StorageTreeNode extends AbstractBonsaiNode {
                 .map(node -> {
                     if (bonsaiStorageView.nodeIsHashReferencedDescendant(this.node, node)) {
                         return new StorageTreeNode(bonsaiStorageView, accountHash, bonsaiStorageView.getStorageNodeValue(node.getHash(), accountHash, node.getLocation()
-                                .orElseThrow()), node.getHash(), depth + 1);
+                                .orElseThrow()), node.getHash());
                     } else if (node.getValue().isPresent()) {
                         return new StorageValueNode(bonsaiStorageView, accountHash, bonsaiStorageView.getStorageNodeValue(node.getHash(), accountHash, node.getLocation()
-                                .orElseThrow()), depth + 1);
+                                .orElseThrow()));
 
                     } else {
-                        return new LabelNode("Missing value in storage", accountHash.toHexString() + " on " + label(node, storageRootHash), depth + 1);
+                        return new LabelNode("Missing value in storage", accountHash.toHexString() + " on " + label(node, storageRootHash));
                     }
 
                 }).collect(Collectors.toList());
@@ -67,8 +67,10 @@ public class StorageTreeNode extends AbstractBonsaiNode {
         Panel panel = new Panel();
         panel.addComponent(LabelWithTextBox.labelWithTextBox("Account", accountHash.toHexString()).createComponent());
         panel.addComponent(LabelWithTextBox.labelWithTextBox("Hash", node.getHash().toHexString()).createComponent());
-        panel.addComponent(LabelWithTextBox.labelWithTextBox("ExpectedHash", storageRootHash.toHexString()).createComponent());
-        panel.addComponent(LabelWithTextBox.labelWithTextBox("Location", node.getLocation().map(Bytes::toHexString).orElse("")).createComponent());
+        panel.addComponent(LabelWithTextBox.labelWithTextBox("ExpectedHash", storageRootHash.toHexString())
+                .createComponent());
+        panel.addComponent(LabelWithTextBox.labelWithTextBox("Location", node.getLocation().map(Bytes::toHexString)
+                .orElse("")).createComponent());
         return panel.withBorder(Borders.singleLine("Storage Tree Node"));
     }
 

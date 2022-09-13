@@ -10,8 +10,8 @@ public class BonsaiListNode extends AbstractBonsaiNode {
     private final List<? extends BonsaiNode> list;
     private final String title;
 
-    public BonsaiListNode(final String title, final List<? extends BonsaiNode> list, final int depth) {
-        super(title, depth);
+    public BonsaiListNode(final String title, final List<? extends BonsaiNode> list) {
+        super(title);
         this.title = title;
         this.list = list;
     }

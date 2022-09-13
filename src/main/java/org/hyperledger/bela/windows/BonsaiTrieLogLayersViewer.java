@@ -1,6 +1,5 @@
 package org.hyperledger.bela.windows;
 
-import java.util.List;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
@@ -23,7 +22,6 @@ import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.ethereum.worldstate.DataStorageConfiguration;
 
-import static java.util.stream.Collectors.toList;
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.KEY_HEAD;
 import static org.hyperledger.bela.windows.Constants.KEY_LOOKUP_BY_HASH;
@@ -68,8 +66,7 @@ public class BonsaiTrieLogLayersViewer extends AbstractBelaWindow {
     }
 
     private void showAll() {
-        final List<String> allHashes = view.getAllHashes().stream().map(Hash::toHexString).collect(toList());
-        BelaDialog.showListDialog(gui, "All Hashes", allHashes);
+        view.showAllTries();
     }
 
     @Override

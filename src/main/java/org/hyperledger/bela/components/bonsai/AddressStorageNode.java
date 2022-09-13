@@ -3,6 +3,7 @@ package org.hyperledger.bela.components.bonsai;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import com.googlecode.lanterna.gui2.Borders;
 import com.googlecode.lanterna.gui2.Component;
 import com.googlecode.lanterna.gui2.Panel;
@@ -16,7 +17,7 @@ public class AddressStorageNode extends AbstractBonsaiNode {
     private final Address address;
 
     public AddressStorageNode(final Address address, Map<Hash, BonsaiValue<UInt256>> tree, final int depth) {
-        super("Storage", depth);
+        super(address.toHexString(), depth);
         this.address = address;
         this.tree = tree;
 
@@ -34,9 +35,13 @@ public class AddressStorageNode extends AbstractBonsaiNode {
         tree.forEach((key, value) -> {
             final UInt256 prior = value.getPrior();
             final UInt256 updated = value.getUpdated();
-            panel.addComponent(LabelWithTextBox.labelWithTextBox("Key:", key.toHexString()).createComponent());
-            panel.addComponent(LabelWithTextBox.labelWithTextBox("Prior:", prior.toString()).createComponent());
-            panel.addComponent(LabelWithTextBox.labelWithTextBox("Updated:", updated.toString()).createComponent());
+            if (!Objects.equals(prior,updated)) {
+                panel.addComponent(LabelWithTextBox.labelWithTextBox("Key:", key.toHexString()).createComponent());
+                panel.addComponent(LabelWithTextBox.labelWithTextBox("Prior:", String.valueOf(prior))
+                        .createComponent());
+                panel.addComponent(LabelWithTextBox.labelWithTextBox("Updated:", String.valueOf(updated))
+                        .createComponent());
+            }
         });
         return panel.withBorder(Borders.singleLine("Address Storage Node"));
     }

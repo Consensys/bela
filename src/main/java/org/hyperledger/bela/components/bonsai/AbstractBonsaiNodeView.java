@@ -16,13 +16,16 @@ public abstract class AbstractBonsaiNodeView implements BelaComponent<Panel> {
     private final ActionListBox pathListBox;
     private final Panel detailsPanel;
     private final ActionListBox childrenListBox;
+    private final Border childrenBorder;
     private BonsaiNode currentNode;
+    Panel panel = new Panel(new LinearLayout(Direction.HORIZONTAL));
 
     public AbstractBonsaiNodeView() {
         pathListBox = new ActionListBox(new TerminalSize(30, 20));
         detailsPanel = new Panel(new LinearLayout(Direction.VERTICAL));
         resetDetailsPanel();
         childrenListBox = new ActionListBox(new TerminalSize(30, 20));
+        childrenBorder = childrenListBox.withBorder(Borders.singleLine("Children"));
     }
 
     private void resetDetailsPanel() {
@@ -34,10 +37,9 @@ public abstract class AbstractBonsaiNodeView implements BelaComponent<Panel> {
 
     @Override
     public Panel createComponent() {
-        Panel panel = new Panel(new LinearLayout(Direction.HORIZONTAL));
         panel.addComponent(pathListBox.withBorder(Borders.singleLine("Location Path")));
         panel.addComponent(detailsPanel);
-        panel.addComponent(childrenListBox.withBorder(Borders.singleLine("Children")));
+        panel.addComponent(childrenBorder);
         return panel;
     }
 
@@ -46,11 +48,18 @@ public abstract class AbstractBonsaiNodeView implements BelaComponent<Panel> {
         this.currentNode = newLeaf;
         detailsPanel.removeAllComponents();
         final Component component = newLeaf.createComponent();
-        component.setPreferredSize(new TerminalSize(30, 22));
-        detailsPanel.addComponent(component);
-        childrenListBox.clearItems();
         final List<BonsaiNode> children = newLeaf.getChildren();
-        children.forEach(child -> childrenListBox.addItem(child.getLabel(), () -> selectNode(child)));
+        childrenListBox.clearItems();
+        if (children.isEmpty()){
+            childrenBorder.setVisible(false);
+            component.setPreferredSize(new TerminalSize(70, 22));
+        } else {
+            childrenBorder.setVisible(true);
+            children.forEach(child -> childrenListBox.addItem(child.getLabel(), () -> selectNode(child)));
+            component.setPreferredSize(new TerminalSize(30, 22));
+        }
+
+        detailsPanel.addComponent(component);
     }
 
     private void updatePath(final BonsaiNode node) {

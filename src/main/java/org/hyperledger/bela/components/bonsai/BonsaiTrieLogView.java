@@ -2,8 +2,11 @@ package org.hyperledger.bela.components.bonsai;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
+import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.bonsai.TrieLogLayer;
@@ -32,6 +35,7 @@ public class BonsaiTrieLogView extends AbstractBonsaiNodeView {
 
 
         if (trieLog.isPresent()) {
+            clear();
             bonsaiTrieLogNode = new BonsaiTrieLogNode(hash, trieLog.get(), 0);
             selectNode(bonsaiTrieLogNode);
         } else {
@@ -54,5 +58,14 @@ public class BonsaiTrieLogView extends AbstractBonsaiNodeView {
 
     public TrieLogLayer getLayer() {
         return bonsaiTrieLogNode.getLayer();
+    }
+
+    public List<Hash> getAllHashes() {
+        List<Hash> blocks = new ArrayList<>();
+
+        final StorageProvider provider = storageProviderFactory.createProvider();
+        final KeyValueStorage storage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_LOG_STORAGE);
+        storage.streamKeys().forEach(entry -> blocks.add(Hash.wrap(Bytes32.wrap(entry))));
+        return blocks;
     }
 }

@@ -15,6 +15,7 @@ import org.hyperledger.bela.config.BelaConfigurationImpl;
 import org.hyperledger.bela.converter.RocksDBKeyValueStorageConverterFactory;
 import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.dialogs.NonClosableMessage;
+import org.hyperledger.bela.dialogs.ProgressBarPopup;
 import org.hyperledger.bela.utils.hacks.ReadOnlyDatabaseDecider;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
@@ -155,18 +156,19 @@ public class StorageProviderFactory implements AutoCloseable {
 
     private List<SegmentIdentifier> detectReadOnly() {
         final SegmentIdentifier[] listOfSegments = KeyValueSegmentIdentifier.values();
+        final ProgressBarPopup progress = ProgressBarPopup.showPopup(gui, "Detecting DB Segments", listOfSegments.length);
         final List<SegmentIdentifier> detectedSegments = new ArrayList<>();
 
         for (SegmentIdentifier segment : listOfSegments) {
-            try {
-                final StorageProvider provider = createProvider(Collections.singletonList(segment), true);
-                provider.close();
-//                accessLongPropertyForSegment(provider, segment, LongRocksDbProperty.LIVE_SST_FILES_SIZE);
+            try (StorageProvider testProvider = createProvider(Collections.singletonList(segment), true)) {
                 detectedSegments.add(segment);
             } catch (Exception e) {
-                //ignore on purpouse
+                log.info("Could not access segment {} ({})", segment, e.getMessage());
+            } finally {
+                progress.increment();
             }
         }
+        progress.close();
         return detectedSegments;
     }
 

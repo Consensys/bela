@@ -64,10 +64,10 @@ public class AccountChangeNode extends AbstractBonsaiNode {
     public void log() {
         log.info("Account Change");
         log.info("Address: {}", address.toHexString());
-        log.info("Nonce: {} -> {}", prior.getNonce(), updated.getNonce());
-        log.info("Balance: {} -> {}", prior.getBalance(), updated.getBalance());
-        log.info("Code: {} -> {}", prior.getCodeHash(), updated.getCodeHash());
-        log.info("Storage: {} -> {}", prior.getStorageRoot(), updated.getStorageRoot());
+        log.info("Nonce: {} -> {}", prior!=null?prior.getNonce():"null", updated.getNonce());
+        log.info("Balance: {} -> {}", prior!=null?prior.getBalance():"null", updated.getBalance());
+        log.info("Code: {} -> {}", prior!=null?prior.getCodeHash().toHexString():"null", updated.getCodeHash());
+        log.info("Storage: {} -> {}", prior!=null?prior.getStorageRoot().toHexString():"null", updated.getStorageRoot());
     }
 
     @Override

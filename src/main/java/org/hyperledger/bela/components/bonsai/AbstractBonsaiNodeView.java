@@ -37,6 +37,7 @@ public abstract class AbstractBonsaiNodeView implements BelaComponent<Panel> {
 
     @Override
     public Panel createComponent() {
+        panel.removeAllComponents();
         panel.addComponent(pathListBox.withBorder(Borders.singleLine("Location Path")));
         panel.addComponent(detailsPanel);
         panel.addComponent(childrenBorder);

@@ -63,9 +63,10 @@ public class BonsaiTrieLogView extends AbstractBonsaiNodeView {
 
         final StorageProvider provider = storageProviderFactory.createProvider();
         final KeyValueStorage storage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_LOG_STORAGE);
-        final List<Hash> blocks = storage.streamKeys().map(entry -> Hash.wrap(Bytes32.wrap(entry)))
+        final List<BonsaiNode> blocks = storage.streamKeys().map(entry -> Hash.wrap(Bytes32.wrap(entry)))
+                .map(hash -> new RootTrieLogSearchResult(storage,hash))
                 .collect(Collectors.toList());
         clear();
-        selectNode(new SearchResultBlocksNode(storage, blocks));
+        selectNode(new SearchResultNode(storage, blocks));
     }
 }

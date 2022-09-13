@@ -9,12 +9,12 @@ import com.googlecode.lanterna.gui2.Panel;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 
-public class LazyTrieLogNode extends AbstractBonsaiNode {
+public class RootTrieLogSearchResult extends AbstractBonsaiNode {
     private final KeyValueStorage storage;
     @org.jetbrains.annotations.NotNull
     private final Hash blockHash;
 
-    public LazyTrieLogNode(final KeyValueStorage storage, final Hash blockHash) {
+    public RootTrieLogSearchResult(final KeyValueStorage storage, final Hash blockHash) {
         super(blockHash.toHexString());
         this.storage = storage;
         this.blockHash = blockHash;

@@ -49,7 +49,7 @@ public class BonsaiStorageView extends AbstractBonsaiNodeView {
                         .map(Hash::hash)
                         .orElseThrow();
         Node<Bytes> root = getAccountNodeValue(rootHash, Bytes.EMPTY);
-        BonsaiNode rootNodeView = new AccountTreeNode(this, root, 0);
+        BonsaiNode rootNodeView = new AccountTreeNode(this, root);
         return rootNodeView;
     }
 

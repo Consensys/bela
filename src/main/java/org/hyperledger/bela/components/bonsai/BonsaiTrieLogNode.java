@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import com.googlecode.lanterna.gui2.Borders;
 import com.googlecode.lanterna.gui2.Component;
-import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.units.bigints.UInt256;
@@ -23,8 +22,8 @@ public class BonsaiTrieLogNode extends AbstractBonsaiNode {
     private final TrieLogLayer layer;
     private final Hash blockHash;
 
-    public BonsaiTrieLogNode(final Hash blockHash, final TrieLogLayer layer, final int depth) {
-        super(blockHash.toHexString(), depth);
+    public BonsaiTrieLogNode(final Hash blockHash, final TrieLogLayer layer) {
+        super(blockHash.toHexString());
         this.blockHash = blockHash;
         this.layer = layer;
     }
@@ -37,33 +36,33 @@ public class BonsaiTrieLogNode extends AbstractBonsaiNode {
             final Address address = account.getKey();
             final StateTrieAccountValue prior = account.getValue().getPrior();
             final StateTrieAccountValue updated = account.getValue().getUpdated();
-            return new AccountChangeNode(address, prior, updated, depth + 2);
+            return new AccountChangeNode(address, prior, updated);
         }).collect(Collectors.toList());
         if (!accounts.isEmpty()) {
-            children.add(new BonsaiListNode("Account changes", accounts, depth + 1));
+            children.add(new BonsaiListNode("Account changes", accounts));
         } else {
-            children.add(new LabelNode("No accounts changes", blockHash.toHexString(), depth + 1));
+            children.add(new LabelNode("No accounts changes", blockHash.toHexString()));
         }
         final List<LabelNode> codeChanges = streamCodeChanges().map(codeChange -> {
             final Address address = codeChange.getKey();
             final Bytes prior = codeChange.getValue().getPrior();
             final Bytes updated = codeChange.getValue().getUpdated();
-            return new LabelNode(address.toHexString(), prior.toHexString() + " -> " + updated.toHexString(), depth + 2);
+            return new LabelNode(address.toHexString(), prior.toHexString() + " -> " + updated.toHexString());
         }).collect(Collectors.toList());
         if (!codeChanges.isEmpty()) {
-            children.add(new BonsaiListNode("Code Changes", codeChanges, depth + 1));
+            children.add(new BonsaiListNode("Code Changes", codeChanges));
         } else {
-            children.add(new LabelNode("No code changes", blockHash.toHexString(), depth + 1));
+            children.add(new LabelNode("No code changes", blockHash.toHexString()));
         }
         final List<AddressStorageNode> storageChanges = streamStorageChanges().map(storageChange -> {
             final Address address = storageChange.getKey();
             final Map<Hash, BonsaiValue<UInt256>> tree = storageChange.getValue();
-            return new AddressStorageNode(address, tree, depth + 2);
+            return new AddressStorageNode(address, tree);
         }).collect(Collectors.toList());
         if (!storageChanges.isEmpty()) {
-            children.add(new BonsaiListNode("Storage Changes", storageChanges, depth + 1));
+            children.add(new BonsaiListNode("Storage Changes", storageChanges));
         } else {
-            children.add(new LabelNode("No storage changes", blockHash.toHexString(), depth + 1));
+            children.add(new LabelNode("No storage changes", blockHash.toHexString()));
         }
         return children;
     }

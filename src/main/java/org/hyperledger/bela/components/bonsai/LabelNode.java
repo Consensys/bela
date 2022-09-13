@@ -4,15 +4,14 @@ import java.util.Collections;
 import java.util.List;
 import com.googlecode.lanterna.gui2.Borders;
 import com.googlecode.lanterna.gui2.Component;
-import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.TextBox;
 
 public class LabelNode extends AbstractBonsaiNode {
     private final String value;
 
-    public LabelNode(final String title, final String value, final int depth) {
-        super(title, depth);
+    public LabelNode(final String title, final String value) {
+        super(title);
         this.value = value;
     }
 

@@ -17,8 +17,8 @@ public abstract class AbstractBonsaiNodeView implements BelaComponent<Panel> {
     private final Panel detailsPanel;
     private final ActionListBox childrenListBox;
     private final Border childrenBorder;
-    private BonsaiNode currentNode;
     Panel panel = new Panel(new LinearLayout(Direction.HORIZONTAL));
+    private BonsaiNode currentNode;
 
     public AbstractBonsaiNodeView() {
         pathListBox = new ActionListBox(new TerminalSize(30, 20));
@@ -50,7 +50,7 @@ public abstract class AbstractBonsaiNodeView implements BelaComponent<Panel> {
         final Component component = newLeaf.createComponent();
         final List<BonsaiNode> children = newLeaf.getChildren();
         childrenListBox.clearItems();
-        if (children.isEmpty()){
+        if (children.isEmpty()) {
             childrenBorder.setVisible(false);
             component.setPreferredSize(new TerminalSize(70, 22));
         } else {

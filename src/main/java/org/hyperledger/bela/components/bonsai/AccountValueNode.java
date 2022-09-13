@@ -7,7 +7,6 @@ import com.googlecode.lanterna.gui2.Borders;
 import com.googlecode.lanterna.gui2.Component;
 import com.googlecode.lanterna.gui2.Panel;
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.rlp.RLP;
 import org.hyperledger.besu.ethereum.trie.MerklePatriciaTrie;
@@ -21,8 +20,8 @@ class AccountValueNode extends AbstractBonsaiNode {
     private final StateTrieAccountValue accountValue;
     private final StorageLocation storageLocation;
 
-    public AccountValueNode(final BonsaiStorageView bonsaiStorageView, final Hash accountHash, final Bytes accountValueBytes, final int depth, final StorageLocation storageLocation) {
-        super("Account " + storageLocation, depth);
+    public AccountValueNode(final BonsaiStorageView bonsaiStorageView, final Hash accountHash, final Bytes accountValueBytes, final StorageLocation storageLocation) {
+        super("Account " + storageLocation);
         this.bonsaiStorageView = bonsaiStorageView;
         this.accountHash = accountHash;
         this.accountValueBytes = accountValueBytes;
@@ -37,9 +36,9 @@ class AccountValueNode extends AbstractBonsaiNode {
         if (storageLocation == StorageLocation.BONSAI) {
             final Optional<Bytes> accountInFlatDB = bonsaiStorageView.getAccountFromFlatDatabase(accountHash);
             if (accountInFlatDB.isPresent()) {
-                children.add(new AccountValueNode(bonsaiStorageView, accountHash, accountInFlatDB.get(), depth + 1, StorageLocation.FLAT));
+                children.add(new AccountValueNode(bonsaiStorageView, accountHash, accountInFlatDB.get(), StorageLocation.FLAT));
             } else {
-                children.add(new LabelNode("No Flat DB Account", "Flat DB value not found ", depth + 1));
+                children.add(new LabelNode("No Flat DB Account", "Flat DB value not found "));
             }
         }
         // check the account in the flat database
@@ -49,29 +48,29 @@ class AccountValueNode extends AbstractBonsaiNode {
             // traverse code
             final Optional<Bytes> code = bonsaiStorageView.getCode(accountHash);
             if (code.isEmpty()) {
-                children.add(new LabelNode("Missing Code", accountHash.toHexString(), depth + 1));
+                children.add(new LabelNode("Missing Code", accountHash.toHexString()));
             } else {
                 final Hash foundCodeHash = Hash.hash(code.orElseThrow());
                 if (!foundCodeHash.equals(accountValue.getCodeHash())) {
-                    children.add(new LabelNode("Invalid Code hash", "found: " + foundCodeHash + " account: " + accountValue.getCodeHash(), depth + 1));
+                    children.add(new LabelNode("Invalid Code hash", "found: " + foundCodeHash + " account: " + accountValue.getCodeHash()));
                 } else {
-                    children.add(new LabelNode("Code", foundCodeHash.toHexString(), depth + 1));
+                    children.add(new LabelNode("Code", foundCodeHash.toHexString()));
                 }
             }
         } else {
-            children.add(new LabelNode("No Code", "No code", depth + 1));
+            children.add(new LabelNode("No Code", "No code"));
         }
         // Add storage, if appropriate
         if (!accountValue.getStorageRoot().equals(MerklePatriciaTrie.EMPTY_TRIE_NODE_HASH)) {
             final Node<Bytes> storageNodeValue = bonsaiStorageView.getStorageNodeValue(accountValue.getStorageRoot(), accountHash, Bytes.EMPTY);
             if (storageNodeValue == null) {
                 children.add(new LabelNode("Missing Storage", "Storage root: " + accountValue.getStorageRoot()
-                        .toHexString(), depth + 1));
+                        .toHexString()));
             } else {
-                children.add(new StorageTreeNode(bonsaiStorageView, accountHash, storageNodeValue,accountValue.getStorageRoot(), depth + 1));
+                children.add(new StorageTreeNode(bonsaiStorageView, accountHash, storageNodeValue, accountValue.getStorageRoot()));
             }
         } else {
-            children.add(new LabelNode("No Storage", "No storage", depth + 1));
+            children.add(new LabelNode("No Storage", "No storage"));
         }
         return children;
     }

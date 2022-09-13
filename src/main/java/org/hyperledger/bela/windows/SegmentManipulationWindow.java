@@ -20,6 +20,7 @@ import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.dialogs.BelaDialog;
+import org.hyperledger.bela.dialogs.ProgressBarPopup;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
@@ -248,8 +249,10 @@ public class SegmentManipulationWindow extends AbstractBelaWindow {
     }
 
     private void detectReadOnly() {
-        columnCheckBoxes.forEach(checkBox -> checkBox.setChecked(false));
         final List<SegmentIdentifier> listOfSegments = Arrays.asList(KeyValueSegmentIdentifier.values());
+        final ProgressBarPopup progress = ProgressBarPopup.showPopup(gui, "Detecting", listOfSegments.size());
+
+        columnCheckBoxes.forEach(checkBox -> checkBox.setChecked(false));
         selected.clear();
 
         for (SegmentIdentifier segment : listOfSegments) {
@@ -261,8 +264,11 @@ public class SegmentManipulationWindow extends AbstractBelaWindow {
                 columnCheckBoxes.get(listOfSegments.indexOf(segment)).setChecked(true);
             } catch (Exception e) {
                 //ignore on purpouse
+            } finally {
+                progress.increment();
             }
         }
+        progress.close();
     }
 
     private void detectReadWrite() {

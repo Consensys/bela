@@ -30,5 +30,6 @@ public class BonsaiListNode extends AbstractBonsaiNode {
     @Override
     public void log() {
         log.info(title);
+        list.forEach(BonsaiNode::log);
     }
 }

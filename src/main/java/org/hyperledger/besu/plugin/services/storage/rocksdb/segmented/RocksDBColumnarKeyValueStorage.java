@@ -38,6 +38,7 @@ import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDbSegmentIdenti
 import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDbUtil;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBConfiguration;
 import org.hyperledger.besu.services.kvstore.SegmentedKeyValueStorage;
+import org.hyperledger.besu.services.kvstore.SegmentedKeyValueStorageTransactionTransitionValidatorDecorator;
 import org.rocksdb.BlockBasedTableConfig;
 import org.rocksdb.ColumnFamilyDescriptor;
 import org.rocksdb.ColumnFamilyHandle;
@@ -59,17 +60,18 @@ import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNullElse;
 import static java.util.stream.Collectors.toUnmodifiableSet;
-import static org.hyperledger.bela.windows.Constants.NODE_PATH_DEFAULT;
 
 public class RocksDBColumnarKeyValueStorage
         implements SegmentedKeyValueStorage<RocksDbSegmentIdentifier> {
-
     public static final OperationTimer OPERATION_TIMER = () -> null;
+
     private static final Logger LOG = LoggerFactory.getLogger(RocksDBColumnarKeyValueStorage.class);
     private static final String DEFAULT_COLUMN = "default";
     private static final String NO_SPACE_LEFT_ON_DEVICE = "No space left on device";
     private static final int ROCKSDB_FORMAT_VERSION = 5;
     private static final long ROCKSDB_BLOCK_SIZE = 32768;
+    private static final long ROCKSDB_BLOCKCACHE_SIZE_HIGH_SPEC = 1_073_741_824L;
+    private static final long ROCKSDB_MEMTABLE_SIZE_HIGH_SPEC = 1_073_741_824L;
 
     static {
         RocksDbUtil.loadNativeLibrary();
@@ -112,19 +114,33 @@ public class RocksDBColumnarKeyValueStorage
                                     .setTableFormatConfig(createBlockBasedTableConfig(configuration))));
 
             final Statistics stats = new Statistics();
-            options =
-                    new DBOptions()
-                            .setCreateIfMissing(true)
-                            .setMaxOpenFiles(configuration.getMaxOpenFiles())
-                            .setMaxBackgroundCompactions(configuration.getMaxBackgroundCompactions())
-                            .setStatistics(stats)
-                            .setCreateMissingColumnFamilies(true)
-                            .setEnv(
-                                    Env.getDefault().setBackgroundThreads(configuration.getBackgroundThreadCount()));
+            if (configuration.isHighSpec()) {
+                options =
+                        new DBOptions()
+                                .setCreateIfMissing(true)
+                                .setMaxOpenFiles(configuration.getMaxOpenFiles())
+                                .setDbWriteBufferSize(ROCKSDB_MEMTABLE_SIZE_HIGH_SPEC)
+                                .setMaxBackgroundCompactions(configuration.getMaxBackgroundCompactions())
+                                .setStatistics(stats)
+                                .setCreateMissingColumnFamilies(true)
+                                .setEnv(
+                                        Env.getDefault()
+                                                .setBackgroundThreads(configuration.getBackgroundThreadCount()));
+            } else {
+                options =
+                        new DBOptions()
+                                .setCreateIfMissing(true)
+                                .setMaxOpenFiles(configuration.getMaxOpenFiles())
+                                .setMaxBackgroundCompactions(configuration.getMaxBackgroundCompactions())
+                                .setStatistics(stats)
+                                .setCreateMissingColumnFamilies(true)
+                                .setEnv(
+                                        Env.getDefault()
+                                                .setBackgroundThreads(configuration.getBackgroundThreadCount()));
+            }
 
             txOptions = new TransactionDBOptions();
             final List<ColumnFamilyHandle> columnHandles = new ArrayList<>(columnDescriptors.size());
-
             if (ReadOnlyDatabaseDecider.getInstance().isReadOnly()) {
                 db =
                         RocksDB.openReadOnly(
@@ -132,12 +148,18 @@ public class RocksDBColumnarKeyValueStorage
                                 configuration.getDatabaseDir().toString(),
                                 columnDescriptors,
                                 columnHandles);
+
+
             } else {
-                db = TransactionDB.open(options, txOptions, NODE_PATH_DEFAULT, columnDescriptors, columnHandles);
+                db = TransactionDB.open(
+                        options,
+                        txOptions,
+                        configuration.getDatabaseDir().toString(),
+                        columnDescriptors,
+                        columnHandles);
             }
-
-
             metrics = new RocksDBMetrics(OPERATION_TIMER, OPERATION_TIMER, OPERATION_TIMER, OPERATION_TIMER, new NoOpCounter());
+
             final Map<Bytes, String> segmentsById =
                     segments.stream()
                             .collect(
@@ -160,6 +182,22 @@ public class RocksDBColumnarKeyValueStorage
     }
 
     private BlockBasedTableConfig createBlockBasedTableConfig(final RocksDBConfiguration config) {
+        if (config.isHighSpec()) return createBlockBasedTableConfigHighSpec();
+        else return createBlockBasedTableConfigDefault(config);
+    }
+
+    private BlockBasedTableConfig createBlockBasedTableConfigHighSpec() {
+        final LRUCache cache = new LRUCache(ROCKSDB_BLOCKCACHE_SIZE_HIGH_SPEC);
+        return new BlockBasedTableConfig()
+                .setBlockCache(cache)
+                .setFormatVersion(ROCKSDB_FORMAT_VERSION)
+                .setOptimizeFiltersForMemory(true)
+                .setCacheIndexAndFilterBlocks(true)
+                .setBlockSize(ROCKSDB_BLOCK_SIZE);
+    }
+
+    private BlockBasedTableConfig createBlockBasedTableConfigDefault(
+            final RocksDBConfiguration config) {
         final LRUCache cache = new LRUCache(config.getCacheCapacity());
         return new BlockBasedTableConfig()
                 .setBlockCache(cache)
@@ -188,7 +226,16 @@ public class RocksDBColumnarKeyValueStorage
 
     @Override
     public Transaction<RocksDbSegmentIdentifier> startTransaction() throws StorageException {
-        throw new UnsupportedOperationException("RocksDB does not support transactions");
+        if (db instanceof TransactionDB tdb) {
+            throwIfClosed();
+            final WriteOptions writeOptions = new WriteOptions();
+            writeOptions.setIgnoreMissingColumnFamilies(true);
+            return new SegmentedKeyValueStorageTransactionTransitionValidatorDecorator<>(
+                    new RocksDbTransaction(tdb.beginTransaction(writeOptions), writeOptions));
+        } else {
+            throw new UnsupportedOperationException("RocksDB is not in transaction mode");
+        }
+
     }
 
     @Override

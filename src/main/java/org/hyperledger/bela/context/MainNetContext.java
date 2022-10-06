@@ -40,6 +40,7 @@ import org.hyperledger.besu.ethereum.eth.manager.EthScheduler;
 import org.hyperledger.besu.ethereum.eth.manager.ForkIdManager;
 import org.hyperledger.besu.ethereum.eth.manager.MergePeerFilter;
 import org.hyperledger.besu.ethereum.eth.peervalidation.PeerValidator;
+import org.hyperledger.besu.ethereum.eth.sync.state.SyncState;
 import org.hyperledger.besu.ethereum.eth.transactions.ImmutableTransactionPoolConfiguration;
 import org.hyperledger.besu.ethereum.eth.transactions.TransactionPool;
 import org.hyperledger.besu.ethereum.eth.transactions.TransactionPoolConfiguration;
@@ -288,7 +289,7 @@ public class MainNetContext implements BelaContext {
                 getEthContext(),
                 getClock(),
                 getMetricsSystem(),
-                () -> false,
+                getSyncState(),
                 getMiningParameters(),
                 getTransactionPoolConfiguration()
         );
@@ -349,5 +350,9 @@ public class MainNetContext implements BelaContext {
 
     private StorageProvider getProvider() {
         return storageProviderFactory.createProvider();
+    }
+
+    private SyncState getSyncState() {
+        return new SyncState(getBlockChain(), getEthContext().getEthPeers());
     }
 }

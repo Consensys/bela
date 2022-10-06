@@ -75,7 +75,8 @@ public class BonsaiTreeVerifier implements BonsaiListener {
                                                 RocksDBCLIOptions.DEFAULT_MAX_OPEN_FILES,
                                                 RocksDBCLIOptions.DEFAULT_MAX_BACKGROUND_COMPACTIONS,
                                                 RocksDBCLIOptions.DEFAULT_BACKGROUND_THREAD_COUNT,
-                                                RocksDBCLIOptions.DEFAULT_CACHE_CAPACITY),
+                                                RocksDBCLIOptions.DEFAULT_CACHE_CAPACITY,
+                                                RocksDBCLIOptions.DEFAULT_IS_HIGH_SPEC),
                                 Arrays.asList(KeyValueSegmentIdentifier.values()),
                                 RocksDBMetricsFactory.PUBLIC_ROCKS_DB_METRICS))
                 .withCommonConfiguration(new BelaConfigurationImpl(dataDir, dbDir))

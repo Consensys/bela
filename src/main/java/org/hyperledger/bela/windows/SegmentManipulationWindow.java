@@ -1,5 +1,6 @@
 package org.hyperledger.bela.windows;
 
+import java.util.HashMap;
 import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -18,6 +19,8 @@ import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
+import org.apache.commons.io.FileUtils;
+import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.dialogs.ProgressBarPopup;
@@ -145,6 +148,7 @@ public class SegmentManipulationWindow extends AbstractBelaWindow {
         return new KeyControls()
                 .addControl("Detect", KEY_DETECT_COLUMNS, this::detect)
                 .addControl("LongProp", KEY_LONG_PROPERTY, this::getLongProperty)
+                .addControl("Blockchain Sizes", 'b', this::blockchainSizes)
                 .addControl("Prune", KEY_PRUNE_COLUMNS, this::prune);
     }
 
@@ -310,5 +314,62 @@ public class SegmentManipulationWindow extends AbstractBelaWindow {
         }
         log.info("Columns: {}", columns);
         return columns;
+    }
+
+    enum BlockchainPrefix {
+        VARIABLES,
+        BLOCK_HEADER,
+        BLOCK_BODY,
+        TRANSACTION_RECEIPTS,
+        BLOCK_HASH,
+        TOTAL_DIFFICULTY,
+        TRANSACTION_LOCATION;
+
+        private static final Map<Bytes, BlockchainPrefix> PREFIX_MAPPING = Map.of(
+            Bytes.of(1), VARIABLES,
+            Bytes.of(2), BLOCK_HEADER,
+            Bytes.of(3), BLOCK_BODY,
+            Bytes.of(4), TRANSACTION_RECEIPTS,
+            Bytes.of(5), BLOCK_HASH,
+            Bytes.of(6), TOTAL_DIFFICULTY,
+            Bytes.of(7), TRANSACTION_LOCATION
+        );
+
+        public static Optional<BlockchainPrefix> fromBytes(final Bytes prefix) {
+            return Optional.ofNullable(PREFIX_MAPPING.get(prefix));
+        }
+    }
+
+    private void blockchainSizes() {
+        final StorageProvider provider = storageProviderFactory.createProvider(List.of(KeyValueSegmentIdentifier.BLOCKCHAIN));
+        final long estimate = accessLongPropertyForSegment(provider, KeyValueSegmentIdentifier.BLOCKCHAIN,
+            LongRocksDbProperty.ROCKSDB_ESTIMATE_NUM_KEYS);
+        final KeyValueStorage blockChainStorage = provider.getStorageBySegmentIdentifier(
+            KeyValueSegmentIdentifier.BLOCKCHAIN);
+
+        final ProgressBarPopup progress = ProgressBarPopup.showPopup(gui, "Calculating Sizes",
+            (int) estimate);
+        final Map<BlockchainPrefix, Long> blockchainSizes = new HashMap<>();
+
+        try {
+            blockChainStorage.streamKeys().forEach(key -> {
+                final byte[] value = blockChainStorage.get(key).orElse(new byte[]{});
+                final Bytes prefix = Bytes.wrap(key, 0, 1);
+                final Optional<BlockchainPrefix> blockchainPrefix = BlockchainPrefix.fromBytes(
+                    prefix);
+                blockchainPrefix.ifPresent(p -> blockchainSizes.merge(p, (long) value.length, Long::sum));
+                progress.increment();
+            });
+        } catch (Exception e) {
+            BelaDialog.showException(gui, e);
+        } finally {
+            progress.close();
+        }
+
+        final List<String> segmentInfos = blockchainSizes.entrySet().stream().map(entry ->
+            entry.getKey().name() + ": " + FileUtils.byteCountToDisplaySize(entry.getValue()))
+        .collect(Collectors.toList());
+
+        BelaDialog.showListDialog(gui, "Blockchain segment information", segmentInfos);
     }
 }

@@ -39,6 +39,7 @@ import org.rocksdb.RocksDBException;
 import org.rocksdb.TransactionDB;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
+import static org.hyperledger.bela.windows.Constants.KEY_BLOCKCHAIN_SIZES;
 import static org.hyperledger.bela.windows.Constants.KEY_DETECT_COLUMNS;
 import static org.hyperledger.bela.windows.Constants.KEY_LONG_PROPERTY;
 import static org.hyperledger.bela.windows.Constants.KEY_PRUNE_COLUMNS;
@@ -148,7 +149,7 @@ public class SegmentManipulationWindow extends AbstractBelaWindow {
         return new KeyControls()
                 .addControl("Detect", KEY_DETECT_COLUMNS, this::detect)
                 .addControl("LongProp", KEY_LONG_PROPERTY, this::getLongProperty)
-                .addControl("Blockchain Sizes", 'b', this::blockchainSizes)
+                .addControl("Blockchain Sizes", KEY_BLOCKCHAIN_SIZES, this::blockchainSizes)
                 .addControl("Prune", KEY_PRUNE_COLUMNS, this::prune);
     }
 

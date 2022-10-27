@@ -341,8 +341,10 @@ public class SegmentManipulationWindow extends AbstractBelaWindow {
     }
 
     private void blockchainSizes() {
-        final StorageProvider provider = storageProviderFactory.createProvider(List.of(KeyValueSegmentIdentifier.BLOCKCHAIN));
-        final long estimate = accessLongPropertyForSegment(provider, KeyValueSegmentIdentifier.BLOCKCHAIN,
+        final StorageProvider provider = storageProviderFactory.createProvider(
+            List.of(KeyValueSegmentIdentifier.BLOCKCHAIN));
+        final long estimate = accessLongPropertyForSegment(provider,
+            KeyValueSegmentIdentifier.BLOCKCHAIN,
             LongRocksDbProperty.ROCKSDB_ESTIMATE_NUM_KEYS);
         final KeyValueStorage blockChainStorage = provider.getStorageBySegmentIdentifier(
             KeyValueSegmentIdentifier.BLOCKCHAIN);
@@ -357,7 +359,8 @@ public class SegmentManipulationWindow extends AbstractBelaWindow {
                 final Bytes prefix = Bytes.wrap(key, 0, 1);
                 final Optional<BlockchainPrefix> blockchainPrefix = BlockchainPrefix.fromBytes(
                     prefix);
-                blockchainPrefix.ifPresent(p -> blockchainSizes.merge(p, (long) value.length, Long::sum));
+                blockchainPrefix.ifPresent(
+                    p -> blockchainSizes.merge(p, (long) value.length, Long::sum));
                 progress.increment();
             });
         } catch (Exception e) {
@@ -367,8 +370,8 @@ public class SegmentManipulationWindow extends AbstractBelaWindow {
         }
 
         final List<String> segmentInfos = blockchainSizes.entrySet().stream().map(entry ->
-            entry.getKey().name() + ": " + FileUtils.byteCountToDisplaySize(entry.getValue()))
-        .collect(Collectors.toList());
+                entry.getKey().name() + ": " + FileUtils.byteCountToDisplaySize(entry.getValue()))
+            .collect(Collectors.toList());
 
         BelaDialog.showListDialog(gui, "Blockchain segment information", segmentInfos);
     }

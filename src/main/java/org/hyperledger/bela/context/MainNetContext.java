@@ -24,12 +24,14 @@ import org.hyperledger.besu.datatypes.Wei;
 import org.hyperledger.besu.ethereum.ProtocolContext;
 import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateArchive;
 import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateKeyValueStorage;
+import org.hyperledger.besu.ethereum.bonsai.LayeredTrieLogManager;
 import org.hyperledger.besu.ethereum.bonsai.TrieLogManager;
 import org.hyperledger.besu.ethereum.chain.BlockchainStorage;
 import org.hyperledger.besu.ethereum.chain.DefaultBlockchain;
 import org.hyperledger.besu.ethereum.chain.MutableBlockchain;
 import org.hyperledger.besu.ethereum.core.MiningParameters;
 import org.hyperledger.besu.ethereum.core.PrivacyParameters;
+import org.hyperledger.besu.ethereum.core.Synchronizer;
 import org.hyperledger.besu.ethereum.eth.EthProtocol;
 import org.hyperledger.besu.ethereum.eth.EthProtocolConfiguration;
 import org.hyperledger.besu.ethereum.eth.manager.EthContext;
@@ -37,14 +39,15 @@ import org.hyperledger.besu.ethereum.eth.manager.EthMessages;
 import org.hyperledger.besu.ethereum.eth.manager.EthPeers;
 import org.hyperledger.besu.ethereum.eth.manager.EthProtocolManager;
 import org.hyperledger.besu.ethereum.eth.manager.EthScheduler;
-import org.hyperledger.besu.ethereum.eth.manager.ForkIdManager;
 import org.hyperledger.besu.ethereum.eth.manager.MergePeerFilter;
 import org.hyperledger.besu.ethereum.eth.peervalidation.PeerValidator;
+import org.hyperledger.besu.ethereum.eth.sync.SynchronizerConfiguration;
 import org.hyperledger.besu.ethereum.eth.sync.state.SyncState;
 import org.hyperledger.besu.ethereum.eth.transactions.ImmutableTransactionPoolConfiguration;
 import org.hyperledger.besu.ethereum.eth.transactions.TransactionPool;
 import org.hyperledger.besu.ethereum.eth.transactions.TransactionPoolConfiguration;
 import org.hyperledger.besu.ethereum.eth.transactions.TransactionPoolFactory;
+import org.hyperledger.besu.ethereum.forkid.ForkIdManager;
 import org.hyperledger.besu.ethereum.mainnet.MainnetBlockHeaderFunctions;
 import org.hyperledger.besu.ethereum.mainnet.MainnetProtocolSchedule;
 import org.hyperledger.besu.ethereum.mainnet.ProtocolSchedule;
@@ -194,7 +197,6 @@ public class MainNetContext implements BelaContext {
                 .storageProvider(storageProviderFactory.createProvider())
 //                .natService(natService)
 //                .randomPeerPriority(randomPeerPriority)
-                .forkIdSupplier(Collections::emptyList)
 //                .p2pTLSConfiguration(p2pTLSConfiguration)
                 .build();
 
@@ -261,7 +263,7 @@ public class MainNetContext implements BelaContext {
                 ethContext,
                 getPeerValidators(),
                 getMergePeerFilter(),
-                false,
+                new SynchronizerConfiguration.Builder().build(),
                 getEthScheduler(),
                 getForkIdManager());
         return protocolManager;
@@ -328,10 +330,7 @@ public class MainNetContext implements BelaContext {
     }
 
     private WorldStateArchive getWorldStateArchive() {
-        return new BonsaiWorldStateArchive(new TrieLogManager(
-                getBlockChain(),
-                getWorldStateStorage(),
-                DataStorageConfiguration.DEFAULT_CONFIG.getBonsaiMaxLayersToLoad()),getProvider(), getBlockChain());
+        return new BonsaiWorldStateArchive(getProvider(), getBlockChain());
     }
 
     private BonsaiWorldStateKeyValueStorage getWorldStateStorage() {

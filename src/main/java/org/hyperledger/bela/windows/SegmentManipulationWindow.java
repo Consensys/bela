@@ -353,6 +353,7 @@ public class SegmentManipulationWindow extends AbstractBelaWindow {
         final ProgressBarPopup progress = ProgressBarPopup.showPopup(gui, "Calculating Sizes",
             (int) estimate);
         final Map<BlockchainPrefix, Long> blockchainSizes = new HashMap<>();
+        final Map<BlockchainPrefix, Long> blockchainCount = new HashMap<>();
 
         try {
             blockChainStorage.streamKeys().forEach(key -> {
@@ -361,7 +362,10 @@ public class SegmentManipulationWindow extends AbstractBelaWindow {
                 final Optional<BlockchainPrefix> blockchainPrefix = BlockchainPrefix.fromBytes(
                     prefix);
                 blockchainPrefix.ifPresent(
-                    p -> blockchainSizes.merge(p, (long) value.length, Long::sum));
+                    p -> {
+                        blockchainSizes.merge(p, (long) value.length, Long::sum);
+                        blockchainCount.merge(p, (long) 1, Long::sum);
+                    });
                 progress.increment();
             });
         } catch (Exception e) {
@@ -371,7 +375,8 @@ public class SegmentManipulationWindow extends AbstractBelaWindow {
         }
 
         final List<String> segmentInfos = blockchainSizes.entrySet().stream().map(entry ->
-                entry.getKey().name() + ": " + FileUtils.byteCountToDisplaySize(entry.getValue()))
+                entry.getKey().name() + ": " + FileUtils.byteCountToDisplaySize(entry.getValue())
+                    + " count: " + blockchainCount.get(entry.getKey()))
             .collect(Collectors.toList());
 
         BelaDialog.showListDialog(gui, "Blockchain segment information", segmentInfos);

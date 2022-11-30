@@ -174,7 +174,8 @@ public class P2PManagementWindow extends AbstractBelaWindow implements MessageCa
                         belaContext.getEthContext(),
                         hash,
                         1,
-                        belaContext.getMetricsSystem());
+                        belaContext.getMetricsSystem(),
+                        3);
 
         final CompletableFuture<List<BlockHeader>> run = retryingGetHeadersEndingAtFromPeerByHashTask.run();
 

@@ -25,17 +25,15 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import com.google.common.collect.ImmutableMap;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.bela.utils.hacks.ReadOnlyDatabaseDecider;
 import org.hyperledger.besu.plugin.services.MetricsSystem;
 import org.hyperledger.besu.plugin.services.exception.StorageException;
 import org.hyperledger.besu.plugin.services.metrics.OperationTimer;
 import org.hyperledger.besu.plugin.services.storage.SegmentIdentifier;
-import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBMetrics;
-import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBMetricsFactory;
-import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDbKeyIterator;
-import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDbSegmentIdentifier;
-import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDbUtil;
+import org.hyperledger.besu.plugin.services.storage.rocksdb.*;
+import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDbIterator;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBConfiguration;
 import org.hyperledger.besu.services.kvstore.SegmentedKeyValueStorage;
 import org.hyperledger.besu.services.kvstore.SegmentedKeyValueStorageTransactionTransitionValidatorDecorator;
@@ -239,10 +237,17 @@ public class RocksDBColumnarKeyValueStorage
     }
 
     @Override
+    public Stream<Pair<byte[], byte[]>> stream(final RocksDbSegmentIdentifier segmentHandle) {
+        final RocksIterator rocksIterator = db.newIterator(segmentHandle.get());
+        rocksIterator.seekToFirst();
+        return RocksDbIterator.create(rocksIterator).toStream();
+    }
+
+    @Override
     public Stream<byte[]> streamKeys(final RocksDbSegmentIdentifier segmentHandle) {
         final RocksIterator rocksIterator = db.newIterator(segmentHandle.get());
         rocksIterator.seekToFirst();
-        return RocksDbKeyIterator.create(rocksIterator).toStream();
+        return RocksDbIterator.create(rocksIterator).toStreamKeys();
     }
 
     @Override
@@ -263,6 +268,15 @@ public class RocksDBColumnarKeyValueStorage
     public Set<byte[]> getAllKeysThat(
             final RocksDbSegmentIdentifier segmentHandle, final Predicate<byte[]> returnCondition) {
         return streamKeys(segmentHandle).filter(returnCondition).collect(toUnmodifiableSet());
+    }
+
+    @Override
+    public Set<byte[]> getAllValuesFromKeysThat(
+            final RocksDbSegmentIdentifier segmentHandle, final Predicate<byte[]> returnCondition) {
+        return stream(segmentHandle)
+                .filter(pair -> returnCondition.test(pair.getKey()))
+                .map(Pair::getValue)
+                .collect(toUnmodifiableSet());
     }
 
     @Override

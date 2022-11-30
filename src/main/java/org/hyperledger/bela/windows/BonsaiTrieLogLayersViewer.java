@@ -154,16 +154,7 @@ public class BonsaiTrieLogLayersViewer extends AbstractBelaWindow {
         final StorageProvider provider = storageProviderFactory.createProvider();
         final BlockChainContext blockChainContext = BlockChainContextFactory.createBlockChainContext(provider);
 
-        final BonsaiWorldStateArchive archive = new BonsaiWorldStateArchive(
-                new TrieLogManager(blockChainContext.getBlockchain(),
-                        new BonsaiWorldStateKeyValueStorage(
-                                provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_INFO_STATE),
-                                provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.CODE_STORAGE),
-                                provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_STORAGE_STORAGE),
-                                provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_BRANCH_STORAGE),
-                                provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_LOG_STORAGE)),
-                        DataStorageConfiguration.DEFAULT_CONFIG.getBonsaiMaxLayersToLoad()),
-                provider, blockChainContext.getBlockchain());
+        final BonsaiWorldStateArchive archive = new BonsaiWorldStateArchive(provider, blockChainContext.getBlockchain());
 
         return (BonsaiWorldStateUpdater) archive.getMutable().updater();
 

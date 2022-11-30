@@ -37,7 +37,8 @@ import org.hyperledger.besu.ethereum.eth.manager.EthMessages;
 import org.hyperledger.besu.ethereum.eth.manager.EthPeers;
 import org.hyperledger.besu.ethereum.eth.manager.EthProtocolManager;
 import org.hyperledger.besu.ethereum.eth.manager.EthScheduler;
-import org.hyperledger.besu.ethereum.eth.manager.ForkIdManager;
+import org.hyperledger.besu.ethereum.eth.sync.SynchronizerConfiguration;
+import org.hyperledger.besu.ethereum.forkid.ForkIdManager;
 import org.hyperledger.besu.ethereum.eth.manager.MergePeerFilter;
 import org.hyperledger.besu.ethereum.eth.peervalidation.PeerValidator;
 import org.hyperledger.besu.ethereum.eth.sync.state.SyncState;
@@ -194,7 +195,7 @@ public class MainNetContext implements BelaContext {
                 .storageProvider(storageProviderFactory.createProvider())
 //                .natService(natService)
 //                .randomPeerPriority(randomPeerPriority)
-                .forkIdSupplier(Collections::emptyList)
+                .forks(Collections.emptyList())
 //                .p2pTLSConfiguration(p2pTLSConfiguration)
                 .build();
 
@@ -261,7 +262,7 @@ public class MainNetContext implements BelaContext {
                 ethContext,
                 getPeerValidators(),
                 getMergePeerFilter(),
-                false,
+                SynchronizerConfiguration.builder().build(),
                 getEthScheduler(),
                 getForkIdManager());
         return protocolManager;
@@ -328,10 +329,7 @@ public class MainNetContext implements BelaContext {
     }
 
     private WorldStateArchive getWorldStateArchive() {
-        return new BonsaiWorldStateArchive(new TrieLogManager(
-                getBlockChain(),
-                getWorldStateStorage(),
-                DataStorageConfiguration.DEFAULT_CONFIG.getBonsaiMaxLayersToLoad()),getProvider(), getBlockChain());
+        return new BonsaiWorldStateArchive(getProvider(), getBlockChain());
     }
 
     private BonsaiWorldStateKeyValueStorage getWorldStateStorage() {

@@ -35,10 +35,7 @@ public class BlockChainContextFactory {
         var blockchain = DefaultBlockchain
                 .create(blockchainStorage, new NoOpMetricsSystem(), 0L);
         var worldStateStorage = new BonsaiWorldStateKeyValueStorage(provider);
-        var worldStateArchive = new BonsaiWorldStateArchive(new TrieLogManager(
-                blockchain,
-                worldStateStorage,
-                DataStorageConfiguration.DEFAULT_CONFIG.getBonsaiMaxLayersToLoad()),provider, blockchain);
+        var worldStateArchive = new BonsaiWorldStateArchive(provider, blockchain);
 
         return new BlockChainContext(blockchain, worldStateStorage, worldStateArchive);
     }

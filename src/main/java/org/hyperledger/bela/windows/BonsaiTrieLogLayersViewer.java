@@ -26,11 +26,13 @@ import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateArchive;
 import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateKeyValueStorage;
 import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateUpdater;
+import org.hyperledger.besu.ethereum.bonsai.CachedMerkleTrieLoader;
 import org.hyperledger.besu.ethereum.bonsai.TrieLogManager;
 import org.hyperledger.besu.ethereum.chain.ChainHead;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.ethereum.worldstate.DataStorageConfiguration;
+import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
@@ -154,7 +156,10 @@ public class BonsaiTrieLogLayersViewer extends AbstractBelaWindow {
         final StorageProvider provider = storageProviderFactory.createProvider();
         final BlockChainContext blockChainContext = BlockChainContextFactory.createBlockChainContext(provider);
 
-        final BonsaiWorldStateArchive archive = new BonsaiWorldStateArchive(provider, blockChainContext.getBlockchain());
+        final BonsaiWorldStateArchive archive = new BonsaiWorldStateArchive(
+            provider,
+            blockChainContext.getBlockchain(),
+            new CachedMerkleTrieLoader(new NoOpMetricsSystem()));
 
         return (BonsaiWorldStateUpdater) archive.getMutable().updater();
 

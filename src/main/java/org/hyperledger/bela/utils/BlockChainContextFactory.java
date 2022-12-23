@@ -6,6 +6,7 @@ import org.hyperledger.besu.consensus.ibft.IbftExtraDataCodec;
 import org.hyperledger.besu.consensus.qbft.QbftExtraDataCodec;
 import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateArchive;
 import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateKeyValueStorage;
+import org.hyperledger.besu.ethereum.bonsai.CachedMerkleTrieLoader;
 import org.hyperledger.besu.ethereum.bonsai.TrieLogManager;
 import org.hyperledger.besu.ethereum.chain.DefaultBlockchain;
 import org.hyperledger.besu.ethereum.core.BlockHeaderFunctions;
@@ -35,7 +36,8 @@ public class BlockChainContextFactory {
         var blockchain = DefaultBlockchain
                 .create(blockchainStorage, new NoOpMetricsSystem(), 0L);
         var worldStateStorage = new BonsaiWorldStateKeyValueStorage(provider);
-        var worldStateArchive = new BonsaiWorldStateArchive(provider, blockchain);
+        var worldStateArchive = new BonsaiWorldStateArchive(provider, blockchain,
+            new CachedMerkleTrieLoader(new NoOpMetricsSystem()));
 
         return new BlockChainContext(blockchain, worldStateStorage, worldStateArchive);
     }

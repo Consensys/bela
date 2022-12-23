@@ -196,7 +196,8 @@ public class MainNetContext implements BelaContext {
                 .storageProvider(storageProviderFactory.createProvider())
 //                .natService(natService)
 //                .randomPeerPriority(randomPeerPriority)
-                .forks(Collections.emptyList())
+                .blockNumberForks(Collections.emptyList())
+                .timestampForks(Collections.emptyList())
 //                .p2pTLSConfiguration(p2pTLSConfiguration)
                 .build();
 
@@ -272,6 +273,7 @@ public class MainNetContext implements BelaContext {
     private ForkIdManager getForkIdManager() {
         return new ForkIdManager(
                 getBlockChain(),
+                Collections.emptyList(),
                 Collections.emptyList(),
                 getEthProtocolConfiguration().isLegacyEth64ForkIdEnabled());
     }

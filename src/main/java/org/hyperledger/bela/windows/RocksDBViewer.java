@@ -26,7 +26,7 @@ public class RocksDBViewer extends AbstractBelaWindow {
     private static final Pattern HEX_ONLY = Pattern.compile("^[0-9A-Fa-f]+$");
     private final ComboBox<KeyValueSegmentIdentifier> identifierCombo = new ComboBox<>(KeyValueSegmentIdentifier.values());
     private final TextBox keyBox = new TextBox(new TerminalSize(80, 1));
-    private final Label valueLabel = new Label("");
+    private final TextBox valueBox = new TextBox(new TerminalSize(80, 1));
     private final StorageProviderFactory storageProviderFactory;
     private final WindowBasedTextGUI gui;
 
@@ -74,7 +74,7 @@ public class RocksDBViewer extends AbstractBelaWindow {
 
         Panel valuePanel = new Panel(new LinearLayout(Direction.HORIZONTAL));
         valuePanel.addComponent(new Label("Value (hex):"));
-        valuePanel.addComponent(valueLabel);
+        valuePanel.addComponent(valueBox);
         panel.addComponent(valuePanel);
 
 
@@ -88,9 +88,9 @@ public class RocksDBViewer extends AbstractBelaWindow {
             final Optional<byte[]> value = storageBySegmentIdentifier.get(Bytes.fromHexString(keyBox.getText())
                     .toArrayUnsafe());
             if (value.isPresent()) {
-                valueLabel.setText(Bytes.wrap(value.get()).toHexString());
+                valueBox.setText(Bytes.wrap(value.get()).toHexString());
             } else {
-                valueLabel.setText("Not found...");
+                valueBox.setText("Not found...");
             }
         } catch (Exception e) {
             BelaDialog.showException(gui, e);
@@ -125,14 +125,12 @@ public class RocksDBViewer extends AbstractBelaWindow {
         try {
             final StorageProvider provider = storageProviderFactory.createProvider();
             final KeyValueStorage storageBySegmentIdentifier = provider.getStorageBySegmentIdentifier(identifierCombo.getSelectedItem());
-            final Optional<byte[]> value = storageBySegmentIdentifier.get(Bytes.fromHexString(keyBox.getText())
-                .toArrayUnsafe());
             final boolean deleted = storageBySegmentIdentifier.tryDelete(Bytes.fromHexString(keyBox.getText())
                 .toArrayUnsafe());
             if (deleted) {
-                valueLabel.setText("Deleted " + keyBox.getText());
+                BelaDialog.showMessage(gui, "Delete key", "deleted " + keyBox.getText());
             } else {
-                valueLabel.setText("Not found...");
+                BelaDialog.showMessage(gui, "Delete key", "'" + keyBox.getText() + "' not found");
             }
         } catch (Exception e) {
             BelaDialog.showException(gui, e);

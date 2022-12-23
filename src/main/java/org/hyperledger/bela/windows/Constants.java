@@ -24,6 +24,7 @@ public class Constants {
 
     public static final Character KEY_DELETE = 'd';
     public static final Character KEY_SEARCH = 's';
+    public static final Character KEY_UPDATE = 'u';
     public static final Character KEY_CLOSE = 'q';
     public static final Character KEY_OPEN_TRANSACTION = 't';
     public static final Character KEY_TRACE_TRANSACTION = 't';

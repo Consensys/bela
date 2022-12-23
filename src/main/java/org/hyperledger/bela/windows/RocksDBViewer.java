@@ -20,6 +20,7 @@ import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 
 import static org.hyperledger.bela.windows.Constants.KEY_DELETE;
 import static org.hyperledger.bela.windows.Constants.KEY_SEARCH;
+import static org.hyperledger.bela.windows.Constants.KEY_UPDATE;
 
 public class RocksDBViewer extends AbstractBelaWindow {
     private static final Pattern HEX_ONLY = Pattern.compile("^[0-9A-Fa-f]+$");
@@ -52,6 +53,7 @@ public class RocksDBViewer extends AbstractBelaWindow {
     public KeyControls createControls() {
         return new KeyControls()
                 .addControl("Search", KEY_SEARCH, this::search)
+                .addControl("Update", KEY_UPDATE, this::update)
                 .addControl("Delete", KEY_DELETE, this::delete);
     }
 
@@ -94,6 +96,30 @@ public class RocksDBViewer extends AbstractBelaWindow {
             BelaDialog.showException(gui, e);
         }
     }
+
+    private void update() {
+        try {
+            final StorageProvider provider = storageProviderFactory.createProvider();
+            final KeyValueStorage storageBySegmentIdentifier = provider.getStorageBySegmentIdentifier(identifierCombo.getSelectedItem());
+            final Optional<byte[]> key = Optional.ofNullable(Bytes.fromHexString(keyBox.getText())
+                .toArrayUnsafe());
+            final Optional<byte[]> value = Optional.ofNullable(Bytes.fromHexString(keyBox.getText())
+                .toArrayUnsafe());
+            String message;
+            if (key.isPresent() && value.isPresent()) {
+                var tx = storageBySegmentIdentifier.startTransaction();
+                tx.put(key.get(), value.get());
+                tx.commit();
+                message = "Updated";
+            } else {
+                message = "Both key and value are required for update";
+            }
+            BelaDialog.showMessage(gui, "Update Key", message);
+        } catch (Exception e) {
+            BelaDialog.showException(gui, e);
+        }
+    }
+
 
     private void delete() {
         try {

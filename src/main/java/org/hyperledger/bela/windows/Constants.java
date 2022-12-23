@@ -22,6 +22,7 @@ public class Constants {
     public static final Character KEY_BEGINNING = '^';
     public static final Character KEY_END = '$';
 
+    public static final Character KEY_DELETE = 'd';
     public static final Character KEY_SEARCH = 's';
     public static final Character KEY_CLOSE = 'q';
     public static final Character KEY_OPEN_TRANSACTION = 't';

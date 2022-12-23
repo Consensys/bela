@@ -18,6 +18,7 @@ import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 
+import static org.hyperledger.bela.windows.Constants.KEY_DELETE;
 import static org.hyperledger.bela.windows.Constants.KEY_SEARCH;
 
 public class RocksDBViewer extends AbstractBelaWindow {
@@ -50,7 +51,8 @@ public class RocksDBViewer extends AbstractBelaWindow {
     @Override
     public KeyControls createControls() {
         return new KeyControls()
-                .addControl("Search", KEY_SEARCH, this::search);
+                .addControl("Search", KEY_SEARCH, this::search)
+                .addControl("Delete", KEY_DELETE, this::delete);
     }
 
     @Override
@@ -92,4 +94,23 @@ public class RocksDBViewer extends AbstractBelaWindow {
             BelaDialog.showException(gui, e);
         }
     }
+
+    private void delete() {
+        try {
+            final StorageProvider provider = storageProviderFactory.createProvider();
+            final KeyValueStorage storageBySegmentIdentifier = provider.getStorageBySegmentIdentifier(identifierCombo.getSelectedItem());
+            final Optional<byte[]> value = storageBySegmentIdentifier.get(Bytes.fromHexString(keyBox.getText())
+                .toArrayUnsafe());
+            final boolean deleted = storageBySegmentIdentifier.tryDelete(Bytes.fromHexString(keyBox.getText())
+                .toArrayUnsafe());
+            if (deleted) {
+                valueLabel.setText("Deleted " + keyBox.getText());
+            } else {
+                valueLabel.setText("Not found...");
+            }
+        } catch (Exception e) {
+            BelaDialog.showException(gui, e);
+        }
+    }
+
 }

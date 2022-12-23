@@ -103,14 +103,14 @@ public class RocksDBViewer extends AbstractBelaWindow {
             final KeyValueStorage storageBySegmentIdentifier = provider.getStorageBySegmentIdentifier(identifierCombo.getSelectedItem());
             final Optional<byte[]> key = Optional.ofNullable(Bytes.fromHexString(keyBox.getText())
                 .toArrayUnsafe());
-            final Optional<byte[]> value = Optional.ofNullable(Bytes.fromHexString(keyBox.getText())
+            final Optional<byte[]> value = Optional.ofNullable(Bytes.fromHexString(valueBox.getText())
                 .toArrayUnsafe());
             String message;
             if (key.isPresent() && value.isPresent()) {
                 var tx = storageBySegmentIdentifier.startTransaction();
                 tx.put(key.get(), value.get());
                 tx.commit();
-                message = "Updated";
+                message = "Updated to " + valueBox.getText();
             } else {
                 message = "Both key and value are required for update";
             }

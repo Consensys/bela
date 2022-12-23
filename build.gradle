@@ -20,7 +20,7 @@ sourceCompatibility = 17
 targetCompatibility = 17
 
 dependencies {
-    def besuVersion = '+'
+    def besuVersion = '22.10.3'
     implementation group:'org.hyperledger.besu.internal', name: 'api',  version:   besuVersion
     implementation group:'org.hyperledger.besu.internal', name: 'besu',  version:   besuVersion
     implementation group:'org.hyperledger.besu.internal', name: 'config',  version:   besuVersion

@@ -1,3 +1,5 @@
+import java.text.SimpleDateFormat
+
 plugins {
     id 'application'
 }
@@ -7,7 +9,7 @@ version '0.1-SNAPSHOT'
 
 repositories {
     mavenCentral()
-    maven { url "https://hyperledger.jfrog.io/hyperledger/besu-maven" }
+    maven { url "https://hyperledger.jfrog.io/hyperledger/besu-maven"}
     maven { url "https://artifacts.consensys.net/public/maven/maven/" }
     maven { url "https://splunk.jfrog.io/splunk/ext-releases-local" }
     maven { url "https://dl.cloudsmith.io/public/consensys/quorum-mainnet-launcher/maven/"}
@@ -19,8 +21,16 @@ apply plugin: 'java'
 sourceCompatibility = 17
 targetCompatibility = 17
 
+// specify the besu version to use via -PbesuVersion=.. otherwise default to latest.
+//   e.g. `-PbesuVersion=23.0.1-beta`
+def besuVersion = project.hasProperty('besuVersion') ? project.property('besuVersion') : '+'
+
+def dockerOrgName = project.hasProperty('dockerOrgName') ? project.getProperty("dockerOrgName") : "consensys"
+def dockerArtifactName = project.hasProperty("dockerArtifactName") ? project.getProperty("dockerArtifactName") : "bela"
+def dockerImageName = "${dockerOrgName}/${dockerArtifactName}"
+
+
 dependencies {
-    def besuVersion = '+'
     implementation group:'org.hyperledger.besu.internal', name: 'api',  version:   besuVersion
     implementation group:'org.hyperledger.besu.internal', name: 'besu',  version:   besuVersion
     implementation group:'org.hyperledger.besu.internal', name: 'config',  version:   besuVersion
@@ -63,10 +73,89 @@ configurations.all {
     exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
 }
 
+configurations {
+    resolvableImplementation
+    resolvableImplementation.extendsFrom implementation
+}
+
 application {
     mainClass = "org.hyperledger.bela.Bela"
 }
 
+task distDocker {
+    dependsOn installDist
+    inputs.dir("build/install/")
+
+    def dockerBuildVersion
+    def dockerBuildDir
+
+    doFirst {
+        dockerBuildDir = installDist.destinationDir.getParent()
+        println("building docker image using install: " + dockerBuildDir)
+
+        def resolvedConf = configurations
+                .getByName("resolvableImplementation")
+                .getResolvedConfiguration()
+        def besuDep = resolvedConf.getFirstLevelModuleDependencies()
+                .find(d -> d.moduleName == "besu")
+
+        dockerBuildVersion = (besuDep != null) ? besuDep.moduleVersion : "latest"
+
+        println("building docker image for besu version: " + dockerBuildVersion)
+    }
+    doLast {
+        copy {
+            from file("${projectDir}/src/docker/Dockerfile")
+            into(dockerBuildDir)
+        }
+
+        exec {
+            def image = "${dockerImageName}:${dockerBuildVersion}"
+            executable "sh"
+            workingDir dockerBuildDir
+            args "-c", "docker build --build-arg BUILD_DATE=${buildTime()} --build-arg VERSION=${dockerBuildVersion} --build-arg VCS_REF=${getCheckedOutGitCommitHash()} -t ${image} ."
+        }
+    }
+
+}
+
 test {
     useJUnitPlatform()
+}
+
+
+def getCheckedOutGitCommitHash(length = 8) {
+    try {
+        def gitFolder = "$projectDir/.git/"
+        if (!file(gitFolder).isDirectory()) {
+            // We are in a submodule.  The file's contents are `gitdir: <gitFolder>\n`.
+            // Read the file, cut off the front, and trim the whitespace.
+            gitFolder = file(gitFolder).text.substring(length).trim() + "/"
+        }
+        def takeFromHash = length
+        /*
+         * '.git/HEAD' contains either
+         *      in case of detached head: the currently checked out commit hash
+         *      otherwise: a reference to a file containing the current commit hash
+         */
+        def head = new File(gitFolder + "HEAD").text.split(":") // .git/HEAD
+        def isCommit = head.length == 1 // e5a7c79edabbf7dd39888442df081b1c9d8e88fd
+
+        if (isCommit) return head[0].trim().take(takeFromHash) // e5a7c79edabb
+
+        def refHead = new File(gitFolder + head[1].trim()) // .git/refs/heads/master
+        refHead.text.trim().take takeFromHash
+    } catch (Exception e) {
+        logger.warn('Could not calculate git commit, using "xxxxxxxx" (run with --info for stacktrace)')
+        logger.info('Error retrieving git commit', e)
+        return "xxxxxxxx"
+    }
+}
+
+// http://label-schema.org/rc1/
+// using the RFC3339 format "2016-04-12T23:20:50.52Z"
+def buildTime() {
+    def df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'")
+    df.setTimeZone(TimeZone.getTimeZone("UTC"))
+    return df.format(new Date())
 }

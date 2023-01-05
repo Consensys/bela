@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.ComboBox;
 import com.googlecode.lanterna.gui2.Direction;
+import com.googlecode.lanterna.gui2.GridLayout;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
@@ -18,6 +19,9 @@ import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 
+import static org.hyperledger.bela.utils.TextUtils.abbreviateForDisplay;
+import static org.hyperledger.bela.utils.TextUtils.unWrapDisplayBytes;
+import static org.hyperledger.bela.utils.TextUtils.wrapBytesForDisplayAtCols;
 import static org.hyperledger.bela.windows.Constants.KEY_DELETE;
 import static org.hyperledger.bela.windows.Constants.KEY_SEARCH;
 import static org.hyperledger.bela.windows.Constants.KEY_UPDATE;
@@ -26,7 +30,7 @@ public class RocksDBViewer extends AbstractBelaWindow {
     private static final Pattern HEX_ONLY = Pattern.compile("^[0-9A-Fa-f]+$");
     private final ComboBox<KeyValueSegmentIdentifier> identifierCombo = new ComboBox<>(KeyValueSegmentIdentifier.values());
     private final TextBox keyBox = new TextBox(new TerminalSize(80, 1));
-    private final TextBox valueBox = new TextBox(new TerminalSize(80, 1));
+    private final TextBox valueBox = new TextBox(new TerminalSize(80, 25));
     private final StorageProviderFactory storageProviderFactory;
     private final WindowBasedTextGUI gui;
 
@@ -71,7 +75,6 @@ public class RocksDBViewer extends AbstractBelaWindow {
         keyPanel.addComponent(new Label("Key (hex):"));
         keyPanel.addComponent(keyBox);
         panel.addComponent(keyPanel);
-
         Panel valuePanel = new Panel(new LinearLayout(Direction.HORIZONTAL));
         valuePanel.addComponent(new Label("Value (hex):"));
         valuePanel.addComponent(valueBox);
@@ -88,7 +91,7 @@ public class RocksDBViewer extends AbstractBelaWindow {
             final Optional<byte[]> value = storageBySegmentIdentifier.get(Bytes.fromHexString(keyBox.getText())
                     .toArrayUnsafe());
             if (value.isPresent()) {
-                valueBox.setText(Bytes.wrap(value.get()).toHexString());
+                valueBox.setText(wrapBytesForDisplayAtCols(value.get(), 78));
             } else {
                 valueBox.setText("Not found...");
             }
@@ -103,14 +106,13 @@ public class RocksDBViewer extends AbstractBelaWindow {
             final KeyValueStorage storageBySegmentIdentifier = provider.getStorageBySegmentIdentifier(identifierCombo.getSelectedItem());
             final Optional<byte[]> key = Optional.ofNullable(Bytes.fromHexString(keyBox.getText())
                 .toArrayUnsafe());
-            final Optional<byte[]> value = Optional.ofNullable(Bytes.fromHexString(valueBox.getText())
-                .toArrayUnsafe());
+            final Optional<byte[]> value = Optional.ofNullable(unWrapDisplayBytes(valueBox.getText()));
             String message;
             if (key.isPresent() && value.isPresent()) {
                 var tx = storageBySegmentIdentifier.startTransaction();
                 tx.put(key.get(), value.get());
                 tx.commit();
-                message = "Updated to " + valueBox.getText();
+                message = "Updated to " + abbreviateForDisplay(valueBox.getText());
             } else {
                 message = "Both key and value are required for update";
             }

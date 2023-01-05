@@ -1,7 +1,5 @@
 package org.hyperledger.bela.windows;
 
-import java.util.Optional;
-import java.util.regex.Pattern;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.ComboBox;
 import com.googlecode.lanterna.gui2.Direction;
@@ -10,6 +8,8 @@ import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.TextBox;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
+import com.googlecode.lanterna.gui2.dialogs.MessageDialogBuilder;
+import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.dialogs.BelaDialog;
@@ -18,13 +18,23 @@ import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 
+import java.util.Optional;
+import java.util.regex.Pattern;
+
+import static org.hyperledger.bela.utils.TextUtils.abbreviateForDisplay;
+import static org.hyperledger.bela.utils.TextUtils.unWrapDisplayBytes;
+import static org.hyperledger.bela.utils.TextUtils.wrapBytesForDisplayAtCols;
+import static org.hyperledger.bela.windows.Constants.KEY_DELETE;
 import static org.hyperledger.bela.windows.Constants.KEY_SEARCH;
+import static org.hyperledger.bela.windows.Constants.KEY_UPDATE;
+import static org.hyperledger.bela.windows.Constants.KEY_RESET;
 
 public class RocksDBViewer extends AbstractBelaWindow {
-    private static final Pattern HEX_ONLY = Pattern.compile("^[0-9A-Fa-f]+$");
+    private static final Pattern HEX_ONLY = Pattern.compile("^(0x)?[0-9A-Fa-f]*$");
+    private static final Pattern HEX_AND_WRAP_ONLY = Pattern.compile("^(0x)?[0-9A-Fa-f]*(\\\\\n)?$");
     private final ComboBox<KeyValueSegmentIdentifier> identifierCombo = new ComboBox<>(KeyValueSegmentIdentifier.values());
     private final TextBox keyBox = new TextBox(new TerminalSize(80, 1));
-    private final Label valueLabel = new Label("");
+    private final TextBox valueBox = new TextBox(new TerminalSize(80, 25));
     private final StorageProviderFactory storageProviderFactory;
     private final WindowBasedTextGUI gui;
 
@@ -33,6 +43,7 @@ public class RocksDBViewer extends AbstractBelaWindow {
 
         this.storageProviderFactory = storageProviderFactory;
         keyBox.setValidationPattern(HEX_ONLY);
+        valueBox.setValidationPattern(HEX_AND_WRAP_ONLY);
 
     }
 
@@ -50,7 +61,10 @@ public class RocksDBViewer extends AbstractBelaWindow {
     @Override
     public KeyControls createControls() {
         return new KeyControls()
-                .addControl("Search", KEY_SEARCH, this::search);
+                .addControl("Search", KEY_SEARCH, this::search)
+                .addControl("Update", KEY_UPDATE, this::update)
+                .addControl("Delete", KEY_DELETE, this::delete)
+                .addControl("Reset", KEY_RESET, this::reset);
     }
 
     @Override
@@ -67,10 +81,9 @@ public class RocksDBViewer extends AbstractBelaWindow {
         keyPanel.addComponent(new Label("Key (hex):"));
         keyPanel.addComponent(keyBox);
         panel.addComponent(keyPanel);
-
         Panel valuePanel = new Panel(new LinearLayout(Direction.HORIZONTAL));
         valuePanel.addComponent(new Label("Value (hex):"));
-        valuePanel.addComponent(valueLabel);
+        valuePanel.addComponent(valueBox);
         panel.addComponent(valuePanel);
 
 
@@ -84,12 +97,70 @@ public class RocksDBViewer extends AbstractBelaWindow {
             final Optional<byte[]> value = storageBySegmentIdentifier.get(Bytes.fromHexString(keyBox.getText())
                     .toArrayUnsafe());
             if (value.isPresent()) {
-                valueLabel.setText(Bytes.wrap(value.get()).toHexString());
+                valueBox.setText(wrapBytesForDisplayAtCols(value.get(), 78));
             } else {
-                valueLabel.setText("Not found...");
+                BelaDialog.showMessage(gui, "Search Key",
+                        "Key '" + abbreviateForDisplay(keyBox.getText()) + "' not found");
+                valueBox.setText("");
             }
         } catch (Exception e) {
             BelaDialog.showException(gui, e);
         }
     }
+
+    private void update() {
+        try {
+            final StorageProvider provider = storageProviderFactory.createProvider();
+            final KeyValueStorage storageBySegmentIdentifier = provider.getStorageBySegmentIdentifier(identifierCombo.getSelectedItem());
+            if (keyBox.getText().length() > 0) {
+                final Optional<byte[]> key = Optional.ofNullable(Bytes.fromHexString(keyBox.getText())
+                        .toArrayUnsafe());
+                final Optional<byte[]> value = Optional.ofNullable(unWrapDisplayBytes(valueBox.getText()));
+
+                final MessageDialogButton messageDialogButton = new MessageDialogBuilder()
+                        .setTitle("Are you sure?")
+                        .setText("Updating key: \n\t" + abbreviateForDisplay(key.get())
+                                + "\nto value:\n\t" + abbreviateForDisplay(value.get()))
+                        .addButton(MessageDialogButton.Cancel)
+                        .addButton(MessageDialogButton.OK)
+                        .build()
+                        .showDialog(gui);
+
+                if (messageDialogButton.equals(MessageDialogButton.OK)) {
+                    var tx = storageBySegmentIdentifier.startTransaction();
+                    tx.put(key.get(), value.get());
+                    tx.commit();
+                }
+            } else {
+                BelaDialog.showMessage(gui, "Update Key", "Key is required for update");
+            }
+
+        } catch (Exception e) {
+            BelaDialog.showException(gui, e);
+        }
+    }
+
+
+    private void delete() {
+        try {
+            final StorageProvider provider = storageProviderFactory.createProvider();
+            final KeyValueStorage storageBySegmentIdentifier = provider.getStorageBySegmentIdentifier(identifierCombo.getSelectedItem());
+            final boolean deleted = storageBySegmentIdentifier.tryDelete(Bytes.fromHexString(keyBox.getText())
+                .toArrayUnsafe());
+            if (deleted) {
+                BelaDialog.showMessage(gui, "Delete key", "deleted " + keyBox.getText());
+                valueBox.setText("");
+            } else {
+                BelaDialog.showMessage(gui, "Delete key", "'" + keyBox.getText() + "' not found");
+            }
+        } catch (Exception e) {
+            BelaDialog.showException(gui, e);
+        }
+    }
+
+    private void reset() {
+        keyBox.setText("");
+        valueBox.setText("");
+    }
+
 }

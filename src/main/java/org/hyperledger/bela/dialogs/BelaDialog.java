@@ -21,7 +21,7 @@ public interface BelaDialog {
         dialog.showDialog(gui);
     }
 
-    public static void showException(final WindowBasedTextGUI gui, Exception e) {
+    static void showException(final WindowBasedTextGUI gui, Exception e) {
         new BelaExceptionDialog(e).showAndWait(gui);
     }
 
@@ -29,7 +29,7 @@ public interface BelaDialog {
         new BelaActionListDialog<T>(title, list, nameGenerator, subscriber).showAndWait(gui);
     }
 
-    public void showAndWait(WindowBasedTextGUI gui);
+    void showAndWait(WindowBasedTextGUI gui);
 
 
 

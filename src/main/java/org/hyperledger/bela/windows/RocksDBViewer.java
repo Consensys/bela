@@ -13,6 +13,7 @@ import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.dialogs.BelaDialog;
+import org.hyperledger.bela.model.KeyValueConstants;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
@@ -25,14 +26,15 @@ import static org.hyperledger.bela.utils.TextUtils.abbreviateForDisplay;
 import static org.hyperledger.bela.utils.TextUtils.unWrapDisplayBytes;
 import static org.hyperledger.bela.utils.TextUtils.wrapBytesForDisplayAtCols;
 import static org.hyperledger.bela.windows.Constants.KEY_DELETE;
+import static org.hyperledger.bela.windows.Constants.KEY_RESET;
 import static org.hyperledger.bela.windows.Constants.KEY_SEARCH;
 import static org.hyperledger.bela.windows.Constants.KEY_UPDATE;
-import static org.hyperledger.bela.windows.Constants.KEY_RESET;
 
 public class RocksDBViewer extends AbstractBelaWindow {
     private static final Pattern HEX_ONLY = Pattern.compile("^(0x)?[0-9A-Fa-f]*$");
     private static final Pattern HEX_AND_WRAP_ONLY = Pattern.compile("^(0x)?[0-9A-Fa-f]*(\\\\\n)?$");
     private final ComboBox<KeyValueSegmentIdentifier> identifierCombo = new ComboBox<>(KeyValueSegmentIdentifier.values());
+    private final ComboBox<KeyValueConstants> kvConstantsCombo = new ComboBox<>(KeyValueConstants.values());;
     private final TextBox keyBox = new TextBox(new TerminalSize(80, 1));
     private final TextBox valueBox = new TextBox(new TerminalSize(80, 25));
     private final StorageProviderFactory storageProviderFactory;
@@ -44,7 +46,11 @@ public class RocksDBViewer extends AbstractBelaWindow {
         this.storageProviderFactory = storageProviderFactory;
         keyBox.setValidationPattern(HEX_ONLY);
         valueBox.setValidationPattern(HEX_AND_WRAP_ONLY);
-
+        kvConstantsCombo.addListener((selected, previous, changedByUser) -> {
+            if (changedByUser) {
+                keyBox.setText(KeyValueConstants.values()[selected].getKeyValue());
+            }
+        });
     }
 
     @Override
@@ -73,11 +79,14 @@ public class RocksDBViewer extends AbstractBelaWindow {
 
 
         Panel columnFamily = new Panel(new LinearLayout(Direction.HORIZONTAL));
-        columnFamily.addComponent(new Label("Column family: "));
+        columnFamily.addComponent(new Label("Column family:"));
         columnFamily.addComponent(identifierCombo);
         panel.addComponent(columnFamily);
+        Panel constantsPanel = new Panel(new LinearLayout(Direction.HORIZONTAL));
+        constantsPanel.addComponent(new Label("Autofill Key Constant:"));
+        constantsPanel.addComponent(kvConstantsCombo);
+        panel.addComponent(constantsPanel);
         Panel keyPanel = new Panel(new LinearLayout(Direction.HORIZONTAL));
-
         keyPanel.addComponent(new Label("Key (hex):"));
         keyPanel.addComponent(keyBox);
         panel.addComponent(keyPanel);
@@ -119,8 +128,8 @@ public class RocksDBViewer extends AbstractBelaWindow {
 
                 final MessageDialogButton messageDialogButton = new MessageDialogBuilder()
                         .setTitle("Are you sure?")
-                        .setText("Updating key: \n\t" + abbreviateForDisplay(key.get())
-                                + "\nto value:\n\t" + abbreviateForDisplay(value.get()))
+                        .setText("Updating Key: \n\t" + abbreviateForDisplay(key.get())
+                                + "\nwith Value:\n\t" + abbreviateForDisplay(value.get()))
                         .addButton(MessageDialogButton.Cancel)
                         .addButton(MessageDialogButton.OK)
                         .build()

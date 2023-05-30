@@ -15,13 +15,13 @@ import org.hyperledger.besu.config.GenesisConfigOptions;
 import org.hyperledger.besu.consensus.clique.CliqueProtocolSchedule;
 import org.hyperledger.besu.consensus.ibft.IbftExtraDataCodec;
 import org.hyperledger.besu.consensus.ibft.IbftForksSchedulesFactory;
-import org.hyperledger.besu.consensus.ibft.IbftProtocolSchedule;
+import org.hyperledger.besu.consensus.ibft.IbftProtocolScheduleBuilder;
 import org.hyperledger.besu.consensus.qbft.QbftExtraDataCodec;
 import org.hyperledger.besu.consensus.qbft.QbftForksSchedulesFactory;
-import org.hyperledger.besu.consensus.qbft.QbftProtocolSchedule;
-import org.hyperledger.besu.crypto.KeyPairSecurityModule;
+import org.hyperledger.besu.consensus.qbft.QbftProtocolScheduleBuilder;
 import org.hyperledger.besu.crypto.KeyPairUtil;
-import org.hyperledger.besu.crypto.NodeKey;
+import org.hyperledger.besu.cryptoservices.KeyPairSecurityModule;
+import org.hyperledger.besu.cryptoservices.NodeKey;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.api.jsonrpc.internal.methods.TraceTransaction;
 import org.hyperledger.besu.ethereum.api.jsonrpc.internal.processor.BlockReplay;
@@ -86,12 +86,12 @@ public class TraceUtils {
                     EvmConfiguration.DEFAULT);
         } else if (configOptions.isIbft2()) {
             var forkSchedule = IbftForksSchedulesFactory.create(configOptions);
-            return IbftProtocolSchedule.create(configOptions, forkSchedule, PrivacyParameters.DEFAULT,
+            return IbftProtocolScheduleBuilder.create(configOptions, forkSchedule, PrivacyParameters.DEFAULT,
                     true, new IbftExtraDataCodec(),
                     EvmConfiguration.DEFAULT);
         } else if (configOptions.isQbft()) {
             var forkSchedule = QbftForksSchedulesFactory.create(configOptions);
-            return QbftProtocolSchedule.create(configOptions, forkSchedule, PrivacyParameters.DEFAULT,
+            return QbftProtocolScheduleBuilder.create(configOptions, forkSchedule, PrivacyParameters.DEFAULT,
                     true, new QbftExtraDataCodec(),
                     EvmConfiguration.DEFAULT);
         } else {

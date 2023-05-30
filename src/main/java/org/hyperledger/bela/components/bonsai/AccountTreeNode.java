@@ -10,7 +10,7 @@ import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.trie.CompactEncoding;
 import org.hyperledger.besu.ethereum.trie.Node;
-import org.hyperledger.besu.ethereum.trie.TrieNodeDecoder;
+import org.hyperledger.besu.ethereum.trie.patricia.TrieNodeDecoder;
 import org.jetbrains.annotations.NotNull;
 
 public class AccountTreeNode extends AbstractBonsaiNode {
@@ -32,7 +32,7 @@ public class AccountTreeNode extends AbstractBonsaiNode {
     @Override
     public List<BonsaiNode> getChildren() {
         final List<Node<Bytes>> nodes =
-                TrieNodeDecoder.decodeNodes(node.getLocation().orElseThrow(), node.getRlp());
+                TrieNodeDecoder.decodeNodes(node.getLocation().orElseThrow(), node.getEncodedBytes());
         final List<BonsaiNode> children = nodes.stream()
                 .map(node -> {
                     if (bonsaiStorageView.nodeIsHashReferencedDescendant(this.node, node)) {
@@ -64,7 +64,7 @@ public class AccountTreeNode extends AbstractBonsaiNode {
                 .map(Bytes::toHexString).orElse("")).createComponent());
         panel.addComponent(LabelWithTextBox.labelWithTextBox("Hash", node.getHash().toHexString())
                 .createComponent());
-        panel.addComponent(LabelWithTextBox.labelWithTextBox("RLP", node.getRlp().toHexString())
+        panel.addComponent(LabelWithTextBox.labelWithTextBox("RLP", node.getEncodedBytes().toHexString())
                 .createComponent());
         return panel.withBorder(Borders.singleLine("Account Tree Node"));
     }
@@ -79,6 +79,6 @@ public class AccountTreeNode extends AbstractBonsaiNode {
         log.info("AccountTreeNode");
         log.info("Location: {}", node.getLocation().map(Bytes::toHexString).orElse(""));
         log.info("Hash: {}", node.getHash().toHexString());
-        log.info("RLP: {}", node.getRlp().toHexString());
+        log.info("RLP: {}", node.getEncodedBytes().toHexString());
     }
 }

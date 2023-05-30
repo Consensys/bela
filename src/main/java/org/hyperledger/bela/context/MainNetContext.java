@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
+
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -22,10 +24,8 @@ import org.hyperledger.besu.config.JsonGenesisConfigOptions;
 import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.datatypes.Wei;
 import org.hyperledger.besu.ethereum.ProtocolContext;
-import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateArchive;
-import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateKeyValueStorage;
-import org.hyperledger.besu.ethereum.bonsai.CachedMerkleTrieLoader;
-import org.hyperledger.besu.ethereum.bonsai.TrieLogManager;
+import org.hyperledger.besu.ethereum.bonsai.cache.CachedMerkleTrieLoader;
+import org.hyperledger.besu.ethereum.bonsai.storage.BonsaiWorldStateKeyValueStorage;
 import org.hyperledger.besu.ethereum.chain.BlockchainStorage;
 import org.hyperledger.besu.ethereum.chain.DefaultBlockchain;
 import org.hyperledger.besu.ethereum.chain.MutableBlockchain;
@@ -50,6 +50,7 @@ import org.hyperledger.besu.ethereum.eth.transactions.TransactionPoolFactory;
 import org.hyperledger.besu.ethereum.mainnet.MainnetBlockHeaderFunctions;
 import org.hyperledger.besu.ethereum.mainnet.MainnetProtocolSchedule;
 import org.hyperledger.besu.ethereum.mainnet.ProtocolSchedule;
+import org.hyperledger.besu.ethereum.mainnet.ProtocolSpec;
 import org.hyperledger.besu.ethereum.p2p.config.NetworkingConfiguration;
 import org.hyperledger.besu.ethereum.p2p.config.RlpxConfiguration;
 import org.hyperledger.besu.ethereum.p2p.network.DefaultP2PNetwork;
@@ -117,15 +118,19 @@ public class MainNetContext implements BelaContext {
         if (ethContext!= null){
             return ethContext;
         }
+        final Supplier<ProtocolSpec> currentProtocolSpecSupplier =
+                () -> getProtocolSchedule().getByBlockHeader(getBlockChain().getChainHeadHeader());
         final Clock clock = getClock();
+        final Bytes localNodeKey = Bytes.wrap(new byte[64]);
+        final int maxPeers = 10;
         final EthPeers ethPeers =
                 new EthPeers(
                         "eth",
+                        currentProtocolSpecSupplier,
                         clock,
                         getMetricsSystem(),
-                        10,
                         1000,
-                        Collections.emptyList());
+                        Collections.emptyList(), localNodeKey, maxPeers, maxPeers, maxPeers, false);
         final EthScheduler scheduler = getEthScheduler();
         ethContext = new EthContext(ethPeers, new EthMessages(), new EthMessages(), scheduler);
         return ethContext;
@@ -178,11 +183,8 @@ public class MainNetContext implements BelaContext {
         final RlpxConfiguration rlpxConfiguration = RlpxConfiguration.create()
                 .setBindHost(p2pListenInterface)
                 .setBindPort(p2pListenPort)
-                .setPeerUpperBound(maxPeers)
                 .setSupportedProtocols(subProtocols)
-                .setClientId(BesuInfo.nodeName(identityString))
-                .setLimitRemoteWireConnectionsEnabled(limitRemoteWireConnectionsEnabled)
-                .setFractionRemoteWireConnectionsAllowed(fractionRemoteConnectionsAllowed);
+                .setClientId(BesuInfo.nodeName(identityString));
 
         networkingConfiguration.setRlpx(rlpxConfiguration);
 
@@ -208,7 +210,7 @@ public class MainNetContext implements BelaContext {
                     connection.getAgreedCapabilities(), getSupportedCapabilities())) {
                 return;
             }
-            getEthContext().getEthPeers().registerConnection(connection, getPeerValidators());
+            getEthContext().getEthPeers().registerNewConnection(connection, getPeerValidators());
 
         });
         network.subscribeDisconnect((connection, reason, initiatedByPeer) -> {

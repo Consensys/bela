@@ -36,7 +36,7 @@ dependencies {
     implementation group:'org.hyperledger.besu.internal', name: 'config',  version:   besuVersion
     implementation group:'org.hyperledger.besu.internal', name: 'clique',  version:   besuVersion
     implementation group:'org.hyperledger.besu.internal', name: 'core',  version:   besuVersion
-    implementation group:'org.hyperledger.besu.internal', name: 'crypto',  version:   besuVersion
+    implementation group:'org.hyperledger.besu.internal', name: 'services',  version:   besuVersion
     implementation group:'org.hyperledger.besu.internal', name: 'plugins-rocksdb',  version:   besuVersion
     implementation group:'org.hyperledger.besu.internal', name: 'metrics-core',  version:   besuVersion
     implementation group:'org.hyperledger.besu.internal', name: 'trie',  version:   besuVersion

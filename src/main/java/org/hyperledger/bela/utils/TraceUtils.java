@@ -43,9 +43,8 @@ public class TraceUtils {
         final String genesisConfig = getGenesisConfig(preferences);
         final ProtocolSchedule protocolSchedule = getProtocolSchedule(preferences, genesisConfig);
         var blockchain = context.getBlockchain();
-        var bonsaiWorldStateArchive = context.getBonsaiWorldStateArchive();
-        final BlockReplay blockReplay = new BlockReplay(protocolSchedule, blockchain,
-                bonsaiWorldStateArchive);
+        var bonsaiWorldStateArchive = context.getBonsaiWorldStateProvider();
+        final BlockReplay blockReplay = new BlockReplay(protocolSchedule, blockchain);
         final BlockchainQueries blockchainQueries = new BlockchainQueries(blockchain,
                 bonsaiWorldStateArchive);
         final TraceTransaction traceTransaction = new TraceTransaction(

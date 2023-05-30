@@ -4,6 +4,7 @@ import org.hyperledger.bela.utils.ConsensusDetector.CONSENSUS_TYPE;
 import org.hyperledger.besu.consensus.common.bft.BftBlockHeaderFunctions;
 import org.hyperledger.besu.consensus.ibft.IbftExtraDataCodec;
 import org.hyperledger.besu.consensus.qbft.QbftExtraDataCodec;
+import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateProvider;
 import org.hyperledger.besu.ethereum.bonsai.cache.CachedMerkleTrieLoader;
 import org.hyperledger.besu.ethereum.bonsai.storage.BonsaiWorldStateKeyValueStorage;
 import org.hyperledger.besu.ethereum.chain.DefaultBlockchain;
@@ -18,8 +19,8 @@ import static org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIden
 
 public class BlockChainContextFactory {
 
-    public static BlockChainContext createBlockChainContext(final StorageProvider provider) {
-        final KeyValueStorage keyValueStorage = provider.getStorageBySegmentIdentifier(BLOCKCHAIN);
+    public static BlockChainContext createBlockChainContext(final StorageProvider storageProvider) {
+        final KeyValueStorage keyValueStorage = storageProvider.getStorageBySegmentIdentifier(BLOCKCHAIN);
         final CONSENSUS_TYPE consensusType = ConsensusDetector.detectConsensusMechanism(
                 keyValueStorage);
         final BlockHeaderFunctions blockHeaderFunction = switch (consensusType) {
@@ -28,13 +29,14 @@ public class BlockChainContextFactory {
             default -> new MainnetBlockHeaderFunctions();
         };
 
+        final NoOpMetricsSystem noOpMetricsSystem = new NoOpMetricsSystem();
         var blockchainStorage = new KeyValueStoragePrefixedKeyBlockchainStorage(keyValueStorage,
                 blockHeaderFunction);
         var blockchain = DefaultBlockchain
                 .create(blockchainStorage, new NoOpMetricsSystem(), 0L);
-        var worldStateStorage = new BonsaiWorldStateKeyValueStorage(provider);
-        var worldStateArchive = new BonsaiWorldStateArchive(provider, blockchain,
-            new CachedMerkleTrieLoader(new NoOpMetricsSystem()));
+        var worldStateStorage = new BonsaiWorldStateKeyValueStorage(storageProvider, noOpMetricsSystem);
+        var worldStateArchive = new BonsaiWorldStateProvider(storageProvider, blockchain,
+            new CachedMerkleTrieLoader(noOpMetricsSystem), noOpMetricsSystem,null );
 
         return new BlockChainContext(blockchain, worldStateStorage, worldStateArchive);
     }

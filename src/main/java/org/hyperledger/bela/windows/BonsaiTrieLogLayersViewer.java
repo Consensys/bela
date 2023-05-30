@@ -23,7 +23,9 @@ import org.hyperledger.bela.utils.BlockChainContext;
 import org.hyperledger.bela.utils.BlockChainContextFactory;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.datatypes.Hash;
+import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateProvider;
 import org.hyperledger.besu.ethereum.bonsai.cache.CachedMerkleTrieLoader;
+import org.hyperledger.besu.ethereum.bonsai.worldview.BonsaiWorldStateUpdateAccumulator;
 import org.hyperledger.besu.ethereum.chain.ChainHead;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
@@ -126,7 +128,7 @@ public class BonsaiTrieLogLayersViewer extends AbstractBelaWindow {
 
     private void rollForward() {
         try {
-            final BonsaiWorldStateUpdater updater = getBonsaiWorldStateUpdater();
+            final BonsaiWorldStateUpdateAccumulator updater = getBonsaiWorldStateAccumulator();
             updater.rollForward(view.getLayer());
             updater.commit();
             storageProviderFactory.close();
@@ -137,7 +139,7 @@ public class BonsaiTrieLogLayersViewer extends AbstractBelaWindow {
 
     private void rollBackward() {
         try {
-            final BonsaiWorldStateUpdater updater = getBonsaiWorldStateUpdater();
+            final BonsaiWorldStateUpdateAccumulator updater = getBonsaiWorldStateAccumulator();
             updater.rollBack(view.getLayer());
             updater.commit();
             storageProviderFactory.close();
@@ -147,16 +149,17 @@ public class BonsaiTrieLogLayersViewer extends AbstractBelaWindow {
 
     }
 
-    private BonsaiWorldStateUpdater getBonsaiWorldStateUpdater() {
+    private BonsaiWorldStateUpdateAccumulator getBonsaiWorldStateAccumulator() {
         final StorageProvider provider = storageProviderFactory.createProvider();
         final BlockChainContext blockChainContext = BlockChainContextFactory.createBlockChainContext(provider);
 
-        final BonsaiWorldStateArchive archive = new BonsaiWorldStateArchive(
+        final NoOpMetricsSystem noOpMetricsSystem = new NoOpMetricsSystem();
+        final BonsaiWorldStateProvider archive = new BonsaiWorldStateProvider(
             provider,
             blockChainContext.getBlockchain(),
-            new CachedMerkleTrieLoader(new NoOpMetricsSystem()));
+            new CachedMerkleTrieLoader(noOpMetricsSystem),noOpMetricsSystem, null);
 
-        return (BonsaiWorldStateUpdater) archive.getMutable().updater();
+        return (BonsaiWorldStateUpdateAccumulator) archive.getMutable().updater();
 
     }
 

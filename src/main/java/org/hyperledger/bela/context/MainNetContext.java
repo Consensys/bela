@@ -24,6 +24,7 @@ import org.hyperledger.besu.config.JsonGenesisConfigOptions;
 import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.datatypes.Wei;
 import org.hyperledger.besu.ethereum.ProtocolContext;
+import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateProvider;
 import org.hyperledger.besu.ethereum.bonsai.cache.CachedMerkleTrieLoader;
 import org.hyperledger.besu.ethereum.bonsai.storage.BonsaiWorldStateKeyValueStorage;
 import org.hyperledger.besu.ethereum.chain.BlockchainStorage;
@@ -333,14 +334,15 @@ public class MainNetContext implements BelaContext {
                 (blockchain, worldStateArchive, protocolSchedule) -> null);
     }
 
-    private WorldStateArchive getWorldStateArchive() {
-        return new BonsaiWorldStateArchive(
+    private BonsaiWorldStateProvider getWorldStateArchive() {
+        final NoOpMetricsSystem noOpMetricsSystem = new NoOpMetricsSystem();
+        return new BonsaiWorldStateProvider(
             getProvider(), getBlockChain(),
-            new CachedMerkleTrieLoader(new NoOpMetricsSystem()));
+            new CachedMerkleTrieLoader(noOpMetricsSystem),noOpMetricsSystem, null);
     }
 
     private BonsaiWorldStateKeyValueStorage getWorldStateStorage() {
-        return new BonsaiWorldStateKeyValueStorage(getProvider());
+        return new BonsaiWorldStateKeyValueStorage(getProvider(), new NoOpMetricsSystem());
     }
 
     private MutableBlockchain getBlockChain() {

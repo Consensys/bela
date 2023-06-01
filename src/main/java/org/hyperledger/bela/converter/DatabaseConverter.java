@@ -10,9 +10,11 @@ import org.hyperledger.bela.utils.bonsai.BonsaiListener;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
-import org.hyperledger.besu.ethereum.trie.MerklePatriciaTrie;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorageTransaction;
+
+import static org.hyperledger.besu.ethereum.trie.MerkleTrie.EMPTY_TRIE_NODE;
+import static org.hyperledger.besu.ethereum.trie.MerkleTrie.EMPTY_TRIE_NODE_HASH;
 
 public class DatabaseConverter {
 
@@ -32,8 +34,8 @@ public class DatabaseConverter {
         TrieTraversal tr = new TrieTraversal(provider, new NodeRetriever() {
             @Override
             public Optional<Bytes> getAccountNode(Bytes location, Bytes32 hash) {
-                if (hash.equals(MerklePatriciaTrie.EMPTY_TRIE_NODE_HASH)) {
-                    return Optional.of(MerklePatriciaTrie.EMPTY_TRIE_NODE);
+                if (hash.equals(EMPTY_TRIE_NODE_HASH)) {
+                    return Optional.of(EMPTY_TRIE_NODE);
                 } else {
                     return forestBranchStorage.get(hash.toArrayUnsafe()).map(Bytes::wrap);
                 }
@@ -42,8 +44,8 @@ public class DatabaseConverter {
 
             @Override
             public Optional<Bytes> getStorageNode(Bytes32 accountHash, Bytes location, Bytes32 hash) {
-                if (hash.equals(MerklePatriciaTrie.EMPTY_TRIE_NODE_HASH)) {
-                    return Optional.of(MerklePatriciaTrie.EMPTY_TRIE_NODE);
+                if (hash.equals(EMPTY_TRIE_NODE_HASH)) {
+                    return Optional.of(EMPTY_TRIE_NODE);
                 } else {
                     return forestBranchStorage.get(hash.toArrayUnsafe()).map(Bytes::wrap);
                 }
@@ -85,8 +87,8 @@ public class DatabaseConverter {
         TrieTraversal tr = new TrieTraversal(provider, new NodeRetriever() {
             @Override
             public Optional<Bytes> getAccountNode(Bytes location, Bytes32 hash) {
-                if (hash.equals(MerklePatriciaTrie.EMPTY_TRIE_NODE_HASH)) {
-                    return Optional.of(MerklePatriciaTrie.EMPTY_TRIE_NODE);
+                if (hash.equals(EMPTY_TRIE_NODE_HASH)) {
+                    return Optional.of(EMPTY_TRIE_NODE);
                 } else {
                     return trieBranchStorage.get(location.toArrayUnsafe()).map(Bytes::wrap);
                 }
@@ -94,8 +96,8 @@ public class DatabaseConverter {
 
             @Override
             public Optional<Bytes> getStorageNode(Bytes32 accountHash, Bytes location, Bytes32 hash) {
-                if (hash.equals(MerklePatriciaTrie.EMPTY_TRIE_NODE_HASH)) {
-                    return Optional.of(MerklePatriciaTrie.EMPTY_TRIE_NODE);
+                if (hash.equals(EMPTY_TRIE_NODE_HASH)) {
+                    return Optional.of(EMPTY_TRIE_NODE);
                 } else {
                     return trieBranchStorage
                             .get(Bytes.concatenate(accountHash, location).toArrayUnsafe())

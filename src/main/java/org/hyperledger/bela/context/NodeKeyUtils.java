@@ -2,10 +2,10 @@ package org.hyperledger.bela.context;
 
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.besu.crypto.KeyPair;
-import org.hyperledger.besu.crypto.KeyPairSecurityModule;
-import org.hyperledger.besu.crypto.NodeKey;
 import org.hyperledger.besu.crypto.SignatureAlgorithm;
 import org.hyperledger.besu.crypto.SignatureAlgorithmFactory;
+import org.hyperledger.besu.cryptoservices.KeyPairSecurityModule;
+import org.hyperledger.besu.cryptoservices.NodeKey;
 
 class NodeKeyUtils {
 

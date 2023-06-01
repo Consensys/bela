@@ -172,7 +172,7 @@ public class P2PManagementWindow extends AbstractBelaWindow implements MessageCa
                 RetryingGetHeadersEndingAtFromPeerByHashTask.endingAtHash(
                         belaContext.getProtocolSchedule(),
                         belaContext.getEthContext(),
-                        hash,
+                        hash,0,
                         1,
                         belaContext.getMetricsSystem(),
                         3);

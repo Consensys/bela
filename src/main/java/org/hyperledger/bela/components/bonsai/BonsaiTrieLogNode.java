@@ -13,7 +13,7 @@ import org.apache.tuweni.units.bigints.UInt256;
 import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.bonsai.BonsaiValue;
-import org.hyperledger.besu.ethereum.bonsai.TrieLogLayer;
+import org.hyperledger.besu.ethereum.bonsai.trielog.TrieLogLayer;
 import org.hyperledger.besu.ethereum.worldstate.StateTrieAccountValue;
 
 public class BonsaiTrieLogNode extends AbstractBonsaiNode {

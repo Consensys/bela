@@ -9,8 +9,8 @@ import com.googlecode.lanterna.gui2.Panel;
 import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.rlp.RLP;
-import org.hyperledger.besu.ethereum.trie.MerklePatriciaTrie;
 import org.hyperledger.besu.ethereum.trie.Node;
+import org.hyperledger.besu.ethereum.trie.patricia.SimpleMerklePatriciaTrie;
 import org.hyperledger.besu.ethereum.worldstate.StateTrieAccountValue;
 
 class AccountValueNode extends AbstractBonsaiNode {
@@ -61,7 +61,7 @@ class AccountValueNode extends AbstractBonsaiNode {
             children.add(new LabelNode("No Code", "No code"));
         }
         // Add storage, if appropriate
-        if (!accountValue.getStorageRoot().equals(MerklePatriciaTrie.EMPTY_TRIE_NODE_HASH)) {
+        if (!accountValue.getStorageRoot().equals(SimpleMerklePatriciaTrie.EMPTY_TRIE_NODE_HASH)) {
             final Node<Bytes> storageNodeValue = bonsaiStorageView.getStorageNodeValue(accountValue.getStorageRoot(), accountHash, Bytes.EMPTY);
             if (storageNodeValue == null) {
                 children.add(new LabelNode("Missing Storage", "Storage root: " + accountValue.getStorageRoot()

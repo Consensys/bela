@@ -229,7 +229,8 @@ public class RocksDBColumnarKeyValueStorage
             final WriteOptions writeOptions = new WriteOptions();
             writeOptions.setIgnoreMissingColumnFamilies(true);
             return new SegmentedKeyValueStorageTransactionTransitionValidatorDecorator<>(
-                    new RocksDbTransaction(tdb.beginTransaction(writeOptions), writeOptions));
+                new RocksDbTransaction(tdb.beginTransaction(writeOptions), writeOptions),
+                this::isClosed);
         } else {
             throw new UnsupportedOperationException("RocksDB is not in transaction mode");
         }
@@ -241,6 +242,12 @@ public class RocksDBColumnarKeyValueStorage
         final RocksIterator rocksIterator = db.newIterator(segmentHandle.get());
         rocksIterator.seekToFirst();
         return RocksDbIterator.create(rocksIterator).toStream();
+    }
+
+    @Override
+    public Stream<Pair<byte[], byte[]>> streamFromKey(RocksDbSegmentIdentifier segmentHandle,
+        byte[] startKey) {
+        throw new UnsupportedOperationException("streamFromKey not implemented");
     }
 
     @Override
@@ -287,6 +294,12 @@ public class RocksDBColumnarKeyValueStorage
                 .findAny()
                 .ifPresent(segmentIdentifier -> segmentIdentifier.reset());
     }
+
+    @Override
+    public boolean isClosed() {
+        return closed.get();
+    }
+
 
     @Override
     public void close() {

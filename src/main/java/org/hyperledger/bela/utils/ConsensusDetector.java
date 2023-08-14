@@ -3,6 +3,7 @@ package org.hyperledger.bela.utils;
 import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.besu.consensus.ibft.IbftExtraDataCodec;
 import org.hyperledger.besu.consensus.qbft.QbftExtraDataCodec;
+import org.hyperledger.besu.ethereum.chain.VariablesStorage;
 import org.hyperledger.besu.ethereum.core.BlockHeader;
 import org.hyperledger.besu.ethereum.mainnet.MainnetBlockHeaderFunctions;
 import org.hyperledger.besu.ethereum.rlp.RLPException;
@@ -12,8 +13,10 @@ import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 public class ConsensusDetector {
     public enum CONSENSUS_TYPE {ETH_HASH, IBFT2, QBFT}
 
-    public static CONSENSUS_TYPE detectConsensusMechanism(final KeyValueStorage keyValueStorage) {
-        var storage = new KeyValueStoragePrefixedKeyBlockchainStorage(keyValueStorage, new MainnetBlockHeaderFunctions());
+    public static CONSENSUS_TYPE detectConsensusMechanism(
+        final KeyValueStorage keyValueStorage,
+        final VariablesStorage variablesStorage) {
+        var storage = new KeyValueStoragePrefixedKeyBlockchainStorage(keyValueStorage, variablesStorage, new MainnetBlockHeaderFunctions());
         var genesisHash = storage.getBlockHash(BlockHeader.GENESIS_BLOCK_NUMBER).orElseThrow();
         var genesisBlockHeader = storage.getBlockHeader(genesisHash).orElseThrow();
         var extraData = genesisBlockHeader.getExtraData();

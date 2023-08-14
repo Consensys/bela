@@ -15,6 +15,7 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import io.vertx.core.Vertx;
+import jnr.ffi.Variable;
 import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.BesuInfo;
@@ -30,6 +31,7 @@ import org.hyperledger.besu.ethereum.bonsai.storage.BonsaiWorldStateKeyValueStor
 import org.hyperledger.besu.ethereum.chain.BlockchainStorage;
 import org.hyperledger.besu.ethereum.chain.DefaultBlockchain;
 import org.hyperledger.besu.ethereum.chain.MutableBlockchain;
+import org.hyperledger.besu.ethereum.chain.VariablesStorage;
 import org.hyperledger.besu.ethereum.core.MiningParameters;
 import org.hyperledger.besu.ethereum.core.PrivacyParameters;
 import org.hyperledger.besu.ethereum.eth.EthProtocol;
@@ -62,6 +64,7 @@ import org.hyperledger.besu.ethereum.p2p.rlpx.wire.SubProtocol;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.messages.DisconnectMessage;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueStoragePrefixedKeyBlockchainStorage;
+import org.hyperledger.besu.ethereum.storage.keyvalue.VariablesKeyValueStorage;
 import org.hyperledger.besu.ethereum.worldstate.DataStorageConfiguration;
 import org.hyperledger.besu.ethereum.worldstate.WorldStateArchive;
 import org.hyperledger.besu.evm.internal.EvmConfiguration;
@@ -77,6 +80,7 @@ import static org.hyperledger.besu.ethereum.core.MiningParameters.DEFAULT_POW_JO
 import static org.hyperledger.besu.ethereum.core.MiningParameters.DEFAULT_REMOTE_SEALERS_LIMIT;
 import static org.hyperledger.besu.ethereum.core.MiningParameters.DEFAULT_REMOTE_SEALERS_TTL;
 import static org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier.BLOCKCHAIN;
+import static org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier.VARIABLES;
 
 public class MainNetContext implements BelaContext {
     private static final BigInteger CHAIN_ID = BigInteger.ONE;
@@ -331,7 +335,7 @@ public class MainNetContext implements BelaContext {
 
     private ProtocolContext getProtocolContext() {
         return ProtocolContext.init(getBlockChain(), getWorldStateArchive(), getProtocolSchedule(),
-                (blockchain, worldStateArchive, protocolSchedule) -> null);
+                (blockchain, worldStateArchive, protocolSchedule) -> null, Optional.empty());
     }
 
     private BonsaiWorldStateProvider getWorldStateArchive() {
@@ -352,7 +356,8 @@ public class MainNetContext implements BelaContext {
 
     private BlockchainStorage getBlockChainStorage() {
         final KeyValueStorage keyValueStorage = getProvider().getStorageBySegmentIdentifier(BLOCKCHAIN);
-        return new KeyValueStoragePrefixedKeyBlockchainStorage(keyValueStorage, new MainnetBlockHeaderFunctions());
+        final VariablesStorage variableStorage = new VariablesKeyValueStorage(getProvider().getStorageBySegmentIdentifier(VARIABLES));
+        return new KeyValueStoragePrefixedKeyBlockchainStorage(keyValueStorage, variableStorage, new MainnetBlockHeaderFunctions());
     }
 
     private StorageProvider getProvider() {

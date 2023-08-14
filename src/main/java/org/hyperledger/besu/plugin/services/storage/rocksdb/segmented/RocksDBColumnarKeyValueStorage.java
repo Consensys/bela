@@ -45,13 +45,13 @@ import org.rocksdb.CompressionType;
 import org.rocksdb.DBOptions;
 import org.rocksdb.Env;
 import org.rocksdb.LRUCache;
+import org.rocksdb.OptimisticTransactionDB;
+import org.rocksdb.OptimisticTransactionOptions;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
 import org.rocksdb.Statistics;
 import org.rocksdb.Status;
-import org.rocksdb.TransactionDB;
-import org.rocksdb.TransactionDBOptions;
 import org.rocksdb.WriteOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +76,7 @@ public class RocksDBColumnarKeyValueStorage
     }
 
     private final DBOptions options;
-    private final TransactionDBOptions txOptions;
+    private final OptimisticTransactionOptions txOptions;
     private final RocksDB db;
     private final AtomicBoolean closed = new AtomicBoolean(false);
     private final Map<String, RocksDbSegmentIdentifier> columnHandlesByName;
@@ -137,7 +137,7 @@ public class RocksDBColumnarKeyValueStorage
                                                 .setBackgroundThreads(configuration.getBackgroundThreadCount()));
             }
 
-            txOptions = new TransactionDBOptions();
+            txOptions = new OptimisticTransactionOptions();
             final List<ColumnFamilyHandle> columnHandles = new ArrayList<>(columnDescriptors.size());
             if (ReadOnlyDatabaseDecider.getInstance().isReadOnly()) {
                 db =
@@ -149,9 +149,8 @@ public class RocksDBColumnarKeyValueStorage
 
 
             } else {
-                db = TransactionDB.open(
+                db = OptimisticTransactionDB.open(
                         options,
-                        txOptions,
                         configuration.getDatabaseDir().toString(),
                         columnDescriptors,
                         columnHandles);
@@ -224,7 +223,7 @@ public class RocksDBColumnarKeyValueStorage
 
     @Override
     public Transaction<RocksDbSegmentIdentifier> startTransaction() throws StorageException {
-        if (db instanceof TransactionDB tdb) {
+        if (db instanceof OptimisticTransactionDB tdb) {
             throwIfClosed();
             final WriteOptions writeOptions = new WriteOptions();
             writeOptions.setIgnoreMissingColumnFamilies(true);

@@ -206,14 +206,20 @@ public class RocksDBColumnarKeyValueStorage
 
     @Override
     public RocksDbSegmentIdentifier getSegmentIdentifierByName(final SegmentIdentifier segment) {
-        return columnHandlesByName.get(segment.getName());
+        var segmentId = columnHandlesByName.get(segment.getName());
+        if (segmentId == null) {
+            LOG.warn("Did not resolve segment identifier for {}", segment.getName());
+        }
+        return segmentId;
     }
 
     @Override
     public Optional<byte[]> get(final RocksDbSegmentIdentifier segment, final byte[] key)
             throws StorageException {
         throwIfClosed();
-
+        if (segment == null) {
+            throw new StorageException("refusing to try to read from a null segment, this is likely a database versioning issue");
+        }
         try (final OperationTimer.TimingContext ignored = metrics.getReadLatency().startTimer()) {
             return Optional.ofNullable(db.get(segment.get(), key));
         } catch (final RocksDBException e) {
@@ -238,6 +244,10 @@ public class RocksDBColumnarKeyValueStorage
 
     @Override
     public Stream<Pair<byte[], byte[]>> stream(final RocksDbSegmentIdentifier segmentHandle) {
+        if (segmentHandle == null) {
+            throw new StorageException("refusing to try to read from a null segment, this is likely a database versioning issue");
+        }
+
         final RocksIterator rocksIterator = db.newIterator(segmentHandle.get());
         rocksIterator.seekToFirst();
         return RocksDbIterator.create(rocksIterator).toStream();
@@ -258,6 +268,10 @@ public class RocksDBColumnarKeyValueStorage
 
     @Override
     public boolean tryDelete(final RocksDbSegmentIdentifier segmentHandle, final byte[] key) {
+        if (segmentHandle == null) {
+            throw new StorageException("refusing to try to read from a null segment, this is likely a database versioning issue");
+        }
+
         try {
             db.delete(segmentHandle.get(), tryDeleteOptions, key);
             return true;

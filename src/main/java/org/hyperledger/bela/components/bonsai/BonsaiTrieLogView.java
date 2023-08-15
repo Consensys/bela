@@ -10,15 +10,19 @@ import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.components.bonsai.queries.TrieQueryValidator;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.datatypes.Hash;
+import org.hyperledger.besu.ethereum.bonsai.trielog.TrieLogFactoryImpl;
 import org.hyperledger.besu.ethereum.bonsai.trielog.TrieLogLayer;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
+import org.hyperledger.besu.plugin.services.trielogs.TrieLogFactory;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 
 public class BonsaiTrieLogView extends AbstractBonsaiNodeView {
     private static final LambdaLogger log = getLogger(BonsaiTrieLogView.class);
+    //TODO: support pluggable trielogfactory so we can use bela with linea nodes
+    private static final         TrieLogFactory trieLogFactory = new TrieLogFactoryImpl();
 
 
     private final StorageProviderFactory storageProviderFactory;
@@ -29,15 +33,10 @@ public class BonsaiTrieLogView extends AbstractBonsaiNodeView {
     }
 
     public static Optional<TrieLogLayer> getTrieLog(final KeyValueStorage storage, final Hash blockHash) {
-        return storage.get(blockHash.toArrayUnsafe()).map(bytes -> {
-            try {
-                Method method = TrieLogLayer.class.getDeclaredMethod("fromBytes", byte[].class);
-                method.setAccessible(true);
-                return (TrieLogLayer) method.invoke(null, bytes);
-            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        return storage.get(blockHash.toArrayUnsafe())
+            .map(trieLogFactory::deserialize)
+            //TODO: when we implement linea/other trielogfactory impl's this cast will break:
+            .map(TrieLogLayer.class::cast);
     }
 
     public void updateFromHash(final Hash hash) {

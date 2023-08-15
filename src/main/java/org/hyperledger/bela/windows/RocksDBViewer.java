@@ -32,7 +32,7 @@ import static org.hyperledger.bela.windows.Constants.KEY_UPDATE;
 
 public class RocksDBViewer extends AbstractBelaWindow {
     private static final Pattern HEX_ONLY = Pattern.compile("^(0x)?[0-9A-Fa-f]*$");
-    private static final Pattern HEX_AND_WRAP_ONLY = Pattern.compile("^(0x)?[0-9A-Fa-f]*(\\\\\n)?$");
+    private static final Pattern HEX_AND_WRAP_ONLY = Pattern.compile("^(0x)?[0-9A-Fa-f]*(\\\\(\n)?)?$");
     private final ComboBox<KeyValueSegmentIdentifier> identifierCombo = new ComboBox<>(KeyValueSegmentIdentifier.values());
     private final ComboBox<KeyValueConstants> kvConstantsCombo = new ComboBox<>(KeyValueConstants.values());;
     private final TextBox keyBox = new TextBox(new TerminalSize(80, 1));

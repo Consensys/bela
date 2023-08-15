@@ -20,6 +20,7 @@ import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksD
 import org.hyperledger.besu.plugin.services.storage.rocksdb.segmented.RocksDBColumnarKeyValueStorage;
 import org.hyperledger.besu.services.kvstore.SegmentedKeyValueStorage;
 import org.hyperledger.besu.services.kvstore.SegmentedKeyValueStorageAdapter;
+import org.hyperledger.besu.services.kvstore.SnappableSegmentedKeyValueStorageAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +69,7 @@ public class RocksDBKeyValueStorageConverterFactory implements KeyValueStorageFa
                     new RocksDBColumnarKeyValueStorage(
                             rocksDBConfiguration, segmentsForVersion, metricsSystem, rocksDBMetricsFactory);
         }
-        return new SegmentedKeyValueStorageAdapter<>(segment, segmentedStorage);
+        return new SnappableSegmentedKeyValueStorageAdapter<>(segment, segmentedStorage);
     }
 
 

@@ -9,11 +9,11 @@ public enum KeyValueConstants {
     BLOCKCHAIN_PREFIX_VARIABLES((byte) 0x1),
     BLOCKCHAIN_PREFIX_HEADER((byte) 0x2),
     BLOCKCHAIN_PREFIX_BODY((byte) 0x3),
-    BLOCKCHAIN_SAFE_HEAD_HASH(BLOCKCHAIN_PREFIX_VARIABLES,
+    VARIABLES_SAFE_HEAD_HASH(
             Bytes.wrap("safeBlockHash".getBytes(StandardCharsets.UTF_8)).toArrayUnsafe()),
-    BLOCKCHAIN_CHAIN_HEAD_HASH(BLOCKCHAIN_PREFIX_VARIABLES,
+    VARIABLES_CHAIN_HEAD_HASH(
             Bytes.wrap("chainHeadHash".getBytes(StandardCharsets.UTF_8)).toArrayUnsafe()),
-    BLOCKCHAIN_FINALIZED_HEAD_HASH(BLOCKCHAIN_PREFIX_VARIABLES,
+    VARIABLES_FINALIZED_HEAD_HASH(
             Bytes.wrap("finalizedBlockHash".getBytes(StandardCharsets.UTF_8)).toArrayUnsafe()),
     WORLDSTATE_ROOT_HASH(Bytes.wrap("worldRoot".getBytes(StandardCharsets.UTF_8)).toArrayUnsafe()),
     WORLDSTATE_BLOCK_HASH(Bytes.wrap("worldBlockHash".getBytes(StandardCharsets.UTF_8)).toArrayUnsafe());

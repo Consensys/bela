@@ -12,16 +12,17 @@ import org.hyperledger.besu.plugin.services.exception.StorageException;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorageFactory;
 import org.hyperledger.besu.plugin.services.storage.SegmentIdentifier;
+import org.hyperledger.besu.plugin.services.storage.SegmentedKeyValueStorage;
+import org.hyperledger.besu.plugin.services.storage.SnappableKeyValueStorage;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBMetricsFactory;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.DatabaseMetadata;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBConfiguration;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBConfigurationBuilder;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBFactoryConfiguration;
+import org.hyperledger.besu.plugin.services.storage.rocksdb.segmented.BelaRocksDBColumnarKeyValueStorage;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.segmented.RocksDBColumnarKeyValueStorage;
 import org.hyperledger.besu.services.kvstore.LayeredKeyValueStorage;
-import org.hyperledger.besu.services.kvstore.SegmentedKeyValueStorage;
 import org.hyperledger.besu.services.kvstore.SegmentedKeyValueStorageAdapter;
-import org.hyperledger.besu.services.kvstore.SnappableSegmentedKeyValueStorageAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +30,7 @@ public class RocksDBKeyValueStorageConverterFactory implements KeyValueStorageFa
 
     private static final Logger LOG = LoggerFactory.getLogger(RocksDBKeyValueStorageConverterFactory.class);
     private RocksDBConfiguration rocksDBConfiguration;
-    private SegmentedKeyValueStorage<?> segmentedStorage;
+    private SegmentedKeyValueStorage segmentedStorage;
     private final List<SegmentIdentifier> segments;
     private final RocksDBMetricsFactory rocksDBMetricsFactory;
     private static final Set<Integer> SUPPORTED_VERSIONS = Set.of(1, 2);
@@ -59,27 +60,35 @@ public class RocksDBKeyValueStorageConverterFactory implements KeyValueStorageFa
             final MetricsSystem metricsSystem)
             throws StorageException {
 
+        return new SegmentedKeyValueStorageAdapter(
+            segment, create(segments, commonConfiguration, metricsSystem));
+    }
+
+    @Override
+    public SegmentedKeyValueStorage create(List<SegmentIdentifier> segments,
+        BesuConfiguration commonConfiguration, MetricsSystem metricsSystem) throws StorageException {
         if (requiresInit()) {
             init(commonConfiguration);
         }
         if (segmentedStorage == null) {
             final List<SegmentIdentifier> segmentsForVersion =
-                    segments.stream()
-                            .collect(Collectors.toList());
+                segments.stream()
+                    .collect(Collectors.toList());
             segmentedStorage =
-                    new RocksDBColumnarKeyValueStorage(
-                            rocksDBConfiguration, segmentsForVersion, metricsSystem, rocksDBMetricsFactory);
+                new BelaRocksDBColumnarKeyValueStorage(
+                    rocksDBConfiguration, segmentsForVersion, null, metricsSystem, rocksDBMetricsFactory);
         }
-        return new SnappableSegmentedKeyValueStorageAdapter<>(
-            segment, segmentedStorage,
-            () -> /* in-memory snapshot */
-                new LayeredKeyValueStorage(
-                    new SegmentedKeyValueStorageAdapter<>(segment, segmentedStorage)));
+        return segmentedStorage;
     }
 
 
     @Override
     public boolean isSegmentIsolationSupported() {
+        return false;
+    }
+
+    @Override
+    public boolean isSnapshotIsolationSupported() {
         return false;
     }
 

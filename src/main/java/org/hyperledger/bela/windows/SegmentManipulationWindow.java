@@ -116,7 +116,7 @@ public class SegmentManipulationWindow extends AbstractBelaWindow {
     public static long accessLongPropertyForSegment(StorageProvider provider, final SegmentIdentifier segment, final LongRocksDbProperty longRocksDbProperty) {
         final long longPropertyValue;
         try {
-            final SegmentedKeyValueStorageAdapter<RocksDbSegmentIdentifier> storageBySegmentIdentifier = (SegmentedKeyValueStorageAdapter) provider.getStorageBySegmentIdentifier(segment);
+            final SegmentedKeyValueStorageAdapter storageBySegmentIdentifier = (SegmentedKeyValueStorageAdapter) provider.getStorageBySegmentIdentifier(segment);
             final Field segmentHandleField = storageBySegmentIdentifier.getClass()
                     .getDeclaredField("segmentHandle");
             segmentHandleField.setAccessible(true);

@@ -1,5 +1,6 @@
 package org.hyperledger.bela.windows;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
@@ -29,7 +30,9 @@ import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 import org.hyperledger.besu.plugin.services.storage.SegmentIdentifier;
+import org.hyperledger.besu.plugin.services.storage.SegmentedKeyValueStorage;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDbSegmentIdentifier;
+import org.hyperledger.besu.plugin.services.storage.rocksdb.segmented.BelaRocksDBColumnarKeyValueStorage;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.segmented.RocksDBColumnarKeyValueStorage;
 import org.hyperledger.besu.services.kvstore.SegmentedKeyValueStorageAdapter;
 import org.jetbrains.annotations.NotNull;
@@ -194,14 +197,15 @@ public class SegmentManipulationWindow extends AbstractBelaWindow {
 
     private void prune() {
         try {
-            Set<SegmentIdentifier> toRemove = new HashSet<>(Arrays.asList(KeyValueSegmentIdentifier.values()));
+            List<SegmentIdentifier> toRemove = new ArrayList<>(EnumSet.allOf(KeyValueSegmentIdentifier.class));
             toRemove.removeAll(selected);
             detect();
-            final StorageProvider provider = storageProviderFactory.createProvider(new ArrayList<>(selected));
+            var storageToRemove = (BelaRocksDBColumnarKeyValueStorage) storageProviderFactory
+                .createProvider(toRemove)
+                .getStorageBySegmentIdentifiers(selected.stream().toList());
 
             for (SegmentIdentifier segmentIdentifier : toRemove) {
-                final KeyValueStorage storageBySegmentIdentifier = provider.getStorageBySegmentIdentifier(segmentIdentifier);
-                remove(storageBySegmentIdentifier);
+                storageToRemove.remove(segmentIdentifier);
             }
             detect();
         } catch (Exception e) {
@@ -209,112 +213,15 @@ public class SegmentManipulationWindow extends AbstractBelaWindow {
         }
     }
 
-    private void remove(final KeyValueStorage storageBySegmentIdentifier) {
-        try {
-            final Field segmentHandleField = storageBySegmentIdentifier.getClass().getDeclaredField("segmentHandle");
-            segmentHandleField.setAccessible(true);
-            final RocksDbSegmentIdentifier identifier = (RocksDbSegmentIdentifier) segmentHandleField.get(storageBySegmentIdentifier);
-            if (identifier == null) {
-                return;
-            }
-
-            Field storageField = storageBySegmentIdentifier.getClass().getDeclaredField("storage");
-            storageField.setAccessible(true);
-            final RocksDBColumnarKeyValueStorage storage = (RocksDBColumnarKeyValueStorage) storageField.get(storageBySegmentIdentifier);
-
-            Field handlesByNameField = storage.getClass().getDeclaredField("columnHandlesByName");
-            handlesByNameField.setAccessible(true);
-
-            final Map<String, RocksDbSegmentIdentifier> columnHandlesByName = (Map<String, RocksDbSegmentIdentifier>) handlesByNameField.get(storage);
-
-            final Field dbField = RocksDbSegmentIdentifier.class.getDeclaredField("db");
-            dbField.setAccessible(true);
-            final Field referenceField = RocksDbSegmentIdentifier.class.getDeclaredField("reference");
-            referenceField.setAccessible(true);
-
-            final Optional<RocksDbSegmentIdentifier> any = columnHandlesByName.values().stream()
-                    .filter(e -> e.equals(identifier))
-                    .findAny();
-
-            if (any.isPresent()) {
-                final TransactionDB db = (TransactionDB) dbField.get(any.get());
-                final AtomicReference<ColumnFamilyHandle> ref = (AtomicReference<ColumnFamilyHandle>) referenceField.get(any.get());
-                db.dropColumnFamily(ref.get());
-            }
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private void detect() {
-        if (preferences.getBoolean(READ_ONLY_DB, true)) {
-            detectReadOnly();
-        } else {
-            detectReadWrite();
-        }
-    }
-
-    private void detectReadOnly() {
-        final List<SegmentIdentifier> listOfSegments = Arrays.asList(KeyValueSegmentIdentifier.values());
-        final ProgressBarPopup progress = ProgressBarPopup.showPopup(gui, "Detecting", listOfSegments.size());
-
         columnCheckBoxes.forEach(checkBox -> checkBox.setChecked(false));
-        selected.clear();
+        storageProviderFactory.detect()
+            .stream()
+            .map(SegmentIdentifier::getId)
+            .map(Bytes::of)
+            .map(Bytes::toInt)
+            .forEach(idx -> columnCheckBoxes.get(idx -1).setChecked(true));
 
-        for (SegmentIdentifier segment : listOfSegments) {
-            try {
-                final StorageProvider provider = storageProviderFactory.createProvider(Collections.singletonList(segment), true);
-                provider.close();
-//                accessLongPropertyForSegment(provider, segment, LongRocksDbProperty.LIVE_SST_FILES_SIZE);
-                selected.add(segment);
-                columnCheckBoxes.get(listOfSegments.indexOf(segment)).setChecked(true);
-            } catch (Exception e) {
-                //ignore on purpouse
-            } finally {
-                progress.increment();
-            }
-        }
-        progress.close();
-    }
-
-    private void detectReadWrite() {
-        try {
-            final StorageProvider provider = storageProviderFactory.createProvider(new ArrayList<>(), false);
-        } catch (Exception e) {
-            final List<Byte> columns;
-            try {
-                columns = parseColumns(e);
-                columnCheckBoxes.forEach(checkBox -> checkBox.setChecked(false));
-                selected.clear();
-                columns.forEach(column -> {
-                    CheckBox box = columnCheckBoxes.get(column - 1);
-                    box.setChecked(true);
-                    selected.add(KeyValueSegmentIdentifier.values()[column - 1]);
-                });
-            } catch (Exception ex) {
-                BelaDialog.showException(gui, e);
-            }
-        }
-    }
-
-    @NotNull
-    private List<Byte> parseColumns(@Nonnull final Exception e) throws Exception {
-        Throwable cause = e;
-        while (cause != null && !(cause instanceof RocksDBException)) {
-            cause = cause.getCause();
-        }
-        if (cause == null || cause.getMessage() == null || !cause.getMessage()
-                .startsWith("Column families not opened: ")) {
-            throw e;
-        }
-        byte[] bytes = cause.getMessage().getBytes();
-        List<Byte> columns = new ArrayList<>();
-        for (int i = 28 /*Column families not opened: */; i < bytes.length; i += 3 /* ,*/) {
-            columns.add(bytes[i]);
-        }
-        log.info("Columns: {}", columns);
-        return columns;
     }
 
     enum BlockchainPrefix {

@@ -1,32 +1,34 @@
 package org.hyperledger.bela.utils;
 
-import javax.annotation.Nonnull;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.prefs.Preferences;
-import java.util.stream.Collectors;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.config.BelaConfigurationImpl;
 import org.hyperledger.bela.converter.RocksDBKeyValueStorageConverterFactory;
-import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.dialogs.NonClosableMessage;
-import org.hyperledger.bela.dialogs.ProgressBarPopup;
 import org.hyperledger.bela.utils.hacks.ReadOnlyDatabaseDecider;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueStorageProviderBuilder;
 import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
+import org.hyperledger.besu.plugin.services.exception.StorageException;
 import org.hyperledger.besu.plugin.services.storage.SegmentIdentifier;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBMetricsFactory;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBCLIOptions;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBFactoryConfiguration;
-import org.jetbrains.annotations.NotNull;
+import org.rocksdb.Options;
+import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Supplier;
+import java.util.prefs.Preferences;
+import java.util.stream.Collectors;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.DATA_PATH;
@@ -45,15 +47,20 @@ public class StorageProviderFactory implements AutoCloseable {
     private StorageProvider provider;
     private Path dataPath;
     private Path storagePath;
+    private final Supplier<String> storagePathConfig;
+    private final Supplier<String> dataPathConfig;
 
     public StorageProviderFactory(final WindowBasedTextGUI gui, final Preferences preferences) {
         this.preferences=preferences;
         this.gui = gui;
+        this.storagePathConfig = () -> preferences.get(STORAGE_PATH, STORAGE_PATH_DEFAULT);
+        this.dataPathConfig = () -> preferences.get(DATA_PATH, DATA_PATH_DEFAULT);
+
     }
 
     public StorageProvider createProvider() {
-        Path data = Path.of(preferences.get(DATA_PATH, DATA_PATH_DEFAULT));
-        Path storage = Path.of(preferences.get(STORAGE_PATH, STORAGE_PATH_DEFAULT));
+        Path data = Path.of(dataPathConfig.get());
+        Path storage = Path.of(storagePathConfig.get());
         if (data.equals(dataPath) && storage.equals(storagePath) && provider != null) {
             return provider;
         }
@@ -135,64 +142,17 @@ public class StorageProviderFactory implements AutoCloseable {
         return provider;
     }
 
-    public List<SegmentIdentifier> detectReadWrite() {
-        try (StorageProvider ignored = createWritableProvider(new ArrayList<>())) {
-            close();
-            return new ArrayList<>();
-        } catch (Exception e) {
-            final List<Byte> columns = parseColumns(e);
-            final KeyValueSegmentIdentifier[] values = KeyValueSegmentIdentifier.values();
-            return columns.stream().map(aByte -> values[aByte - 1]).collect(Collectors.toList());
+    public List<SegmentIdentifier> detect() {
+        final Set<KeyValueSegmentIdentifier> allSegments = EnumSet.allOf(KeyValueSegmentIdentifier.class);
+        try {
+            // load all existing column families or rocks will complain:
+            var existing = new HashSet<>(RocksDB.listColumnFamilies(new Options(), storagePathConfig.get()));
+            return allSegments.stream()
+                .filter(seg -> existing.stream().filter(rocksSeg -> Arrays.equals(rocksSeg,seg.getId())).findFirst().isPresent())
+                .collect(Collectors.toList());
+        } catch(RocksDBException ex) {
+            throw new StorageException(ex);
         }
-    }
-
-    private List<SegmentIdentifier> detect() {
-        if (preferences.getBoolean(READ_ONLY_DB,true)) {
-            return detectReadOnly();
-        } else {
-            return detectReadWrite();
-        }
-    }
-
-    private List<SegmentIdentifier> detectReadOnly() {
-        final SegmentIdentifier[] listOfSegments = KeyValueSegmentIdentifier.values();
-        final ProgressBarPopup progress = ProgressBarPopup.showPopup(gui, "Detecting DB Segments", listOfSegments.length);
-        final List<SegmentIdentifier> detectedSegments = new ArrayList<>();
-
-        for (SegmentIdentifier segment : listOfSegments) {
-            try (StorageProvider testProvider = createProvider(Collections.singletonList(segment), true)) {
-                detectedSegments.add(segment);
-            } catch (Exception e) {
-                log.info("Could not access segment {} ({})", segment, e.getMessage());
-            } finally {
-                progress.increment();
-            }
-        }
-        progress.close();
-        return detectedSegments;
-    }
-
-    private StorageProvider createWritableProvider(final List<SegmentIdentifier> listOfSegments) {
-        return createProvider(listOfSegments, false);
-    }
-
-    @NotNull
-    private List<Byte> parseColumns(@Nonnull final Exception e) {
-        Throwable cause = e;
-        while (cause != null && !(cause instanceof RocksDBException)) {
-            cause = cause.getCause();
-        }
-        if (cause == null || cause.getMessage() == null || !cause.getMessage()
-                .startsWith("Column families not opened: ")) {
-            throw new RuntimeException(e);
-        }
-        byte[] bytes = cause.getMessage().getBytes();
-        List<Byte> columns = new ArrayList<>();
-        for (int i = 28 /*Column families not opened: */; i < bytes.length; i += 3 /* ,*/) {
-            columns.add(bytes[i]);
-        }
-        log.info("Columns: {}", columns);
-        return columns;
     }
 
     public StorageProvider createProvider(final List<SegmentIdentifier> listOfSegments) {

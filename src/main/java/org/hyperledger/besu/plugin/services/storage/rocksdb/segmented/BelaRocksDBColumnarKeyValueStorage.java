@@ -15,6 +15,7 @@
 package org.hyperledger.besu.plugin.services.storage.rocksdb.segmented;
 
 import org.hyperledger.bela.utils.hacks.ReadOnlyDatabaseDecider;
+import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.plugin.services.MetricsSystem;
 import org.hyperledger.besu.plugin.services.exception.StorageException;
 import org.hyperledger.besu.plugin.services.storage.SegmentIdentifier;
@@ -23,15 +24,26 @@ import org.hyperledger.besu.plugin.services.storage.SnappableKeyValueStorage;
 import org.hyperledger.besu.plugin.services.storage.SnappedKeyValueStorage;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBMetricsFactory;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBTransaction;
+import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDbSegmentIdentifier;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBConfiguration;
 import org.hyperledger.besu.services.kvstore.LayeredKeyValueStorage;
 import org.hyperledger.besu.services.kvstore.SegmentedKeyValueStorageAdapter;
 import org.hyperledger.besu.services.kvstore.SegmentedKeyValueStorageTransactionValidatorDecorator;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
+import org.rocksdb.ColumnFamilyDescriptor;
 import org.rocksdb.OptimisticTransactionDB;
+import org.rocksdb.Options;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.WriteOptions;
@@ -103,5 +115,16 @@ public class BelaRocksDBColumnarKeyValueStorage extends RocksDBColumnarKeyValueS
   @Override
   public SnappedKeyValueStorage takeSnapshot() {
     return new LayeredKeyValueStorage(new HashMap<>(), this);
+  }
+
+  public void remove(SegmentIdentifier segment) {
+    RocksDbSegmentIdentifier toRemove = this.columnHandlesBySegmentIdentifier.get(segment);
+    try {
+      if (toRemove.get() != null) {
+        db.dropColumnFamily(toRemove.get());
+      }
+    } catch (RocksDBException e) {
+      throw new StorageException("Failed to drop column family " + segment.getName(), e);
+    }
   }
 }

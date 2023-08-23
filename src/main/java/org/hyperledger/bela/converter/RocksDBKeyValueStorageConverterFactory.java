@@ -1,11 +1,7 @@
 package org.hyperledger.bela.converter;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import com.google.common.base.Supplier;
+import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.plugin.services.BesuConfiguration;
 import org.hyperledger.besu.plugin.services.MetricsSystem;
 import org.hyperledger.besu.plugin.services.exception.StorageException;
@@ -13,24 +9,35 @@ import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorageFactory;
 import org.hyperledger.besu.plugin.services.storage.SegmentIdentifier;
 import org.hyperledger.besu.plugin.services.storage.SegmentedKeyValueStorage;
-import org.hyperledger.besu.plugin.services.storage.SnappableKeyValueStorage;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBMetricsFactory;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.DatabaseMetadata;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBConfiguration;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBConfigurationBuilder;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBFactoryConfiguration;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.segmented.BelaRocksDBColumnarKeyValueStorage;
-import org.hyperledger.besu.plugin.services.storage.rocksdb.segmented.RocksDBColumnarKeyValueStorage;
-import org.hyperledger.besu.services.kvstore.LayeredKeyValueStorage;
 import org.hyperledger.besu.services.kvstore.SegmentedKeyValueStorageAdapter;
+import org.rocksdb.Options;
+import org.rocksdb.RocksDB;
+import org.rocksdb.RocksDBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class RocksDBKeyValueStorageConverterFactory implements KeyValueStorageFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(RocksDBKeyValueStorageConverterFactory.class);
     private RocksDBConfiguration rocksDBConfiguration;
-    private SegmentedKeyValueStorage segmentedStorage;
+    private static SegmentedKeyValueStorage segmentedStorage;
     private final List<SegmentIdentifier> segments;
     private final RocksDBMetricsFactory rocksDBMetricsFactory;
     private static final Set<Integer> SUPPORTED_VERSIONS = Set.of(1, 2);
@@ -71,12 +78,13 @@ public class RocksDBKeyValueStorageConverterFactory implements KeyValueStorageFa
             init(commonConfiguration);
         }
         if (segmentedStorage == null) {
-            final List<SegmentIdentifier> segmentsForVersion =
-                segments.stream()
-                    .collect(Collectors.toList());
+            Set<KeyValueSegmentIdentifier> allSegments = EnumSet.allOf(KeyValueSegmentIdentifier.class);
+            List<SegmentIdentifier> ignorableSegments = new ArrayList<>();
             segmentedStorage =
                 new BelaRocksDBColumnarKeyValueStorage(
-                    rocksDBConfiguration, segmentsForVersion, null, metricsSystem, rocksDBMetricsFactory);
+                    rocksDBConfiguration,
+                    new ArrayList<>(allSegments),
+                    ignorableSegments, metricsSystem, rocksDBMetricsFactory);
         }
         return segmentedStorage;
     }
@@ -134,6 +142,7 @@ public class RocksDBKeyValueStorageConverterFactory implements KeyValueStorageFa
     public void close() throws IOException {
         if (segmentedStorage != null) {
             segmentedStorage.close();
+            segmentedStorage = null;
         }
     }
 }

@@ -23,6 +23,7 @@ import static org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIden
 public class BlockChainContextFactory {
 
     public static BlockChainContext createBlockChainContext(final StorageProvider storageProvider) {
+        //init
         final KeyValueStorage keyValueStorage = storageProvider.getStorageBySegmentIdentifier(BLOCKCHAIN);
         final VariablesStorage variablesStorage = new VariablesKeyValueStorage(storageProvider.getStorageBySegmentIdentifier(VARIABLES));
         final CONSENSUS_TYPE consensusType = ConsensusDetector.detectConsensusMechanism(

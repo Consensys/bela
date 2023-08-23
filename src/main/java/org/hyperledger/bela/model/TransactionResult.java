@@ -1,13 +1,14 @@
 package org.hyperledger.bela.model;
 
-import java.math.BigInteger;
-import java.util.List;
-import java.util.Optional;
 import com.fasterxml.jackson.annotation.JsonGetter;
+import org.hyperledger.besu.datatypes.AccessListEntry;
 import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.datatypes.Wei;
 import org.hyperledger.besu.ethereum.core.Transaction;
-import org.hyperledger.besu.evm.AccessListEntry;
+
+import java.math.BigInteger;
+import java.util.List;
+import java.util.Optional;
 
 public class TransactionResult {
 

@@ -31,6 +31,8 @@ import org.rocksdb.OptimisticTransactionDB;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.WriteOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +40,7 @@ import java.util.List;
 /** Optimistic RocksDB Columnar key value storage for Bela */
 public class BelaRocksDBColumnarKeyValueStorage extends RocksDBColumnarKeyValueStorage
     implements SnappableKeyValueStorage {
+  private static final Logger LOG = LoggerFactory.getLogger(BelaRocksDBColumnarKeyValueStorage.class);
   private final RocksDB db;
 
   /**
@@ -111,6 +114,7 @@ public class BelaRocksDBColumnarKeyValueStorage extends RocksDBColumnarKeyValueS
         db.dropColumnFamily(toRemove.get());
       }
     } catch (RocksDBException e) {
+      LOG.warn("Failed to drop column family " + segment.getName(), e);
       throw new StorageException("Failed to drop column family " + segment.getName(), e);
     }
   }

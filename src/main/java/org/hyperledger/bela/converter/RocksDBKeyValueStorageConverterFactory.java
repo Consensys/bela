@@ -1,6 +1,7 @@
 package org.hyperledger.bela.converter;
 
 import com.google.common.base.Supplier;
+import com.google.common.collect.Streams;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.plugin.services.BesuConfiguration;
 import org.hyperledger.besu.plugin.services.MetricsSystem;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class RocksDBKeyValueStorageConverterFactory implements KeyValueStorageFactory {
 
@@ -64,26 +66,24 @@ public class RocksDBKeyValueStorageConverterFactory implements KeyValueStorageFa
             segment, create(segments, commonConfiguration, metricsSystem));
     }
 
-    /**
-     * This method should be refactored, we ignore the passed in list of segments in favor of
-     * the list of segments passed into this Factory constructor.
-     *
-     * @param requestedSegments IGNORED list of segments identifiers that comprise the created segmented storage.
-     * @param commonConfiguration common configuration available to plugins, in a populated state.
-     * @param metricsSystem metrics component for recording key-value storage events.
-     */
     @Override
     public SegmentedKeyValueStorage create(List<SegmentIdentifier> requestedSegments,
         BesuConfiguration commonConfiguration, MetricsSystem metricsSystem) throws StorageException {
         if (requiresInit()) {
             init(commonConfiguration);
         }
+
+        // create segmented storage for the distinct set of requested and detected segments
+        var allSegments = Streams.concat(segments.stream(), requestedSegments.stream())
+            .distinct()
+            .collect(Collectors.toList());
+
         if (segmentedStorage == null) {
             List<SegmentIdentifier> ignorableSegments = new ArrayList<>();
             segmentedStorage =
                 new BelaRocksDBColumnarKeyValueStorage(
                     rocksDBConfiguration,
-                    new ArrayList<>(segments),
+                    new ArrayList<>(allSegments),
                     ignorableSegments, metricsSystem, rocksDBMetricsFactory);
         }
         return segmentedStorage;

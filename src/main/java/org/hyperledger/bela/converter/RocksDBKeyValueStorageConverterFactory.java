@@ -64,19 +64,26 @@ public class RocksDBKeyValueStorageConverterFactory implements KeyValueStorageFa
             segment, create(segments, commonConfiguration, metricsSystem));
     }
 
+    /**
+     * This method should be refactored, we ignore the passed in list of segments in favor of
+     * the list of segments passed into this Factory constructor.
+     *
+     * @param requestedSegments IGNORED list of segments identifiers that comprise the created segmented storage.
+     * @param commonConfiguration common configuration available to plugins, in a populated state.
+     * @param metricsSystem metrics component for recording key-value storage events.
+     */
     @Override
-    public SegmentedKeyValueStorage create(List<SegmentIdentifier> segments,
+    public SegmentedKeyValueStorage create(List<SegmentIdentifier> requestedSegments,
         BesuConfiguration commonConfiguration, MetricsSystem metricsSystem) throws StorageException {
         if (requiresInit()) {
             init(commonConfiguration);
         }
         if (segmentedStorage == null) {
-            Set<KeyValueSegmentIdentifier> allSegments = EnumSet.allOf(KeyValueSegmentIdentifier.class);
             List<SegmentIdentifier> ignorableSegments = new ArrayList<>();
             segmentedStorage =
                 new BelaRocksDBColumnarKeyValueStorage(
                     rocksDBConfiguration,
-                    new ArrayList<>(allSegments),
+                    new ArrayList<>(segments),
                     ignorableSegments, metricsSystem, rocksDBMetricsFactory);
         }
         return segmentedStorage;

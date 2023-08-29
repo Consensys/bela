@@ -39,6 +39,7 @@ public class BlockChainContextFactory {
             variablesStorage, blockHeaderFunction);
         var blockchain = DefaultBlockchain
                 .create(blockchainStorage, new NoOpMetricsSystem(), 0L);
+        //TODO: we assume bonsai here but we should check the database metadata and load the appropriate worldstate
         var worldStateStorage = new BonsaiWorldStateKeyValueStorage(storageProvider, noOpMetricsSystem);
         var worldStateArchive = new BonsaiWorldStateProvider(storageProvider, blockchain,
             new CachedMerkleTrieLoader(noOpMetricsSystem), noOpMetricsSystem,null );

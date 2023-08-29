@@ -54,7 +54,7 @@ public class BlockChainBrowser {
 
 
     public static BlockChainBrowser fromBlockChainContext(final BlockChainContext blockChainContext) {
-        return new BlockChainBrowser((DefaultBlockchain) blockChainContext.getBlockchain()/*, worldStateArchive*/, blockChainContext.getWorldStateStorage());
+        return new BlockChainBrowser((DefaultBlockchain) blockChainContext.getBlockchain(), blockChainContext.getWorldStateStorage());
     }
 
 

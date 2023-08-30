@@ -76,7 +76,7 @@ public class RocksDBKeyValueStorageConverterFactory implements KeyValueStorageFa
         // create segmented storage for the distinct set of requested and detected segments
         var allSegments = Streams.concat(segments.stream(), requestedSegments.stream())
             .distinct()
-            .collect(Collectors.toList());
+            .toList();
 
         if (segmentedStorage == null) {
             List<SegmentIdentifier> ignorableSegments = new ArrayList<>();

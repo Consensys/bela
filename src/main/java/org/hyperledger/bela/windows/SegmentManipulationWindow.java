@@ -1,20 +1,5 @@
 package org.hyperledger.bela.windows;
 
-import java.util.EnumSet;
-import java.util.HashMap;
-import javax.annotation.Nonnull;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.prefs.Preferences;
-import java.util.stream.Collectors;
 import com.googlecode.lanterna.gui2.CheckBox;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
@@ -28,25 +13,29 @@ import org.hyperledger.bela.dialogs.ProgressBarPopup;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
+import org.hyperledger.besu.plugin.services.exception.StorageException;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 import org.hyperledger.besu.plugin.services.storage.SegmentIdentifier;
-import org.hyperledger.besu.plugin.services.storage.SegmentedKeyValueStorage;
-import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDbSegmentIdentifier;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.segmented.BelaRocksDBColumnarKeyValueStorage;
-import org.hyperledger.besu.plugin.services.storage.rocksdb.segmented.RocksDBColumnarKeyValueStorage;
-import org.hyperledger.besu.services.kvstore.SegmentedKeyValueStorageAdapter;
-import org.jetbrains.annotations.NotNull;
-import org.rocksdb.ColumnFamilyHandle;
-import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
-import org.rocksdb.TransactionDB;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.prefs.Preferences;
+import java.util.stream.Collectors;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.KEY_BLOCKCHAIN_SIZES;
 import static org.hyperledger.bela.windows.Constants.KEY_DETECT_COLUMNS;
 import static org.hyperledger.bela.windows.Constants.KEY_LONG_PROPERTY;
 import static org.hyperledger.bela.windows.Constants.KEY_PRUNE_COLUMNS;
-import static org.hyperledger.bela.windows.Constants.READ_ONLY_DB;
 
 enum LongRocksDbProperty {
 
@@ -117,24 +106,12 @@ public class SegmentManipulationWindow extends AbstractBelaWindow {
     }
 
     public static long accessLongPropertyForSegment(StorageProvider provider, final SegmentIdentifier segment, final LongRocksDbProperty longRocksDbProperty) {
-        final long longPropertyValue;
         try {
-            final SegmentedKeyValueStorageAdapter storageBySegmentIdentifier = (SegmentedKeyValueStorageAdapter) provider.getStorageBySegmentIdentifier(segment);
-            final Field segmentHandleField = storageBySegmentIdentifier.getClass()
-                    .getDeclaredField("segmentHandle");
-            segmentHandleField.setAccessible(true);
-            final RocksDbSegmentIdentifier identifier = (RocksDbSegmentIdentifier) segmentHandleField.get(storageBySegmentIdentifier);
-            final Field storageField = storageBySegmentIdentifier.getClass().getDeclaredField("storage");
-            storageField.setAccessible(true);
-            final RocksDBColumnarKeyValueStorage s = (RocksDBColumnarKeyValueStorage) storageField.get(storageBySegmentIdentifier);
-            final Field dbField = s.getClass().getDeclaredField("db");
-            dbField.setAccessible(true);
-            final RocksDB db = (RocksDB) dbField.get(s);
-            longPropertyValue = db.getLongProperty(identifier.get(), longRocksDbProperty.getName());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            final BelaRocksDBColumnarKeyValueStorage belaStorage = (BelaRocksDBColumnarKeyValueStorage) provider.getStorageBySegmentIdentifiers(List.of(segment));
+            return belaStorage.getLongProperty(segment, longRocksDbProperty.getName());
+        } catch (RocksDBException e) {
+            throw new StorageException(e);
         }
-        return longPropertyValue;
     }
 
     @Override

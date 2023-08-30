@@ -1,6 +1,7 @@
 package org.hyperledger.bela.converter;
 
 import com.google.common.base.Supplier;
+import com.google.common.collect.Streams;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.plugin.services.BesuConfiguration;
 import org.hyperledger.besu.plugin.services.MetricsSystem;
@@ -16,19 +17,13 @@ import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksD
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBFactoryConfiguration;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.segmented.BelaRocksDBColumnarKeyValueStorage;
 import org.hyperledger.besu.services.kvstore.SegmentedKeyValueStorageAdapter;
-import org.rocksdb.Options;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -72,13 +67,18 @@ public class RocksDBKeyValueStorageConverterFactory implements KeyValueStorageFa
     }
 
     @Override
-    public SegmentedKeyValueStorage create(List<SegmentIdentifier> segments,
+    public SegmentedKeyValueStorage create(List<SegmentIdentifier> requestedSegments,
         BesuConfiguration commonConfiguration, MetricsSystem metricsSystem) throws StorageException {
         if (requiresInit()) {
             init(commonConfiguration);
         }
+
+        // create segmented storage for the distinct set of requested and detected segments
+        var allSegments = Streams.concat(segments.stream(), requestedSegments.stream())
+            .distinct()
+            .toList();
+
         if (segmentedStorage == null) {
-            Set<KeyValueSegmentIdentifier> allSegments = EnumSet.allOf(KeyValueSegmentIdentifier.class);
             List<SegmentIdentifier> ignorableSegments = new ArrayList<>();
             segmentedStorage =
                 new BelaRocksDBColumnarKeyValueStorage(

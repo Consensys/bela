@@ -15,7 +15,6 @@
 package org.hyperledger.besu.plugin.services.storage.rocksdb.segmented;
 
 import org.hyperledger.bela.utils.hacks.ReadOnlyDatabaseDecider;
-import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.plugin.services.MetricsSystem;
 import org.hyperledger.besu.plugin.services.exception.StorageException;
 import org.hyperledger.besu.plugin.services.storage.SegmentIdentifier;
@@ -27,30 +26,21 @@ import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBTransaction;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDbSegmentIdentifier;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBConfiguration;
 import org.hyperledger.besu.services.kvstore.LayeredKeyValueStorage;
-import org.hyperledger.besu.services.kvstore.SegmentedKeyValueStorageAdapter;
 import org.hyperledger.besu.services.kvstore.SegmentedKeyValueStorageTransactionValidatorDecorator;
-
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-
-import org.rocksdb.ColumnFamilyDescriptor;
 import org.rocksdb.OptimisticTransactionDB;
-import org.rocksdb.Options;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.WriteOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.List;
 
 /** Optimistic RocksDB Columnar key value storage for Bela */
 public class BelaRocksDBColumnarKeyValueStorage extends RocksDBColumnarKeyValueStorage
     implements SnappableKeyValueStorage {
+  private static final Logger LOG = LoggerFactory.getLogger(BelaRocksDBColumnarKeyValueStorage.class);
   private final RocksDB db;
 
   /**
@@ -124,7 +114,13 @@ public class BelaRocksDBColumnarKeyValueStorage extends RocksDBColumnarKeyValueS
         db.dropColumnFamily(toRemove.get());
       }
     } catch (RocksDBException e) {
+      LOG.warn("Failed to drop column family " + segment.getName(), e);
       throw new StorageException("Failed to drop column family " + segment.getName(), e);
     }
+  }
+
+  public Long getLongProperty(SegmentIdentifier segmentId, String longProperty)
+      throws RocksDBException {
+      return db.getLongProperty(this.columnHandlesBySegmentIdentifier.get(segmentId).get(), longProperty);
   }
 }

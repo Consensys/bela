@@ -39,6 +39,30 @@ import static org.hyperledger.bela.windows.Constants.KEY_PRUNE_COLUMNS;
 
 enum LongRocksDbProperty {
 
+    NUM_BLOB_FILES("rocksdb.num-blob-files") {
+        @Override
+        public String format(final long value) {
+            return round(value, GIGABYTE, "GB ") + round(value % GIGABYTE, MEGABYTE, "MB ") + round(value % MEGABYTE, KILOBYTE, "KB ") + round(value % KILOBYTE, 1, "B");
+        }
+    },
+    TOTAL_BLOB_FILE_SIZE("rocksdb.total-blob-file-size") {
+        @Override
+        public String format(final long value) {
+            return round(value, GIGABYTE, "GB ") + round(value % GIGABYTE, MEGABYTE, "MB ") + round(value % MEGABYTE, KILOBYTE, "KB ") + round(value % KILOBYTE, 1, "B");
+        }
+    },
+    LIVE_BLOB_FILE_SIZE("rocksdb.live-blob-file-size") {
+        @Override
+        public String format(final long value) {
+            return round(value, GIGABYTE, "GB ") + round(value % GIGABYTE, MEGABYTE, "MB ") + round(value % MEGABYTE, KILOBYTE, "KB ") + round(value % KILOBYTE, 1, "B");
+        }
+    },
+    LIVE_BLOB_FILES_GARBAGESIZE("rocksdb.live-blob-file-garbage-size") {
+        @Override
+        public String format(final long value) {
+            return round(value, GIGABYTE, "GB ") + round(value % GIGABYTE, MEGABYTE, "MB ") + round(value % MEGABYTE, KILOBYTE, "KB ") + round(value % KILOBYTE, 1, "B");
+        }
+    },
     TOTAL_SST_FILES_SIZE("rocksdb.total-sst-files-size") {
         @Override
         public String format(final long value) {

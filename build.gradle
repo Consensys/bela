@@ -18,8 +18,8 @@ repositories {
 description("BEsu LAterna commandline interrogation tool")
 
 apply plugin: 'java'
-sourceCompatibility = 17
-targetCompatibility = 17
+sourceCompatibility = 21
+targetCompatibility = 21
 
 // specify the besu version to use via -PbesuVersion=.. otherwise default to latest.
 //   e.g. `-PbesuVersion=23.0.1-beta`

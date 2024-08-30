@@ -23,6 +23,7 @@ import org.hyperledger.bela.windows.P2PManagementWindow;
 import org.hyperledger.bela.windows.RocksDBViewer;
 import org.hyperledger.bela.windows.SegmentManipulationWindow;
 import org.hyperledger.bela.windows.SettingsWindow;
+import org.hyperledger.besu.BesuInfo;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.DATA_PATH;
@@ -38,6 +39,7 @@ public class Bela {
 
         DefaultTerminalFactory terminalFactory = new DefaultTerminalFactory();
         terminalFactory.setInitialTerminalSize(new TerminalSize(120, 35));
+        System.out.println(BesuInfo.version());
         try (Screen screen = terminalFactory.createScreen();
              ) {
             screen.startScreen();

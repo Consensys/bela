@@ -106,8 +106,12 @@ public class BonsaiTraversal {
                             // Add code, if appropriate
                             if (!accountValue.getCodeHash().equals(Hash.EMPTY)) {
                                 // traverse code
-                                final Optional<Bytes> code =
+                                // stored by code hash (CodeHashCodeStorageStrategy) by default since 24.5.2
+                                Optional<Bytes> code = codeStorage.get(accountValue.getCodeHash().toArrayUnsafe()).map(Bytes::wrap);
+                                // if empty, try by account hash instead
+                                if (code.isEmpty()) code =
                                         codeStorage.get(accountHash.toArrayUnsafe()).map(Bytes::wrap);
+                                // if still empty, it's missing
                                 if (code.isEmpty()) {
                                     listener.missingCodeHash(accountValue.getCodeHash(), accountHash);
                                 } else {

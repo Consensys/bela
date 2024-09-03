@@ -80,7 +80,7 @@ configurations {
 
 application {
     // Main distribution configuration
-    // applicationName = 'bela'
+    applicationName = 'bela'
     mainClass = "org.hyperledger.bela.Bela"
 }
 
@@ -95,7 +95,7 @@ tasks.register('bonsaiTreeVerifierDist', Copy) {
     // Replace the main class in the generated script
     doLast {
         def scriptFile = file("$buildDirPath/install/bela/bin/bela")
-        def newScriptFile = file("$buildDirPath/install/bonsaitreeverifier/bin/bonsaitreeverifier")
+        def newScriptFile = file("$buildDirPath/install/bela/bin/bonsaitreeverifier")
 
         copy {
             from scriptFile

@@ -63,7 +63,7 @@ public class BonsaiTreeVerifier implements BonsaiListener {
 
         System.out.println("AAAAAAAAAA!!!!!!!");
         Duration duration = Duration.between(start, Instant.now());
-        System.out.printf("Duration: %d hours, %d minutes, %d seconds%n", duration.toHours(), duration.toMinutesPart(), duration.toSeconds());
+        System.out.printf("Duration: %d hours, %d minutes, %d seconds%n", duration.toHoursPart(), duration.toMinutesPart(), duration.toSecondsPart());
     }
 
     private int getVisited() {

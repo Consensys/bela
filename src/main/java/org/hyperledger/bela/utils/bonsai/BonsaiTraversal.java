@@ -82,10 +82,12 @@ public class BonsaiTraversal {
                 TrieNodeDecoder.decodeNodes(parentNode.getLocation().orElseThrow(), parentNode.getEncodedBytes());
         nodes.forEach(
                 node -> {
+                    // node is a branch node
                     if (nodeIsHashReferencedDescendant(parentNode, node)) {
                         traverseAccountTrie(
                                 getAccountNodeValue(node.getHash(), node.getLocation().orElseThrow()));
                     } else {
+                        // node is a leaf node
                         if (node.getValue().isPresent()) {
                             final StateTrieAccountValue accountValue =
                                     StateTrieAccountValue.readFrom(RLP.input(node.getValue().orElseThrow()));
@@ -194,7 +196,7 @@ public class BonsaiTraversal {
                         .get(Bytes.concatenate(accountHash, location).toArrayUnsafe())
                         .map(Bytes::wrap);
         if (bytes.isEmpty()) {
-            listener.missingStorageTrieForHash(hash, location);
+            listener.missingStorageTrieForHash(accountHash, hash, location);
             return null;
         }
         final Hash foundHashNode = Hash.hash(bytes.orElseThrow());

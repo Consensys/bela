@@ -19,7 +19,11 @@ package org.hyperledger.bela.utils.bonsai;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.config.BelaConfigurationImpl;
@@ -36,8 +40,10 @@ import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksD
 public class BonsaiTreeVerifier implements BonsaiListener {
 
     private int visited;
+    private static final AtomicInteger errorCount = new AtomicInteger(0);
 
     public static void main(final String[] args) {
+        Instant start = Instant.now();
         final Path dataDir = Paths.get(args[0]);
         System.out.println("We are verifying : " + dataDir);
         final StorageProvider provider =
@@ -51,14 +57,26 @@ public class BonsaiTreeVerifier implements BonsaiListener {
 
         try {
             tr.traverse();
-            System.out.println("ޏ₍ ὸ.ό₎ރ World state was verified... ޏ₍ ὸ.ό₎ރ");
-            System.out.println("Verified root " + tr.getRoot() + " with " + listener.getVisited() + " nodes");
+            if (errorCount.get() > 0) {
+                System.out.println();
+                System.out.println();
+                System.out.println("Found " + errorCount.get() + " errors (see above)");
+                System.out.println();
+                System.out.println("Could not verify root " + tr.getRoot() + " with " + listener.getVisited() + " nodes");
+            } else {
+                System.out.println();
+                System.out.println();
+                System.out.println("ޏ₍ ὸ.ό₎ރ World state was verified... ޏ₍ ὸ.ό₎ރ");
+                System.out.println("Verified root " + tr.getRoot() + " with " + listener.getVisited() + " nodes");
+            }
         } catch (Exception e) {
             System.out.println("There was a problem (╯°□°)╯︵ ┻━┻: " + e.getMessage());
             e.printStackTrace();
         }
 
         System.out.println("AAAAAAAAAA!!!!!!!");
+        Duration duration = Duration.between(start, Instant.now());
+        System.out.printf("Duration: %d hours, %d minutes, %d seconds%n", duration.toHoursPart(), duration.toMinutesPart(), duration.toSecondsPart());
     }
 
     private int getVisited() {
@@ -90,21 +108,23 @@ public class BonsaiTreeVerifier implements BonsaiListener {
 
     @Override
     public void missingCodeHash(final Hash codeHash, final Hash accountHash) {
-
+        errorCount.incrementAndGet();
         System.err.format(
-                "missing code hash %s for account %s",
+                "\nmissing code hash %s for account %s",
                 codeHash, accountHash);
     }
 
     @Override
     public void invalidCode(final Hash accountHash, final Hash codeHash, final Hash foundCodeHash) {
+        errorCount.incrementAndGet();
         System.err.format(
-                "invalid code for account %s (expected %s and found %s)",
+                "\ninvalid code for account %s (expected %s and found %s)",
                 accountHash, codeHash, foundCodeHash);
     }
 
     @Override
     public void missingValueForNode(final Bytes32 hash) {
+        errorCount.incrementAndGet();
         System.err.println("\nMissing value for node " + hash.toHexString());
     }
 
@@ -122,36 +142,41 @@ public class BonsaiTreeVerifier implements BonsaiListener {
 
     @Override
     public void missingAccountTrieForHash(final Bytes32 hash, final Bytes location) {
-        System.err.format("missing account trie node for hash %s and location %s", hash, location);
+        errorCount.incrementAndGet();
+        System.err.format("\nmissing account trie node for hash %s and location %s", hash, location);
     }
 
     @Override
     public void invalidAccountTrieForHash(final Bytes32 hash, final Bytes location, final Hash foundHashNode) {
+        errorCount.incrementAndGet();
         System.err.format(
-                "invalid account trie node for hash %s and location %s (found %s)",
+                "\ninvalid account trie node for hash %s and location %s (found %s)",
                 hash, location, foundHashNode);
     }
 
     @Override
     public void missingStorageTrieForHash(final Bytes32 hash, final Bytes location) {
-        System.err.format("missing storage trie node for hash %s and location %s", hash, location);
+        errorCount.incrementAndGet();
+        System.err.format("\nmissing storage trie node for hash %s and location %s", hash, location);
     }
 
     @Override
     public void invalidStorageTrieForHash(final Bytes32 accountHash, final Bytes32 hash, final Bytes location, final Hash foundHashNode) {
-
+        errorCount.incrementAndGet();
         System.err.format(
-                "invalid storage trie node for account %s hash %s and location %s (found %s)",
+                "\ninvalid storage trie node for account %s hash %s and location %s (found %s)",
                 accountHash, hash, location, foundHashNode);
     }
 
     @Override
     public void differentDataInFlatDatabaseForAccount(final Hash accountHash) {
-        System.err.format("inconsistent data in flat database for account %s", accountHash);
+        errorCount.incrementAndGet();
+        System.err.format("\ninconsistent data in flat database for account %s", accountHash);
     }
 
     @Override
     public void differentDataInFlatDatabaseForStorage(final Bytes32 accountHash, final Bytes32 slotHash) {
+        errorCount.incrementAndGet();
         System.err.format("inconsistent data in flat database for account %s on slot %s", accountHash, slotHash);
 
     }

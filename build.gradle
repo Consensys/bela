@@ -21,9 +21,9 @@ apply plugin: 'java'
 sourceCompatibility = 21
 targetCompatibility = 21
 
-// specify the besu version to use via -PbesuVersion=.. otherwise default to latest.
+// specify the besu version to use via -PbesuVersion=.. otherwise default to 23.7.2.
 //   e.g. `-PbesuVersion=23.0.1-beta`
-def besuVersion = project.hasProperty('besuVersion') ? project.property('besuVersion') : '+'
+def besuVersion = project.hasProperty('besuVersion') ? project.property('besuVersion') : '23.7.2'
 
 def dockerOrgName = project.hasProperty('dockerOrgName') ? project.getProperty("dockerOrgName") : "consensys"
 def dockerArtifactName = project.hasProperty("dockerArtifactName") ? project.getProperty("dockerArtifactName") : "bela"
@@ -116,6 +116,7 @@ installDist.finalizedBy bonsaiTreeVerifierDist
 
 task distDocker {
     dependsOn installDist
+    dependsOn bonsaiTreeVerifierDist
     inputs.dir("build/install/")
 
     def dockerBuildVersion

@@ -157,7 +157,7 @@ public class BonsaiTreeVerifier implements BonsaiListener {
     @Override
     public void missingStorageTrieForHash(final Bytes32 accountHash, final Bytes32 hash, final Bytes location) {
         errorCount.incrementAndGet();
-        System.err.format("account hash %s missing storage trie node for hash %s and location %s", accountHash, hash, location);
+        System.err.format("\naccount hash %s missing storage trie node for hash %s and location %s", accountHash, hash, location);
     }
 
     @Override

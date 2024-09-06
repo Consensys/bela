@@ -165,7 +165,7 @@ public class TrieTraversal {
         final Optional<Bytes> bytes =
                 storageNodeFinder.getStorageNode(accountHash, location, hash);
         if (bytes.isEmpty()) {
-            listener.missingStorageTrieForHash(hash, location);
+            listener.missingStorageTrieForHash(accountHash, hash, location);
             return null;
         }
         final Hash foundHashNode = Hash.hash(bytes.orElseThrow());

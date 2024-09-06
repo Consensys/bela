@@ -194,9 +194,9 @@ public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements Bons
     }
 
     @Override
-    public void missingStorageTrieForHash(final Bytes32 hash, final Bytes location) {
+    public void missingStorageTrieForHash(final Bytes32 accountHash, final Bytes32 hash, final Bytes location) {
         log.info("Missing storage trie for hash {} at location {}", hash, location);
-        logTextBox.addLine(String.format("missing storage trie node for hash %s and location %s", hash, location));
+        logTextBox.addLine(String.format("accounthash %s missing storage trie node for hash %s and location %s", accountHash, hash, location));
     }
 
     @Override

@@ -1,4 +1,4 @@
-FROM openjdk:17-slim-bullseye
+FROM openjdk:22-slim-bullseye
 
 EXPOSE 30303
 

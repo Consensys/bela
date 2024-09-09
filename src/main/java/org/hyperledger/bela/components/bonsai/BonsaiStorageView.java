@@ -69,8 +69,8 @@ public class BonsaiStorageView extends AbstractBonsaiNodeView {
         return accountStorage.get(accountHash.toArrayUnsafe()).map(Bytes::wrap);
     }
 
-    public Optional<Bytes> getCode(final Hash accountHash) {
-        return codeStorage.get(accountHash.toArrayUnsafe()).map(Bytes::wrap);
+    public Optional<Bytes> getCode(final Hash codeOrAccountHash) {
+        return codeStorage.get(codeOrAccountHash.toArrayUnsafe()).map(Bytes::wrap);
     }
 
     public Node<Bytes> getStorageNodeValue(

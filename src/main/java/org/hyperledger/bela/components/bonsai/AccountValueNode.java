@@ -46,13 +46,13 @@ class AccountValueNode extends AbstractBonsaiNode {
         // Add code, if appropriate
         if (!accountValue.getCodeHash().equals(Hash.EMPTY)) {
             // traverse code
-            final Optional<Bytes> code = bonsaiStorageView.getCode(accountHash);
+            final Optional<Bytes> code = bonsaiStorageView.getCode(accountValue.getCodeHash()).or(() -> bonsaiStorageView.getCode(accountHash));
             if (code.isEmpty()) {
-                children.add(new LabelNode("Missing Code", accountHash.toHexString()));
+                children.add(new LabelNode("Missing Code", "Code hash: " + accountValue.getCodeHash().toHexString() + "; account hash = " + accountHash.toHexString()));
             } else {
                 final Hash foundCodeHash = Hash.hash(code.orElseThrow());
                 if (!foundCodeHash.equals(accountValue.getCodeHash())) {
-                    children.add(new LabelNode("Invalid Code hash", "found: " + foundCodeHash + " account: " + accountValue.getCodeHash()));
+                    children.add(new LabelNode("Invalid Code hash", "found: " + foundCodeHash + " account code hash: " + accountValue.getCodeHash()));
                 } else {
                     children.add(new LabelNode("Code", foundCodeHash.toHexString()));
                 }

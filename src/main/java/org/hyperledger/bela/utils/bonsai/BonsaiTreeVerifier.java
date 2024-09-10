@@ -139,7 +139,7 @@ public class BonsaiTreeVerifier implements BonsaiListener {
         }
         if (currentVisited % 1000000 == 0) {
             System.out.println();
-            System.out.println("So far processed " + visited.get() + " nodes");
+            System.out.println("So far processed " + currentVisited + " nodes");
         }
     }
 

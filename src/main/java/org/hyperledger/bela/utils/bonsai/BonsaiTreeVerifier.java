@@ -51,7 +51,6 @@ public class BonsaiTreeVerifier implements BonsaiListener {
         final BonsaiTreeVerifier listener = new BonsaiTreeVerifier();
         BonsaiTraversal tr = new BonsaiTraversal(provider, listener);
         System.out.println();
-        System.out.println("ޏ₍ ὸ.ό₎ރ");
         System.out.println(
                 "\uD83E\uDD1E\uD83E\uDD1E\uD83E\uDD1E\uD83E\uDD1E\uD83E\uDD1E\uD83E\uDD1E\uD83E\uDD1E");
 
@@ -66,7 +65,7 @@ public class BonsaiTreeVerifier implements BonsaiListener {
             } else {
                 System.out.println();
                 System.out.println();
-                System.out.println("ޏ₍ ὸ.ό₎ރ World state was verified... ޏ₍ ὸ.ό₎ރ");
+                System.out.println("World state was successfully verified...");
                 System.out.println("Verified root " + tr.getRoot() + " with " + listener.getVisited() + " nodes");
             }
         } catch (Exception e) {
@@ -110,7 +109,7 @@ public class BonsaiTreeVerifier implements BonsaiListener {
     public void missingCodeHash(final Hash codeHash, final Hash accountHash) {
         errorCount.incrementAndGet();
         System.err.format(
-                "\nmissing code hash %s for account %s",
+                "\nmissing code hash %s for account %s\n",
                 codeHash, accountHash);
     }
 
@@ -118,14 +117,14 @@ public class BonsaiTreeVerifier implements BonsaiListener {
     public void invalidCode(final Hash accountHash, final Hash codeHash, final Hash foundCodeHash) {
         errorCount.incrementAndGet();
         System.err.format(
-                "\ninvalid code for account %s (expected %s and found %s)",
+                "\ninvalid code for account %s (expected %s and found %s)\n",
                 accountHash, codeHash, foundCodeHash);
     }
 
     @Override
     public void missingValueForNode(final Bytes32 hash) {
         errorCount.incrementAndGet();
-        System.err.println("\nMissing value for node " + hash.toHexString());
+        System.err.format("\nMissing value for node %s\n", hash.toHexString());
     }
 
     @Override
@@ -143,41 +142,41 @@ public class BonsaiTreeVerifier implements BonsaiListener {
     @Override
     public void missingAccountTrieForHash(final Bytes32 hash, final Bytes location) {
         errorCount.incrementAndGet();
-        System.err.format("\nmissing account trie node for hash %s and location %s", hash, location);
+        System.err.format("\nmissing account trie node for hash %s and location %s\n", hash, location);
     }
 
     @Override
     public void invalidAccountTrieForHash(final Bytes32 hash, final Bytes location, final Hash foundHashNode) {
         errorCount.incrementAndGet();
         System.err.format(
-                "\ninvalid account trie node for hash %s and location %s (found %s)",
+                "\ninvalid account trie node for hash %s and location %s (found %s)\n",
                 hash, location, foundHashNode);
     }
 
     @Override
     public void missingStorageTrieForHash(final Bytes32 accountHash, final Bytes32 hash, final Bytes location) {
         errorCount.incrementAndGet();
-        System.err.format("\naccount hash %s missing storage trie node for hash %s and location %s", accountHash, hash, location);
+        System.err.format("\naccount hash %s missing storage trie node for hash %s and location %s\n", accountHash, hash, location);
     }
 
     @Override
     public void invalidStorageTrieForHash(final Bytes32 accountHash, final Bytes32 hash, final Bytes location, final Hash foundHashNode) {
         errorCount.incrementAndGet();
         System.err.format(
-                "\ninvalid storage trie node for account %s hash %s and location %s (found %s)",
+                "\ninvalid storage trie node for account %s hash %s and location %s (found %s)\n",
                 accountHash, hash, location, foundHashNode);
     }
 
     @Override
     public void differentDataInFlatDatabaseForAccount(final Hash accountHash) {
         errorCount.incrementAndGet();
-        System.err.format("\ninconsistent data in flat database for account %s", accountHash);
+        System.err.format("\ninconsistent data in flat database for account %s\n", accountHash);
     }
 
     @Override
     public void differentDataInFlatDatabaseForStorage(final Bytes32 accountHash, final Bytes32 slotHash) {
         errorCount.incrementAndGet();
-        System.err.format("inconsistent data in flat database for account %s on slot %s", accountHash, slotHash);
+        System.err.format("inconsistent data in flat database for account %s on slot %s\n", accountHash, slotHash);
 
     }
 }

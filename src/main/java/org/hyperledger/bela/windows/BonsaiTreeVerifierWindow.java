@@ -4,6 +4,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.Label;
@@ -39,7 +40,7 @@ public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements Bons
     private final Label counterLabel = new Label("0");
     private final TextBox logTextBox = new TextBox(new TerminalSize(120, 30));
     private final AtomicReference<BonsaiTraversal> bonsaiTraversal = new AtomicReference<>();
-    AtomicInteger visited = new AtomicInteger(0);
+    AtomicLong visited = new AtomicLong(0);
     private Future<?> execution;
 
     public BonsaiTreeVerifierWindow(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory) {

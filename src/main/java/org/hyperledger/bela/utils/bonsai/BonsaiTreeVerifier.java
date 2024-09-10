@@ -22,7 +22,9 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
@@ -39,12 +41,25 @@ import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksD
 
 public class BonsaiTreeVerifier implements BonsaiListener {
 
-    private final AtomicInteger visited = new AtomicInteger(0);
+    private static boolean VERBOSE = false;
+    private final AtomicLong visited = new AtomicLong(0);
     private static final AtomicInteger errorCount = new AtomicInteger(0);
 
+    /*
+        ./bonsaitreeverifier /data/besu --verbose
+     */
     public static void main(final String[] args) {
         Instant start = Instant.now();
         final Path dataDir = Paths.get(args[0]);
+        String verboseArg = args.length > 1 ? args[1] : "";
+        if (verboseArg.startsWith("--verbose") || verboseArg.startsWith("-v")) {
+            System.out.println("Verbose mode enabled, tree traversal progress will be printed");
+            VERBOSE = true;
+        } else {
+            System.out.println("Verbose mode disabled, tree traversal progress will not be printed but errors will.");
+            System.out.println("Enable verbose mode with -v or --verbose as the second argument");
+        }
+        System.out.println();
         System.out.println("We are verifying : " + dataDir);
         final StorageProvider provider =
                 createKeyValueStorageProvider(dataDir, dataDir.resolve("database"));
@@ -73,12 +88,12 @@ public class BonsaiTreeVerifier implements BonsaiListener {
             e.printStackTrace();
         }
 
-        System.out.println("AAAAAAAAAA!!!!!!!");
+        System.out.println();
         Duration duration = Duration.between(start, Instant.now());
         System.out.printf("Duration: %d hours, %d minutes, %d seconds%n", duration.toHoursPart(), duration.toMinutesPart(), duration.toSecondsPart());
     }
 
-    private int getVisited() {
+    private long getVisited() {
         return visited.get();
     }
 
@@ -129,13 +144,15 @@ public class BonsaiTreeVerifier implements BonsaiListener {
 
     @Override
     public void visited(final BonsaiTraversalTrieType type) {
-        visited.incrementAndGet();
-        if (visited.get() % 10000 == 0) {
-            System.out.print(type.getText());
-        }
-        if (visited.get() % 1000000 == 0) {
-            System.out.println();
-            System.out.println("So far processed " + visited.get() + " nodes");
+        long currentVisited = visited.incrementAndGet();
+        if (VERBOSE) {
+            if (currentVisited % 10000 == 0) {
+                System.out.print(type.getText());
+            }
+            if (currentVisited % 1000000 == 0) {
+                System.out.println();
+                System.out.println("So far processed " + visited.get() + " nodes");
+            }
         }
     }
 

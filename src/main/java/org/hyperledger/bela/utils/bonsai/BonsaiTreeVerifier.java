@@ -39,7 +39,7 @@ import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksD
 
 public class BonsaiTreeVerifier implements BonsaiListener {
 
-    private int visited;
+    private final AtomicInteger visited = new AtomicInteger(0);
     private static final AtomicInteger errorCount = new AtomicInteger(0);
 
     public static void main(final String[] args) {
@@ -79,7 +79,7 @@ public class BonsaiTreeVerifier implements BonsaiListener {
     }
 
     private int getVisited() {
-        return visited;
+        return visited.get();
     }
 
     private static StorageProvider createKeyValueStorageProvider(
@@ -129,13 +129,13 @@ public class BonsaiTreeVerifier implements BonsaiListener {
 
     @Override
     public void visited(final BonsaiTraversalTrieType type) {
-        visited++;
-        if (visited % 10000 == 0) {
+        visited.incrementAndGet();
+        if (visited.get() % 10000 == 0) {
             System.out.print(type.getText());
         }
-        if (visited % 1000000 == 0) {
+        if (visited.get() % 1000000 == 0) {
             System.out.println();
-            System.out.println("So far processed " + visited + " nodes");
+            System.out.println("So far processed " + visited.get() + " nodes");
         }
     }
 

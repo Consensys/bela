@@ -105,10 +105,6 @@ tasks.register('bonsaiTreeVerifierDist', Copy) {
 // Ensure the bonsaiTreeVerifierDist task is executed when the installDist task is run
 installDist.finalizedBy bonsaiTreeVerifierDist
 
-// Ensure the bonsaiDist task is executed when the installDist task is run
-installDist.finalizedBy bonsaiTreeVerifierDist
-
-
 task distDocker {
     dependsOn installDist
     dependsOn bonsaiTreeVerifierDist

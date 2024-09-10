@@ -89,26 +89,21 @@ tasks.register('bonsaiTreeVerifierDist', Copy) {
     // Use layout.buildDirectory to get the build directory
     def buildDirPath = layout.buildDirectory.get().asFile.path
 
-    into "$buildDirPath/install/bonsaitreeverifier"
-    from installDist // copy the contents of the main distribution
+    def belaDistDir = file("$buildDirPath/install/bela/bin/")
+    from "$belaDistDir/bela"
+    into belaDistDir
+    rename { String fileName -> 'bonsaitreeverifier' }
 
-    // Replace the main class in the generated script
     doLast {
-        def scriptFile = file("$buildDirPath/install/bela/bin/bela")
-        def newScriptFile = file("$buildDirPath/install/bela/bin/bonsaitreeverifier")
-
-        copy {
-            from scriptFile
-            into newScriptFile.parentFile
-            rename { it.replace('bela', 'bonsaitreeverifier') }
-        }
-
-        newScriptFile.text = newScriptFile.text.replace(
+        def bvtFile = file("$belaDistDir/bonsaitreeverifier")
+        bvtFile.text = bvtFile.text.replace(
                 'org.hyperledger.bela.Bela',
-                'org.hyperledger.bela.utils.bonsai.BonsaiTreeVerifier'
-        )
+                'org.hyperledger.bela.utils.bonsai.BonsaiTreeVerifier')
     }
 }
+
+// Ensure the bonsaiTreeVerifierDist task is executed when the installDist task is run
+installDist.finalizedBy bonsaiTreeVerifierDist
 
 // Ensure the bonsaiDist task is executed when the installDist task is run
 installDist.finalizedBy bonsaiTreeVerifierDist

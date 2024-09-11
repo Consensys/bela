@@ -35,7 +35,7 @@ public class RocksDBKeyValueStorageConverterFactory implements KeyValueStorageFa
     private static SegmentedKeyValueStorage segmentedStorage;
     private final List<SegmentIdentifier> segments;
     private final RocksDBMetricsFactory rocksDBMetricsFactory;
-    private static final Set<Integer> SUPPORTED_VERSIONS = Set.of(1, 2);
+    private static final Set<Integer> SUPPORTED_VERSIONS = Set.of(1, 2, 3);
 
 
     private final Supplier<RocksDBFactoryConfiguration> configuration;
@@ -122,7 +122,7 @@ public class RocksDBKeyValueStorageConverterFactory implements KeyValueStorageFa
         final int databaseVersion;
 
         if (databaseExists) {
-            databaseVersion = DatabaseMetadata.lookUpFrom(dataDir).getVersion();
+            databaseVersion = DatabaseMetadata.lookUpFrom(dataDir).getVersionedStorageFormat().getVersion();
             LOG.info("Existing database detected at {}. Version {}", dataDir, databaseVersion);
         } else {
             final String message = "No existing database detected at " + dataDir;

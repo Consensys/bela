@@ -1,19 +1,20 @@
 package org.hyperledger.bela.utils;
 
+import org.hyperledger.bela.context.MainNetContext;
 import org.hyperledger.bela.utils.ConsensusDetector.CONSENSUS_TYPE;
 import org.hyperledger.besu.consensus.common.bft.BftBlockHeaderFunctions;
 import org.hyperledger.besu.consensus.ibft.IbftExtraDataCodec;
 import org.hyperledger.besu.consensus.qbft.QbftExtraDataCodec;
-import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateProvider;
-import org.hyperledger.besu.ethereum.bonsai.cache.CachedMerkleTrieLoader;
-import org.hyperledger.besu.ethereum.bonsai.storage.BonsaiWorldStateKeyValueStorage;
 import org.hyperledger.besu.ethereum.chain.DefaultBlockchain;
+import org.hyperledger.besu.ethereum.chain.MutableBlockchain;
 import org.hyperledger.besu.ethereum.chain.VariablesStorage;
 import org.hyperledger.besu.ethereum.core.BlockHeaderFunctions;
 import org.hyperledger.besu.ethereum.mainnet.MainnetBlockHeaderFunctions;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueStoragePrefixedKeyBlockchainStorage;
 import org.hyperledger.besu.ethereum.storage.keyvalue.VariablesKeyValueStorage;
+import org.hyperledger.besu.ethereum.trie.diffbased.bonsai.BonsaiWorldStateProvider;
+import org.hyperledger.besu.ethereum.trie.diffbased.bonsai.storage.BonsaiWorldStateKeyValueStorage;
 import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 
@@ -35,16 +36,18 @@ public class BlockChainContextFactory {
         };
 
         final NoOpMetricsSystem noOpMetricsSystem = new NoOpMetricsSystem();
+        // TODO: need to detect this from config rather than hardcoding
         var blockchainStorage = new KeyValueStoragePrefixedKeyBlockchainStorage(keyValueStorage,
-            variablesStorage, blockHeaderFunction);
-        var blockchain = DefaultBlockchain
+            variablesStorage, blockHeaderFunction, false);
+        var blockchain = (MutableBlockchain) DefaultBlockchain
                 .create(blockchainStorage, new NoOpMetricsSystem(), 0L);
         //TODO: we assume bonsai here but we should check the database metadata and load the appropriate worldstate
-        var worldStateStorage = new BonsaiWorldStateKeyValueStorage(storageProvider, noOpMetricsSystem);
-        var worldStateArchive = new BonsaiWorldStateProvider(storageProvider, blockchain,
-            new CachedMerkleTrieLoader(noOpMetricsSystem), noOpMetricsSystem,null );
+        var worldStateArchive = MainNetContext.getWorldStateArchive(storageProvider, blockchain);
 
-        return new BlockChainContext(blockchain, worldStateStorage, worldStateArchive);
+        return new BlockChainContext(
+            blockchain,
+            (BonsaiWorldStateKeyValueStorage) worldStateArchive.getWorldStateKeyValueStorage(),
+            worldStateArchive);
     }
 
 

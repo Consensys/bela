@@ -1,16 +1,17 @@
 package org.hyperledger.bela.utils;
 
-import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateProvider;
-import org.hyperledger.besu.ethereum.bonsai.storage.BonsaiWorldStateKeyValueStorage;
 import org.hyperledger.besu.ethereum.chain.Blockchain;
+import org.hyperledger.besu.ethereum.chain.MutableBlockchain;
+import org.hyperledger.besu.ethereum.trie.diffbased.bonsai.BonsaiWorldStateProvider;
+import org.hyperledger.besu.ethereum.trie.diffbased.bonsai.storage.BonsaiWorldStateKeyValueStorage;
 
 public class BlockChainContext {
 
-    private final Blockchain blockchain;
+    private final MutableBlockchain blockchain;
     private final BonsaiWorldStateKeyValueStorage worldStateStorage;
     private final BonsaiWorldStateProvider bonsaiWorldStateArchive;
 
-    public BlockChainContext(final Blockchain blockchain,
+    public BlockChainContext(final MutableBlockchain blockchain,
                              final BonsaiWorldStateKeyValueStorage worldStateStorage,
                              final BonsaiWorldStateProvider bonsaiWorldStateArchive) {
         this.blockchain = blockchain;
@@ -18,7 +19,7 @@ public class BlockChainContext {
         this.bonsaiWorldStateArchive = bonsaiWorldStateArchive;
     }
 
-    public Blockchain getBlockchain() {
+    public MutableBlockchain getBlockchain() {
         return blockchain;
     }
 

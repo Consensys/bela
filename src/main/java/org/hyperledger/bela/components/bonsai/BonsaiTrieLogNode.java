@@ -1,11 +1,5 @@
 package org.hyperledger.bela.components.bonsai;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
-
 import com.googlecode.lanterna.gui2.Borders;
 import com.googlecode.lanterna.gui2.Component;
 import com.googlecode.lanterna.gui2.Panel;
@@ -15,9 +9,12 @@ import org.hyperledger.besu.datatypes.AccountValue;
 import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.datatypes.StorageSlotKey;
-import org.hyperledger.besu.ethereum.bonsai.BonsaiValue;
-import org.hyperledger.besu.ethereum.bonsai.trielog.TrieLogLayer;
-import org.hyperledger.besu.ethereum.worldstate.StateTrieAccountValue;
+import org.hyperledger.besu.ethereum.trie.diffbased.common.DiffBasedValue;
+import org.hyperledger.besu.ethereum.trie.diffbased.common.trielog.TrieLogLayer;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class BonsaiTrieLogNode extends AbstractBonsaiNode {
 
@@ -61,7 +58,7 @@ public class BonsaiTrieLogNode extends AbstractBonsaiNode {
     final List<AddressStorageNode> storageChanges =
         layer.getStorageChanges().entrySet().stream().map(storageChange -> {
           final Address address = storageChange.getKey();
-          final Map<StorageSlotKey, BonsaiValue<UInt256>> tree = storageChange.getValue();
+          final Map<StorageSlotKey, DiffBasedValue<UInt256>> tree = storageChange.getValue();
           return new AddressStorageNode(address, tree);
         }).toList();
     if (!storageChanges.isEmpty()) {

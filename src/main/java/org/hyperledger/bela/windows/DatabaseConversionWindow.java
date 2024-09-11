@@ -1,6 +1,7 @@
 package org.hyperledger.bela.windows;
 
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,11 +21,13 @@ import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.bela.utils.bonsai.BonsaiListener;
 import org.hyperledger.bela.utils.bonsai.BonsaiTraversalTrieType;
 import org.hyperledger.besu.datatypes.Hash;
+import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.BaseVersionedStorageFormat;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.DatabaseMetadata;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 import static org.hyperledger.bela.windows.Constants.KEY_CONVERT_TO_BONSAI;
 import static org.hyperledger.bela.windows.Constants.KEY_CONVERT_TO_FOREST;
+import static org.hyperledger.besu.plugin.services.storage.DataStorageFormat.BONSAI;
 
 public class DatabaseConversionWindow extends AbstractBelaWindow implements BonsaiListener {
     private static final LambdaLogger log = getLogger(DatabaseConversionWindow.class);
@@ -97,8 +100,13 @@ public class DatabaseConversionWindow extends AbstractBelaWindow implements Bons
 
     private void setDbMetadataVersion(int version) {
         try {
-            new DatabaseMetadata(2, Optional.empty())
-                    .writeToDirectory(storageProviderFactory.getDataPath());
+            new DatabaseMetadata(
+                EnumSet.allOf(BaseVersionedStorageFormat.class)
+                    .stream()
+                    .filter(e -> e.getFormat().equals(BONSAI))
+                    .filter(e -> e.getVersion() == version)
+                    .findFirst().orElseThrow())
+                .writeToDirectory(storageProviderFactory.getDataPath());
         } catch (IOException e) {
             log.error("There was an error when setting the metadata version to version {}", version, e);
             throw new IllegalStateException("Failed to write db metadata version");

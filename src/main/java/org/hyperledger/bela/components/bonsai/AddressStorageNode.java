@@ -12,13 +12,13 @@ import org.apache.tuweni.units.bigints.UInt256;
 import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.datatypes.StorageSlotKey;
-import org.hyperledger.besu.ethereum.bonsai.BonsaiValue;
+import org.hyperledger.besu.ethereum.trie.diffbased.common.DiffBasedValue;
 
 public class AddressStorageNode extends AbstractBonsaiNode {
-  private final Map<StorageSlotKey, BonsaiValue<UInt256>> tree;
+  private final Map<StorageSlotKey, DiffBasedValue<UInt256>> tree;
   private final Address address;
 
-  public AddressStorageNode(final Address address, Map<StorageSlotKey, BonsaiValue<UInt256>> tree) {
+  public AddressStorageNode(final Address address, Map<StorageSlotKey, DiffBasedValue<UInt256>> tree) {
     super(address.toHexString());
     this.address = address;
     this.tree = tree;

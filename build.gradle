@@ -21,9 +21,9 @@ apply plugin: 'java'
 sourceCompatibility = 21
 targetCompatibility = 21
 
-// specify the besu version to use via -PbesuVersion=.. otherwise default to 23.7.2.
-//   e.g. `-PbesuVersion=23.0.1-beta`
-def besuVersion = project.hasProperty('besuVersion') ? project.property('besuVersion') : '23.7.2'
+// specify the besu version to use via -PbesuVersion=.. otherwise default to latest.
+//   e.g. `-PbesuVersion=24.9.1-RC1`
+def besuVersion = project.hasProperty('besuVersion') ? project.property('besuVersion') : '+'
 
 def dockerOrgName = project.hasProperty('dockerOrgName') ? project.getProperty("dockerOrgName") : "consensys"
 def dockerArtifactName = project.hasProperty("dockerArtifactName") ? project.getProperty("dockerArtifactName") : "bela"

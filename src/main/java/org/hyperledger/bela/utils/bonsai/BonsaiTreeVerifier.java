@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
@@ -39,9 +40,12 @@ import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksD
 
 public class BonsaiTreeVerifier implements BonsaiListener {
 
-    private int visited;
+    private final AtomicLong visited = new AtomicLong(0);
     private static final AtomicInteger errorCount = new AtomicInteger(0);
 
+    /*
+        ./bonsaitreeverifier /data/besu
+     */
     public static void main(final String[] args) {
         Instant start = Instant.now();
         final Path dataDir = Paths.get(args[0]);
@@ -73,13 +77,17 @@ public class BonsaiTreeVerifier implements BonsaiListener {
             e.printStackTrace();
         }
 
-        System.out.println("AAAAAAAAAA!!!!!!!");
+        System.out.println();
         Duration duration = Duration.between(start, Instant.now());
-        System.out.printf("Duration: %d hours, %d minutes, %d seconds%n", duration.toHoursPart(), duration.toMinutesPart(), duration.toSecondsPart());
+        double nodesPerMillisecond = (double) listener.getVisited() / duration.toMillis();
+        double nodesPerSecond = nodesPerMillisecond * 1000;
+        System.out.printf("Duration: %d hours, %d minutes, %d seconds (%d nodes per second)%n",
+                duration.toHoursPart(), duration.toMinutesPart(), duration.toSecondsPart(),
+                (int) nodesPerSecond);
     }
 
-    private int getVisited() {
-        return visited;
+    private long getVisited() {
+        return visited.get();
     }
 
     private static StorageProvider createKeyValueStorageProvider(
@@ -129,13 +137,13 @@ public class BonsaiTreeVerifier implements BonsaiListener {
 
     @Override
     public void visited(final BonsaiTraversalTrieType type) {
-        visited++;
-        if (visited % 10000 == 0) {
+        long currentVisited = visited.incrementAndGet();
+        if (currentVisited % 10000 == 0) {
             System.out.print(type.getText());
         }
-        if (visited % 1000000 == 0) {
+        if (currentVisited % 1000000 == 0) {
             System.out.println();
-            System.out.println("So far processed " + visited + " nodes");
+            System.out.println("So far processed " + currentVisited + " nodes");
         }
     }
 

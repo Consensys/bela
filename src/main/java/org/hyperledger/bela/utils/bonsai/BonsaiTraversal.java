@@ -80,7 +80,7 @@ public class BonsaiTraversal {
 
         final List<Node<Bytes>> nodes =
                 TrieNodeDecoder.decodeNodes(parentNode.getLocation().orElseThrow(), parentNode.getEncodedBytes());
-        nodes.forEach(
+        nodes.stream().parallel().forEach(
                 node -> {
                     // node is a branch node
                     if (nodeIsHashReferencedDescendant(parentNode, node)) {
@@ -149,7 +149,7 @@ public class BonsaiTraversal {
 
         final List<Node<Bytes>> nodes =
                 TrieNodeDecoder.decodeNodes(parentNode.getLocation().orElseThrow(), parentNode.getEncodedBytes());
-        nodes.forEach(
+        nodes.stream().parallel().forEach(
                 node -> {
                     if (nodeIsHashReferencedDescendant(parentNode, node)) {
                         traverseStorageTrie(

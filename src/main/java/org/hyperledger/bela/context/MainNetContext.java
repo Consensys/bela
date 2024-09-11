@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import io.vertx.core.Vertx;
 import org.apache.tuweni.bytes.Bytes;
+import org.hyperledger.bela.components.bonsai.BelaKeyValueBlockchainStorage;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.BesuInfo;
 import org.hyperledger.besu.config.GenesisConfigFile;
@@ -350,7 +351,8 @@ public class MainNetContext implements BelaContext {
     private static BlockchainStorage getBlockChainStorage(StorageProvider provider) {
         final KeyValueStorage keyValueStorage = provider.getStorageBySegmentIdentifier(BLOCKCHAIN);
         final VariablesStorage variableStorage = new VariablesKeyValueStorage(provider.getStorageBySegmentIdentifier(VARIABLES));
-        return new KeyValueStoragePrefixedKeyBlockchainStorage(keyValueStorage, variableStorage, new MainnetBlockHeaderFunctions(), true);
+        // temporary until changes to besu main enable the creation of db without auto-migrating data
+        return new BelaKeyValueBlockchainStorage(keyValueStorage, variableStorage, new MainnetBlockHeaderFunctions(), true);
     }
 
     private StorageProvider getProvider() {

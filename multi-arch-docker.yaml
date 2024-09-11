@@ -1,0 +1,10 @@
+image: suburbandad/bela:24.8.0
+manifests:
+  - image: suburbandad/bela:24.8.0-amd64
+    platform:
+      architecture: amd64
+      os: linux
+  - image: suburbandad/bela:24.8.0-arm64
+    platform:
+      architecture: arm64
+      os: linux

@@ -34,8 +34,8 @@ import org.rocksdb.WriteOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** Optimistic RocksDB Columnar key value storage for Bela */
 public class BelaRocksDBColumnarKeyValueStorage extends RocksDBColumnarKeyValueStorage
@@ -104,7 +104,7 @@ public class BelaRocksDBColumnarKeyValueStorage extends RocksDBColumnarKeyValueS
 
   @Override
   public SnappedKeyValueStorage takeSnapshot() {
-    return new LayeredKeyValueStorage(new HashMap<>(), this);
+    return new LayeredKeyValueStorage(new ConcurrentHashMap<>(), this);
   }
 
   public void remove(SegmentIdentifier segment) {

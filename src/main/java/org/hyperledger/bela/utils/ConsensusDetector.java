@@ -16,7 +16,8 @@ public class ConsensusDetector {
     public static CONSENSUS_TYPE detectConsensusMechanism(
         final KeyValueStorage keyValueStorage,
         final VariablesStorage variablesStorage) {
-        var storage = new KeyValueStoragePrefixedKeyBlockchainStorage(keyValueStorage, variablesStorage, new MainnetBlockHeaderFunctions());
+        // TODO: should detect this from file, centralize this logic in a common util
+        var storage = new KeyValueStoragePrefixedKeyBlockchainStorage(keyValueStorage, variablesStorage, new MainnetBlockHeaderFunctions(), false);
         var genesisHash = storage.getBlockHash(BlockHeader.GENESIS_BLOCK_NUMBER).orElseThrow();
         var genesisBlockHeader = storage.getBlockHeader(genesisHash).orElseThrow();
         var extraData = genesisBlockHeader.getExtraData();

@@ -25,9 +25,9 @@ import org.hyperledger.bela.components.BlockPanel;
 import org.hyperledger.bela.components.SummaryPanel;
 import org.hyperledger.bela.model.BlockResult;
 import org.hyperledger.besu.datatypes.Hash;
-import org.hyperledger.besu.ethereum.bonsai.storage.BonsaiWorldStateKeyValueStorage;
 import org.hyperledger.besu.ethereum.chain.DefaultBlockchain;
 import org.hyperledger.besu.ethereum.core.Block;
+import org.hyperledger.besu.ethereum.trie.diffbased.bonsai.storage.BonsaiWorldStateKeyValueStorage;
 
 public class BlockChainBrowser {
 

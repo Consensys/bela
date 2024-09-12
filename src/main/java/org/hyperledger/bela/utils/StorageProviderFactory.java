@@ -9,6 +9,7 @@ import org.hyperledger.bela.utils.hacks.ReadOnlyDatabaseDecider;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueStorageProviderBuilder;
+import org.hyperledger.besu.ethereum.worldstate.ImmutableDataStorageConfiguration;
 import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
 import org.hyperledger.besu.plugin.services.exception.StorageException;
 import org.hyperledger.besu.plugin.services.storage.SegmentIdentifier;
@@ -103,7 +104,7 @@ public class StorageProviderFactory implements AutoCloseable {
                                                 RocksDBCLIOptions.DEFAULT_IS_HIGH_SPEC),
                                 segments,
                                 RocksDBMetricsFactory.PUBLIC_ROCKS_DB_METRICS))
-                .withCommonConfiguration(new BelaConfigurationImpl(dataDir, dbDir))
+                .withCommonConfiguration(new BelaConfigurationImpl(dataDir, dbDir, ImmutableDataStorageConfiguration.DEFAULT_BONSAI_CONFIG))
                 .withMetricsSystem(new NoOpMetricsSystem())
                 .build();
     }

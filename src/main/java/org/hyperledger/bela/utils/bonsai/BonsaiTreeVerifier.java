@@ -17,6 +17,7 @@
 
 package org.hyperledger.bela.utils.bonsai;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -41,6 +42,9 @@ import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.Databa
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBCLIOptions;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBFactoryConfiguration;
 
+import static org.hyperledger.bela.config.BesuDataStorageConfigurationUtil.getDataStorageConfiguration;
+import static org.hyperledger.besu.ethereum.worldstate.DataStorageConfiguration.DEFAULT_CONFIG;
+
 public class BonsaiTreeVerifier implements BonsaiListener {
 
     private final AtomicLong visited = new AtomicLong(0);
@@ -55,7 +59,8 @@ public class BonsaiTreeVerifier implements BonsaiListener {
         System.out.println("We are verifying : " + dataDir);
         final StorageProvider provider =
                 createKeyValueStorageProvider(dataDir, dataDir.resolve("database"));
-//        DatabaseMetadata databaseMetadata = DatabaseMetadata.lookUpFrom(dataDir);
+
+        getDataStorageConfiguration(dataDir);
         final BonsaiTreeVerifier listener = new BonsaiTreeVerifier();
         BonsaiTraversal tr = new BonsaiTraversal(provider, listener);
         System.out.println();
@@ -107,7 +112,7 @@ public class BonsaiTreeVerifier implements BonsaiListener {
                                                 RocksDBCLIOptions.DEFAULT_IS_HIGH_SPEC),
                                 Arrays.asList(KeyValueSegmentIdentifier.values()),
                                 RocksDBMetricsFactory.PUBLIC_ROCKS_DB_METRICS))
-                .withCommonConfiguration(new BelaConfigurationImpl(dataDir, dbDir, ImmutableDataStorageConfiguration.DEFAULT_BONSAI_CONFIG))
+                .withCommonConfiguration(new BelaConfigurationImpl(dataDir, dbDir, getDataStorageConfiguration(dataDir)))
                 .withMetricsSystem(new NoOpMetricsSystem())
                 .build();
     }

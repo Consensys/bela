@@ -3,6 +3,7 @@ package org.hyperledger.bela.utils;
 import java.nio.file.Path;
 import java.util.Arrays;
 import org.hyperledger.bela.config.BelaConfigurationImpl;
+import org.hyperledger.bela.config.BesuDataStorageConfigurationUtil;
 import org.hyperledger.bela.converter.RocksDBKeyValueStorageConverterFactory;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
@@ -28,7 +29,7 @@ public class DataUtils {
                                                 RocksDBCLIOptions.DEFAULT_IS_HIGH_SPEC),
                                 Arrays.asList(KeyValueSegmentIdentifier.values()),
                                 RocksDBMetricsFactory.PUBLIC_ROCKS_DB_METRICS))
-                .withCommonConfiguration(new BelaConfigurationImpl(dataDir, dbDir, ImmutableDataStorageConfiguration.DEFAULT_BONSAI_CONFIG))
+                .withCommonConfiguration(new BelaConfigurationImpl(dataDir, dbDir, BesuDataStorageConfigurationUtil.getDataStorageConfiguration(dataDir)))
                 .withMetricsSystem(new NoOpMetricsSystem())
                 .build();
     }

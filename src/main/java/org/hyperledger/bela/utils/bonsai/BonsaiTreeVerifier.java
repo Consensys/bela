@@ -17,6 +17,7 @@
 
 package org.hyperledger.bela.utils.bonsai;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -32,11 +33,17 @@ import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueStorageProviderBuilder;
+import org.hyperledger.besu.ethereum.worldstate.DataStorageConfiguration;
+import org.hyperledger.besu.ethereum.worldstate.ImmutableDataStorageConfiguration;
 import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBKeyValueStorageFactory;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.RocksDBMetricsFactory;
+import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.DatabaseMetadata;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBCLIOptions;
 import org.hyperledger.besu.plugin.services.storage.rocksdb.configuration.RocksDBFactoryConfiguration;
+
+import static org.hyperledger.bela.config.BesuDataStorageConfigurationUtil.getDataStorageConfiguration;
+import static org.hyperledger.besu.ethereum.worldstate.DataStorageConfiguration.DEFAULT_CONFIG;
 
 public class BonsaiTreeVerifier implements BonsaiListener {
 
@@ -52,6 +59,8 @@ public class BonsaiTreeVerifier implements BonsaiListener {
         System.out.println("We are verifying : " + dataDir);
         final StorageProvider provider =
                 createKeyValueStorageProvider(dataDir, dataDir.resolve("database"));
+
+        getDataStorageConfiguration(dataDir);
         final BonsaiTreeVerifier listener = new BonsaiTreeVerifier();
         BonsaiTraversal tr = new BonsaiTraversal(provider, listener);
         System.out.println();
@@ -103,7 +112,7 @@ public class BonsaiTreeVerifier implements BonsaiListener {
                                                 RocksDBCLIOptions.DEFAULT_IS_HIGH_SPEC),
                                 Arrays.asList(KeyValueSegmentIdentifier.values()),
                                 RocksDBMetricsFactory.PUBLIC_ROCKS_DB_METRICS))
-                .withCommonConfiguration(new BelaConfigurationImpl(dataDir, dbDir))
+                .withCommonConfiguration(new BelaConfigurationImpl(dataDir, dbDir, getDataStorageConfiguration(dataDir)))
                 .withMetricsSystem(new NoOpMetricsSystem())
                 .build();
     }

@@ -39,7 +39,7 @@ public class Bela {
 
         DefaultTerminalFactory terminalFactory = new DefaultTerminalFactory();
         terminalFactory.setInitialTerminalSize(new TerminalSize(120, 35));
-        System.out.println(BesuInfo.version());
+        System.out.println("Built with Besu Version " + BesuInfo.version());
         try (Screen screen = terminalFactory.createScreen();
              ) {
             screen.startScreen();

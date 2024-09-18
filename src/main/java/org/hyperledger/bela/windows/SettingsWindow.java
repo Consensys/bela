@@ -20,6 +20,8 @@ import org.hyperledger.bela.components.settings.BelaSetting;
 import org.hyperledger.bela.components.settings.CheckBoxSetting;
 import org.hyperledger.bela.components.settings.PathSetting;
 import org.hyperledger.bela.config.BelaConfigurationImpl;
+import org.hyperledger.bela.config.BesuDataStorageConfigurationUtil;
+import org.hyperledger.besu.ethereum.worldstate.ImmutableDataStorageConfiguration;
 
 import static org.hyperledger.bela.windows.Constants.DATA_PATH;
 import static org.hyperledger.bela.windows.Constants.DATA_PATH_DEFAULT;
@@ -155,6 +157,10 @@ public class SettingsWindow extends AbstractBelaWindow {
     }
 
     public BelaConfigurationImpl createBelaConfiguration() {
-        return new BelaConfigurationImpl(Path.of(preferences.get(DATA_PATH, DATA_PATH_DEFAULT)), Path.of(preferences.get(STORAGE_PATH, STORAGE_PATH_DEFAULT)));
+        Path dataDir = Path.of(preferences.get(DATA_PATH, DATA_PATH_DEFAULT));
+        return new BelaConfigurationImpl(
+                dataDir,
+                Path.of(preferences.get(STORAGE_PATH, STORAGE_PATH_DEFAULT)),
+                BesuDataStorageConfigurationUtil.getDataStorageConfiguration(dataDir));
     }
 }

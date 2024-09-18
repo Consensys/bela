@@ -3,12 +3,14 @@ package org.hyperledger.bela.utils;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.config.BelaConfigurationImpl;
+import org.hyperledger.bela.config.BesuDataStorageConfigurationUtil;
 import org.hyperledger.bela.converter.RocksDBKeyValueStorageConverterFactory;
 import org.hyperledger.bela.dialogs.NonClosableMessage;
 import org.hyperledger.bela.utils.hacks.ReadOnlyDatabaseDecider;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueStorageProviderBuilder;
+import org.hyperledger.besu.ethereum.worldstate.ImmutableDataStorageConfiguration;
 import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
 import org.hyperledger.besu.plugin.services.exception.StorageException;
 import org.hyperledger.besu.plugin.services.storage.SegmentIdentifier;
@@ -31,6 +33,7 @@ import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
+import static org.hyperledger.bela.config.BesuDataStorageConfigurationUtil.getDataStorageConfiguration;
 import static org.hyperledger.bela.windows.Constants.DATA_PATH;
 import static org.hyperledger.bela.windows.Constants.DATA_PATH_DEFAULT;
 import static org.hyperledger.bela.windows.Constants.DETECT_COLUMNS;
@@ -103,7 +106,7 @@ public class StorageProviderFactory implements AutoCloseable {
                                                 RocksDBCLIOptions.DEFAULT_IS_HIGH_SPEC),
                                 segments,
                                 RocksDBMetricsFactory.PUBLIC_ROCKS_DB_METRICS))
-                .withCommonConfiguration(new BelaConfigurationImpl(dataDir, dbDir))
+                .withCommonConfiguration(new BelaConfigurationImpl(dataDir, dbDir, getDataStorageConfiguration(dataDir)))
                 .withMetricsSystem(new NoOpMetricsSystem())
                 .build();
     }

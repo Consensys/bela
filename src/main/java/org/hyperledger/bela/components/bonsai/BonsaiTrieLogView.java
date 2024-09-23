@@ -3,7 +3,7 @@ package org.hyperledger.bela.components.bonsai;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.components.bonsai.queries.TrieQueryValidator;
-import org.hyperledger.bela.utils.StorageProviderFactory;
+import org.hyperledger.bela.context.BelaContext;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
@@ -24,11 +24,11 @@ public class BonsaiTrieLogView extends AbstractBonsaiNodeView {
   private static final TrieLogFactory trieLogFactory = new TrieLogFactoryImpl();
 
 
-  private final StorageProviderFactory storageProviderFactory;
+  private final BelaContext belaContext;
   private BonsaiTrieLogNode bonsaiTrieLogNode;
 
-  public BonsaiTrieLogView(final StorageProviderFactory storageProviderFactory) {
-    this.storageProviderFactory = storageProviderFactory;
+  public BonsaiTrieLogView(final BelaContext belaContext) {
+    this.belaContext = belaContext;
   }
 
   public static Optional<TrieLogLayer> getTrieLog(final KeyValueStorage storage,
@@ -40,7 +40,7 @@ public class BonsaiTrieLogView extends AbstractBonsaiNodeView {
 
   public void updateFromHash(final Hash hash) {
 
-    final StorageProvider provider = storageProviderFactory.createProvider();
+    final StorageProvider provider = belaContext.getProvider();
     final KeyValueStorage storage =
         provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_LOG_STORAGE);
     final Optional<TrieLogLayer> trieLog = getTrieLog(storage, hash);
@@ -61,7 +61,7 @@ public class BonsaiTrieLogView extends AbstractBonsaiNodeView {
 
   public void showAllTries() {
 
-    final StorageProvider provider = storageProviderFactory.createProvider();
+    final StorageProvider provider = belaContext.getProvider();
     final KeyValueStorage storage =
         provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_LOG_STORAGE);
     final List<BonsaiNode> blocks = storage
@@ -74,7 +74,7 @@ public class BonsaiTrieLogView extends AbstractBonsaiNodeView {
   }
 
   public void executeQuery(final TrieQueryValidator validator) {
-    final StorageProvider provider = storageProviderFactory.createProvider();
+    final StorageProvider provider = belaContext.getProvider();
     final KeyValueStorage storage =
         provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.TRIE_LOG_STORAGE);
     final List<BonsaiNode> results = storage

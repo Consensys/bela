@@ -17,7 +17,8 @@ import org.hyperledger.bela.components.bonsai.BonsaiTrieLogView;
 import org.hyperledger.bela.components.bonsai.RootTrieLogSearchResult;
 import org.hyperledger.bela.components.bonsai.queries.BonsaiTrieQuery;
 import org.hyperledger.bela.components.bonsai.queries.TrieQueryValidator;
-import org.hyperledger.bela.context.MainNetContext;
+import org.hyperledger.bela.config.BonsaiUtil;
+import org.hyperledger.bela.context.BelaContext;
 import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.dialogs.ProgressBarPopup;
 import org.hyperledger.bela.utils.BlockChainContext;
@@ -28,9 +29,7 @@ import org.hyperledger.besu.ethereum.chain.ChainHead;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.ethereum.trie.diffbased.bonsai.BonsaiWorldStateProvider;
-import org.hyperledger.besu.ethereum.trie.diffbased.bonsai.cache.BonsaiCachedMerkleTrieLoader;
 import org.hyperledger.besu.ethereum.trie.diffbased.bonsai.worldview.BonsaiWorldStateUpdateAccumulator;
-import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
@@ -49,15 +48,15 @@ public class BonsaiTrieLogLayersViewer extends AbstractBelaWindow {
     private final StorageProviderFactory storageProviderFactory;
     private final BonsaiTrieLogView view;
     private final BonsaiWorldStateProvider archive;
+    private final BelaContext belaContext;
 
 
-    public BonsaiTrieLogLayersViewer(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory) {
-
+    public BonsaiTrieLogLayersViewer(final WindowBasedTextGUI gui, final BelaContext belaContext) {
         this.gui = gui;
-        this.storageProviderFactory = storageProviderFactory;
-        this.archive = new MainNetContext(storageProviderFactory).getWorldStateArchive();
-
-        this.view = new BonsaiTrieLogView(storageProviderFactory);
+        this.belaContext = belaContext;
+        this.storageProviderFactory = belaContext.getStorageProviderFactory();
+        this.archive = BonsaiUtil.getBonsaiWorldStateArchive(belaContext.getProvider(), belaContext.getBlockChain());
+        this.view = new BonsaiTrieLogView(belaContext);
     }
 
     @Override
@@ -158,14 +157,14 @@ public class BonsaiTrieLogLayersViewer extends AbstractBelaWindow {
 
 
     private void lookupByChainHead() {
-        final BlockChainContext blockChainContext = BlockChainContextFactory.createBlockChainContext(storageProviderFactory.createProvider());
+        final BlockChainContext blockChainContext = BlockChainContextFactory.createBlockChainContext(belaContext);
         final ChainHead chainHead = blockChainContext.getBlockchain().getChainHead();
         updateTrieFromHash(chainHead.getHash());
 
     }
 
     private void lookupByHash() {
-        final BlockChainContext blockChainContext = BlockChainContextFactory.createBlockChainContext(storageProviderFactory.createProvider());
+        final BlockChainContext blockChainContext = BlockChainContextFactory.createBlockChainContext(belaContext);
         final ChainHead chainHead = blockChainContext.getBlockchain().getChainHead();
         final String s = TextInputDialog.showDialog(gui, "Enter Block Hash", "Hash", chainHead.getHash().toHexString());
         if (s == null) {

@@ -2,7 +2,6 @@ package org.hyperledger.bela.windows;
 
 import java.io.IOException;
 import java.util.EnumSet;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -16,6 +15,7 @@ import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.components.KeyControls;
+import org.hyperledger.bela.context.BelaContext;
 import org.hyperledger.bela.converter.DatabaseConverter;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.bela.utils.bonsai.BonsaiListener;
@@ -32,7 +32,7 @@ import static org.hyperledger.besu.plugin.services.storage.DataStorageFormat.BON
 public class DatabaseConversionWindow extends AbstractBelaWindow implements BonsaiListener {
     private static final LambdaLogger log = getLogger(DatabaseConversionWindow.class);
 
-    private final StorageProviderFactory storageProviderFactory;
+    private final BelaContext belaContext;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final Label runningLabel = new Label("Not Running...");
     private final Label counterLabel = new Label("0");
@@ -40,8 +40,8 @@ public class DatabaseConversionWindow extends AbstractBelaWindow implements Bons
     AtomicInteger visited = new AtomicInteger(0);
     private Future<?> execution;
 
-    public DatabaseConversionWindow(final StorageProviderFactory storageProviderFactory) {
-        this.storageProviderFactory = storageProviderFactory;
+    public DatabaseConversionWindow(final BelaContext belaContext) {
+        this.belaContext = belaContext;
     }
 
     @Override
@@ -78,7 +78,7 @@ public class DatabaseConversionWindow extends AbstractBelaWindow implements Bons
         if (execution == null) {
             visited.set(0);
             execution = executorService.submit(() -> {
-                new DatabaseConverter(storageProviderFactory.createProvider(), this).convertToBonsai();
+                new DatabaseConverter(belaContext.getProvider(), this).convertToBonsai();
                 runningLabel.setText("Converting Worldstate to Bonsai");
 
             });
@@ -90,7 +90,7 @@ public class DatabaseConversionWindow extends AbstractBelaWindow implements Bons
         if (execution == null) {
             visited.set(0);
             execution = executorService.submit(() -> {
-                new DatabaseConverter(storageProviderFactory.createProvider(), this).convertToForest();
+                new DatabaseConverter(belaContext.getProvider(), this).convertToForest();
                 runningLabel.setText("Converting Worldstate to Forest");
 
             });
@@ -106,7 +106,7 @@ public class DatabaseConversionWindow extends AbstractBelaWindow implements Bons
                     .filter(e -> e.getFormat().equals(BONSAI))
                     .filter(e -> e.getVersion() == version)
                     .findFirst().orElseThrow())
-                .writeToDirectory(storageProviderFactory.getDataPath());
+                .writeToDirectory(belaContext.getDataPath());
         } catch (IOException e) {
             log.error("There was an error when setting the metadata version to version {}", version, e);
             throw new IllegalStateException("Failed to write db metadata version");

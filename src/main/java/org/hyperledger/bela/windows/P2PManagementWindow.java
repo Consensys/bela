@@ -10,7 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.LinearLayout;
@@ -24,10 +23,8 @@ import org.hyperledger.bela.components.Counter;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.context.BelaContext;
 import org.hyperledger.bela.context.BelaP2PNetworkFacade;
-import org.hyperledger.bela.context.MainNetContext;
 import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.utils.ConnectionMessageMonitor;
-import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.bela.utils.hacks.SentMessageMonitor;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.core.BlockHeader;
@@ -51,24 +48,20 @@ import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
 public class P2PManagementWindow extends AbstractBelaWindow implements MessageCallback, ConnectCallback, DisconnectCallback {
     private static final LambdaLogger log = getLogger(P2PManagementWindow.class);
 
-    private final StorageProviderFactory storageProviderFactory;
-    private final Preferences preferences;
     private final WindowBasedTextGUI gui;
     private final ConnectionMessageMonitor monitor = new ConnectionMessageMonitor();
     private final PeerDetailWindow peerDetailWindow;
+    private final BelaContext belaContext;
     Map<Capability, Counter> counters = new HashMap<>();
     Counter connect = new Counter("connect");
     Counter disconnect = new Counter("disconnect");
     Map<DisconnectMessage.DisconnectReason, Counter> disconects = new ConcurrentHashMap<>();
     Panel rightCounters = new Panel();
-    BelaContext belaContext;
 
-    public P2PManagementWindow(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory, final Preferences preferences) {
+    public P2PManagementWindow(final WindowBasedTextGUI gui, final BelaContext belaContext) {
         this.gui = gui;
-        this.storageProviderFactory = storageProviderFactory;
-        this.preferences = preferences;
-        belaContext = new MainNetContext(storageProviderFactory);
-        peerDetailWindow = new PeerDetailWindow(gui);
+        this.belaContext = belaContext;
+        this.peerDetailWindow = new PeerDetailWindow(gui);
     }
 
 

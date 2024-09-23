@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableList;
 import io.vertx.core.Vertx;
 import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.bela.components.bonsai.BelaKeyValueBlockchainStorage;
+import org.hyperledger.bela.config.BonsaiUtil;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.BesuInfo;
 import org.hyperledger.besu.config.GenesisConfigFile;
@@ -52,7 +53,6 @@ import org.hyperledger.besu.ethereum.p2p.network.ProtocolManager;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.Capability;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.SubProtocol;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
-import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueStoragePrefixedKeyBlockchainStorage;
 import org.hyperledger.besu.ethereum.storage.keyvalue.VariablesKeyValueStorage;
 import org.hyperledger.besu.ethereum.trie.diffbased.bonsai.BonsaiWorldStateProvider;
 import org.hyperledger.besu.ethereum.trie.diffbased.bonsai.cache.BonsaiCachedMerkleTrieLoader;
@@ -62,12 +62,14 @@ import org.hyperledger.besu.evm.internal.EvmConfiguration;
 import org.hyperledger.besu.metrics.noop.NoOpMetricsSystem;
 import org.hyperledger.besu.plugin.data.EnodeURL;
 import org.hyperledger.besu.plugin.services.MetricsSystem;
+import org.hyperledger.besu.plugin.services.storage.DataStorageFormat;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 import org.hyperledger.besu.services.BesuPluginContextImpl;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.file.Path;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -86,8 +88,10 @@ public class MainNetContext implements BelaContext {
     private EthContext ethContext;
     private NoOpMetricsSystem metricsSystem;
     private EthProtocolManager protocolManager;
+    private DataStorageConfiguration dataStorageConfiguration;
 
-    public MainNetContext(final StorageProviderFactory storageProviderFactory) {
+    public MainNetContext(final DataStorageConfiguration dataStorageConfiguration, final StorageProviderFactory storageProviderFactory) {
+        this.dataStorageConfiguration = dataStorageConfiguration;
         this.storageProviderFactory = storageProviderFactory;
     }
 
@@ -263,7 +267,7 @@ public class MainNetContext implements BelaContext {
         protocolManager = new EthProtocolManager(
                 getBlockChain(),
                 CHAIN_ID,
-                getWorldStateArchive(),
+                getBonsaiWorldStateArchive(),
                 getTransactionPool(),
                 getEthProtocolConfiguration(),
                 getEthContext().getEthPeers(),
@@ -312,35 +316,37 @@ public class MainNetContext implements BelaContext {
 
 
     private ProtocolContext getProtocolContext() {
-        return ProtocolContext.init(getBlockChain(), getWorldStateArchive(), getProtocolSchedule(),
+        return ProtocolContext.init(getBlockChain(), getBonsaiWorldStateArchive(), getProtocolSchedule(),
                 (blockchain, worldStateArchive, protocolSchedule) -> null, new BadBlockManager());
     }
 
-    //TODO: Visible for re-use elsewhere.
-    public BonsaiWorldStateProvider getWorldStateArchive() {
-        return getWorldStateArchive(getProvider(), getBlockChain());
+    public DataStorageFormat getDataStorageFormat() {
+        return dataStorageConfiguration.getDataStorageFormat();
     }
 
-    // TODO: This should probably move to a common/util class
-    public static BonsaiWorldStateProvider getWorldStateArchive(StorageProvider provider, Blockchain blockchain) {
-        final NoOpMetricsSystem noOpMetricsSystem = new NoOpMetricsSystem();
-        return new BonsaiWorldStateProvider(
-            (BonsaiWorldStateKeyValueStorage)
-                provider.createWorldStateStorage(DataStorageConfiguration.DEFAULT_BONSAI_CONFIG),
-            blockchain,
-            Optional.empty(),
-            new BonsaiCachedMerkleTrieLoader(noOpMetricsSystem),
-            new BesuPluginContextImpl(),
-            EvmConfiguration.DEFAULT
-        );
+    public Path getDataPath() {
+        return storageProviderFactory.getDataPath();
+    }
+
+    // TODO lots of dependencies on various methods on this but should be removed
+    public StorageProviderFactory getStorageProviderFactory() {
+        return this.storageProviderFactory;
+    }
+
+    public StorageProvider getProvider() {
+        return storageProviderFactory.createProvider();
+    }
+
+    public BonsaiWorldStateProvider getBonsaiWorldStateArchive() {
+        return BonsaiUtil.getBonsaiWorldStateArchive(getProvider(), getBlockChain());
     }
 
     private BonsaiWorldStateKeyValueStorage getWorldStateStorage() {
         return new BonsaiWorldStateKeyValueStorage(getProvider(), new NoOpMetricsSystem(), DataStorageConfiguration.DEFAULT_BONSAI_CONFIG);
     }
 
-    private MutableBlockchain getBlockChain() {
-        return   (MutableBlockchain) DefaultBlockchain
+    public MutableBlockchain getBlockChain() {
+        return (MutableBlockchain) DefaultBlockchain
             .create(getBlockChainStorage(), new NoOpMetricsSystem(), 0L);
     }
 
@@ -355,11 +361,8 @@ public class MainNetContext implements BelaContext {
         return new BelaKeyValueBlockchainStorage(keyValueStorage, variableStorage, new MainnetBlockHeaderFunctions(), true);
     }
 
-    private StorageProvider getProvider() {
-        return storageProviderFactory.createProvider();
-    }
-
     private SyncState getSyncState() {
         return new SyncState(getBlockChain(), getEthContext().getEthPeers());
     }
+
 }

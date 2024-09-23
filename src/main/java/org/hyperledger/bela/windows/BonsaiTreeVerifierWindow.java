@@ -3,7 +3,6 @@ package org.hyperledger.bela.windows;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import com.googlecode.lanterna.TerminalSize;
@@ -17,8 +16,8 @@ import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.bela.components.KeyControls;
+import org.hyperledger.bela.context.BelaContext;
 import org.hyperledger.bela.dialogs.BelaDialog;
-import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.bela.utils.bonsai.BonsaiListener;
 import org.hyperledger.bela.utils.bonsai.BonsaiTraversal;
 import org.hyperledger.bela.utils.bonsai.BonsaiTraversalTrieType;
@@ -34,7 +33,7 @@ public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements Bons
     public static final String NOT_RUNNING = "Not Running...";
     private static final LambdaLogger log = getLogger(BonsaiTreeVerifierWindow.class);
     private final WindowBasedTextGUI gui;
-    private final StorageProviderFactory storageProviderFactory;
+    private final BelaContext belaContext;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final Label runningLabel = new Label(NOT_RUNNING);
     private final Label counterLabel = new Label("0");
@@ -43,9 +42,9 @@ public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements Bons
     AtomicLong visited = new AtomicLong(0);
     private Future<?> execution;
 
-    public BonsaiTreeVerifierWindow(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory) {
+    public BonsaiTreeVerifierWindow(final WindowBasedTextGUI gui, final BelaContext belaContext) {
         this.gui = gui;
-        this.storageProviderFactory = storageProviderFactory;
+        this.belaContext = belaContext;
         logTextBox.setReadOnly(true);
     }
 
@@ -90,7 +89,7 @@ public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements Bons
         Thread.yield();
         logTextBox.setText("");
         visited.set(0);
-        final StorageProvider storageProvider = storageProviderFactory.createProvider();
+        final StorageProvider storageProvider = belaContext.getProvider();
         this.bonsaiTraversal.set(new BonsaiTraversal(storageProvider, this));
         execution = executorService.submit(() -> {
             try {
@@ -134,7 +133,7 @@ public class BonsaiTreeVerifierWindow extends AbstractBelaWindow implements Bons
         logTextBox.setText("");
         visited.set(0);
 
-        final StorageProvider provider = storageProviderFactory.createProvider();
+        final StorageProvider provider = belaContext.getProvider();
         this.bonsaiTraversal.set(new BonsaiTraversal(provider, this));
 
         execution = executorService.submit(() -> {

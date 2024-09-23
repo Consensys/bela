@@ -11,11 +11,11 @@ import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.components.KeyControls;
+import org.hyperledger.bela.context.BelaContext;
 import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.utils.BlockChainBrowser;
 import org.hyperledger.bela.utils.BlockChainContext;
 import org.hyperledger.bela.utils.BlockChainContextFactory;
-import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.datatypes.Hash;
 
 import static kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory.getLogger;
@@ -31,14 +31,14 @@ import static org.hyperledger.bela.windows.Constants.KEY_ROLL_HEAD;
 public class BlockChainBrowserWindow extends AbstractBelaWindow {
     private static final LambdaLogger log = getLogger(BlockChainBrowserWindow.class);
     private final Preferences preferences;
-    private final StorageProviderFactory storageProviderFactory;
+    private final BelaContext belaContext;
     private final WindowBasedTextGUI gui;
     private BlockChainBrowser browser;
     private BlockChainContext context;
 
-    public BlockChainBrowserWindow(final StorageProviderFactory storageProviderFactory,
+    public BlockChainBrowserWindow(final BelaContext belaContext,
                                    final WindowBasedTextGUI gui, final Preferences preferences) {
-        this.storageProviderFactory = storageProviderFactory;
+        this.belaContext = belaContext;
         this.gui = gui;
         this.preferences = preferences;
     }
@@ -70,7 +70,7 @@ public class BlockChainBrowserWindow extends AbstractBelaWindow {
 
     @Override
     public Panel createMainPanel() {
-        context = BlockChainContextFactory.createBlockChainContext(storageProviderFactory.createProvider());
+        context = BlockChainContextFactory.createBlockChainContext(belaContext);
         browser = BlockChainBrowser.fromBlockChainContext(context);
 
         Panel panel = new Panel(new LinearLayout());

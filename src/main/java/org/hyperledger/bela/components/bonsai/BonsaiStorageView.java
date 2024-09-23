@@ -5,7 +5,7 @@ import java.util.Objects;
 import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.hyperledger.bela.utils.StorageProviderFactory;
+import org.hyperledger.bela.context.BelaContext;
 import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
@@ -18,21 +18,21 @@ import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
 import static org.hyperledger.besu.ethereum.trie.CompactEncoding.bytesToPath;
 
 public class BonsaiStorageView extends AbstractBonsaiNodeView {
-    private final StorageProviderFactory storageProviderFactory;
+    private final BelaContext belaContext;
     private KeyValueStorage accountStorage;
     private KeyValueStorage storageStorage;
     private KeyValueStorage trieBranchStorage;
     private KeyValueStorage codeStorage;
 
-    public BonsaiStorageView(final StorageProviderFactory storageProviderFactory) {
-        this.storageProviderFactory = storageProviderFactory;
+    public BonsaiStorageView(final BelaContext belaContext) {
+        this.belaContext = belaContext;
     }
 
     private void initStorage() {
         if (accountStorage != null) {
             return;
         }
-        final StorageProvider provider = storageProviderFactory.createProvider();
+        final StorageProvider provider = belaContext.getProvider();
         accountStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_INFO_STATE);
         codeStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.CODE_STORAGE);
         storageStorage = provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.ACCOUNT_STORAGE_STORAGE);

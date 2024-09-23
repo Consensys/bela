@@ -7,8 +7,8 @@ import com.googlecode.lanterna.gui2.dialogs.TextInputDialog;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
 import org.hyperledger.bela.components.KeyControls;
 import org.hyperledger.bela.components.bonsai.BonsaiStorageView;
+import org.hyperledger.bela.context.BelaContext;
 import org.hyperledger.bela.dialogs.BelaDialog;
-import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.datatypes.Hash;
 
@@ -22,14 +22,11 @@ public class BonsaiStorageBrowserWindow extends AbstractBelaWindow {
     private static final LambdaLogger log = getLogger(BonsaiStorageBrowserWindow.class);
 
     private final WindowBasedTextGUI gui;
-    private final StorageProviderFactory storageProviderFactory;
     private final BonsaiStorageView storageView;
 
-    public BonsaiStorageBrowserWindow(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory) {
-
+    public BonsaiStorageBrowserWindow(final WindowBasedTextGUI gui, final BelaContext belaContext) {
         this.gui = gui;
-        this.storageProviderFactory = storageProviderFactory;
-        this.storageView = new BonsaiStorageView(storageProviderFactory);
+        this.storageView = new BonsaiStorageView(belaContext);
     }
 
 

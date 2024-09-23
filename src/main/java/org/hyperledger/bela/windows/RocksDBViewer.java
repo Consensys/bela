@@ -12,9 +12,9 @@ import com.googlecode.lanterna.gui2.dialogs.MessageDialogBuilder;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.bela.components.KeyControls;
+import org.hyperledger.bela.context.BelaContext;
 import org.hyperledger.bela.dialogs.BelaDialog;
 import org.hyperledger.bela.model.KeyValueConstants;
-import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
 import org.hyperledger.besu.ethereum.storage.keyvalue.KeyValueSegmentIdentifier;
 import org.hyperledger.besu.plugin.services.storage.KeyValueStorage;
@@ -37,13 +37,13 @@ public class RocksDBViewer extends AbstractBelaWindow {
     private final ComboBox<KeyValueConstants> kvConstantsCombo = new ComboBox<>(KeyValueConstants.values());;
     private final TextBox keyBox = new TextBox(new TerminalSize(80, 1));
     private final TextBox valueBox = new TextBox(new TerminalSize(80, 25));
-    private final StorageProviderFactory storageProviderFactory;
     private final WindowBasedTextGUI gui;
+    private final BelaContext belaContext;
 
-    public RocksDBViewer(final WindowBasedTextGUI gui, final StorageProviderFactory storageProviderFactory) {
+    public RocksDBViewer(final WindowBasedTextGUI gui, final BelaContext belaContext) {
         this.gui = gui;
 
-        this.storageProviderFactory = storageProviderFactory;
+        this.belaContext = belaContext;
         keyBox.setValidationPattern(HEX_ONLY);
         valueBox.setValidationPattern(HEX_AND_WRAP_ONLY);
         kvConstantsCombo.addListener((selected, previous, changedByUser) -> {
@@ -101,7 +101,7 @@ public class RocksDBViewer extends AbstractBelaWindow {
 
     private void search() {
         try {
-            final StorageProvider provider = storageProviderFactory.createProvider();
+            final StorageProvider provider = belaContext.getProvider();
             final KeyValueStorage storageBySegmentIdentifier = provider.getStorageBySegmentIdentifier(identifierCombo.getSelectedItem());
             final Optional<byte[]> value = storageBySegmentIdentifier.get(Bytes.fromHexString(keyBox.getText())
                     .toArrayUnsafe());
@@ -119,7 +119,7 @@ public class RocksDBViewer extends AbstractBelaWindow {
 
     private void update() {
         try {
-            final StorageProvider provider = storageProviderFactory.createProvider();
+            StorageProvider provider = belaContext.getProvider();
             final KeyValueStorage storageBySegmentIdentifier = provider.getStorageBySegmentIdentifier(identifierCombo.getSelectedItem());
             if (keyBox.getText().length() > 0) {
                 final Optional<byte[]> key = Optional.ofNullable(Bytes.fromHexString(keyBox.getText())
@@ -152,7 +152,7 @@ public class RocksDBViewer extends AbstractBelaWindow {
 
     private void delete() {
         try {
-            final StorageProvider provider = storageProviderFactory.createProvider();
+            final StorageProvider provider = belaContext.getProvider();
             final KeyValueStorage storageBySegmentIdentifier = provider.getStorageBySegmentIdentifier(identifierCombo.getSelectedItem());
             final boolean deleted = storageBySegmentIdentifier.tryDelete(Bytes.fromHexString(keyBox.getText())
                 .toArrayUnsafe());

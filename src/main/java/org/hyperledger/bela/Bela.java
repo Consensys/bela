@@ -11,7 +11,7 @@ import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
-import org.hyperledger.bela.config.BesuDataStorageConfigurationUtil;
+import org.hyperledger.bela.context.MainNetContext;
 import org.hyperledger.bela.utils.StorageProviderFactory;
 import org.hyperledger.bela.windows.BlockChainBrowserWindow;
 import org.hyperledger.bela.windows.BonsaiStorageBrowserWindow;
@@ -52,21 +52,23 @@ public class Bela {
             StorageProviderFactory storageProviderFactory = new StorageProviderFactory(gui,preferences);
             DataStorageConfiguration dataStorageConfig = getDataStorageConfiguration(Path.of(preferences.get(DATA_PATH, DATA_PATH_DEFAULT)));
             DataStorageFormat dataStorageFormat = dataStorageConfig.getDataStorageFormat();
+            MainNetContext mainNetContext = new MainNetContext(dataStorageConfig, storageProviderFactory);
 
             gui.setTheme(LanternaThemes.getRegisteredTheme(preferences.get(THEME_KEY, DEFAULT_THEME)));
             MainWindow mainWindow = new MainWindow(gui, preferences);
             final SettingsWindow config = new SettingsWindow(gui, preferences);
             mainWindow.registerWindow(config);
-            mainWindow.registerWindow(new BlockChainBrowserWindow(storageProviderFactory, gui, preferences));
-            mainWindow.registerWindow(new DatabaseConversionWindow(storageProviderFactory));
+            mainWindow.registerWindow(new BlockChainBrowserWindow(mainNetContext, gui, preferences));
+            mainWindow.registerWindow(new DatabaseConversionWindow(mainNetContext));
             mainWindow.registerWindow(new LogoWindow());
-            mainWindow.registerWindow(new P2PManagementWindow(gui, storageProviderFactory, preferences));
-            mainWindow.registerWindow(new RocksDBViewer(gui, storageProviderFactory));
+            mainWindow.registerWindow(new P2PManagementWindow(gui, mainNetContext));
+            mainWindow.registerWindow(new RocksDBViewer(gui, mainNetContext));
+            // TODO SegmentManipulationWindow is the main culprit for the storageProviderFactory dependency
             mainWindow.registerWindow(new SegmentManipulationWindow(gui, storageProviderFactory, preferences));
             if (DataStorageFormat.BONSAI.equals(dataStorageFormat)) {
-              mainWindow.registerWindow(new BonsaiStorageBrowserWindow(gui, storageProviderFactory));
-              mainWindow.registerWindow(new BonsaiTrieLogLayersViewer(gui, storageProviderFactory));
-              mainWindow.registerWindow(new BonsaiTreeVerifierWindow(gui, storageProviderFactory));
+              mainWindow.registerWindow(new BonsaiStorageBrowserWindow(gui, mainNetContext));
+              mainWindow.registerWindow(new BonsaiTrieLogLayersViewer(gui, mainNetContext));
+              mainWindow.registerWindow(new BonsaiTreeVerifierWindow(gui, mainNetContext));
             }
             final Window window = mainWindow.createWindow();
             gui.addWindowAndWait(window);

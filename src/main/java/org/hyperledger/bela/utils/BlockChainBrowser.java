@@ -31,7 +31,6 @@ import org.hyperledger.besu.ethereum.trie.diffbased.bonsai.storage.BonsaiWorldSt
 
 public class BlockChainBrowser {
 
-    private final BonsaiWorldStateKeyValueStorage worldStateStorage;
     private final DefaultBlockchain blockchain;
     private Optional<BlockResult> blockResult;
     private BlockPanel blockPanel;
@@ -39,10 +38,8 @@ public class BlockChainBrowser {
 
 
     public BlockChainBrowser(
-            final DefaultBlockchain blockchain,
-            final BonsaiWorldStateKeyValueStorage worldStateStorage) {
+            final DefaultBlockchain blockchain) {
         this.blockchain = blockchain;
-        this.worldStateStorage = worldStateStorage;
         //fixme
         this.blockResult = getChainHead();
         blockResult.ifPresent(result -> this.blockPanel = new BlockPanel(result));
@@ -54,7 +51,7 @@ public class BlockChainBrowser {
 
 
     public static BlockChainBrowser fromBlockChainContext(final BlockChainContext blockChainContext) {
-        return new BlockChainBrowser((DefaultBlockchain) blockChainContext.getBlockchain(), blockChainContext.getWorldStateStorage());
+        return new BlockChainBrowser((DefaultBlockchain) blockChainContext.getBlockchain());
     }
 
 
